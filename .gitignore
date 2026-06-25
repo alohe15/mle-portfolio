@@ -221,3 +221,8 @@ __marimo__/
 
 # Data
 data/
+
+# Trained model artifacts (stored locally in models/)
+models/**/*
+!models/.gitkeep
+!models/README.md
