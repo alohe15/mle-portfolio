@@ -221,6 +221,7 @@ __marimo__/
 
 # Data
 data/
+test_payload.json
 
 # Trained model artifacts (stored locally in models/)
 models/**/*
