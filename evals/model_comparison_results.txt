@@ -1,0 +1,35 @@
+IEEE-CIS Fraud Detection — Model Comparison
+================================================================
+Generated: 2026-07-03 22:52 UTC
+
+Sources:
+  Baseline metrics:   /Users/arnavlohe/mle-portfolio/models/baseline_lightgbm_metrics.json
+  Engineered metrics: /Users/arnavlohe/mle-portfolio/models/engineered_lightgbm_metrics.json
+
+================================================================
+Side-by-side (prevalence-matched flag rate)
+================================================================
+
+Metric           Baseline   Engineered         Lift
+----------------------------------------------------
+auc_pr             0.2504       0.2661      +0.0157
+precision          0.3035       0.3534      +0.0499
+recall             0.3329       0.3967      +0.0637
+
+================================================================
+Split configuration
+================================================================
+
+Method:         time_based_transaction_dt
+Train fraction: 0.8
+Train rows:     472,432
+Test rows:      118,108
+Train fraud:    3.5135%
+Test fraud:     3.4409%
+
+================================================================
+Feature counts
+================================================================
+
+Baseline model:   raw merged parquet
+Engineered model: 697 features (33 categorical)

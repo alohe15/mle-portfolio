@@ -2,7 +2,7 @@
 
 Usage:
     uvicorn services.api.app:app --reload --app-dir .
-    python scripts/benchmark_api_latency.py
+    python tests/benchmark_api_latency.py
 
 Optional env vars:
     API_URL   default http://127.0.0.1:8000/predict
@@ -18,8 +18,8 @@ import time
 from pathlib import Path
 from urllib import error
 
-SCRIPTS_DIR = Path(__file__).resolve().parent
-sys.path.insert(0, str(SCRIPTS_DIR))
+TESTS_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(TESTS_DIR))
 
 from test_api_endpoint import DEFAULT_API_URL, build_test_payload, call_predict_endpoint
 

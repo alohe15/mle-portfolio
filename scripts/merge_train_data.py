@@ -1,19 +1,21 @@
 from pathlib import Path
+import sys
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SOURCE_DIR = REPO_ROOT / "project-1-detect-fraud" / "data"
-OUTPUT_DIR = REPO_ROOT / "data"
-OUTPUT_PATH = OUTPUT_DIR / "train_merged.parquet"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from load_config import load_config, repo_path
 
-train_transaction = pd.read_csv(SOURCE_DIR / "train_transaction.csv")
-train_identity = pd.read_csv(SOURCE_DIR / "train_identity.csv")
+paths = load_config("paths")
+
+train_transaction = pd.read_csv(repo_path(paths["train_transaction_csv"]))
+train_identity = pd.read_csv(repo_path(paths["train_identity_csv"]))
 
 merged = train_transaction.merge(train_identity, on="TransactionID", how="left")
 
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-merged.to_parquet(OUTPUT_PATH, index=False)
+output_path = repo_path(paths["train_merged_parquet"])
+output_path.parent.mkdir(parents=True, exist_ok=True)
+merged.to_parquet(output_path, index=False)
 
-print(f"Saved merged dataset to {OUTPUT_PATH}")
+print(f"Saved merged dataset to {output_path}")
 print(f"Shape: {merged.shape}")

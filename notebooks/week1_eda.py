@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "project-1-detect-fraud" / "data"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 
 train_transaction = pd.read_csv(DATA_DIR / "train_transaction.csv")
 train_identity = pd.read_csv(DATA_DIR / "train_identity.csv")

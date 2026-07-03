@@ -2,7 +2,7 @@
 
 Usage:
     uvicorn services.api.app:app --reload --app-dir .
-    python scripts/test_api_endpoint.py
+    python tests/test_api_endpoint.py
 
 Optional env vars:
     API_URL  default http://127.0.0.1:8000/predict
@@ -19,24 +19,23 @@ from urllib import error, request
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = REPO_ROOT / "data" / "train_merged.parquet"
-PAYLOAD_PATH = REPO_ROOT / "test_payload.json"
+PATHS = json.loads((REPO_ROOT / "configs" / "paths.json").read_text())
+DATA_PATH = REPO_ROOT / PATHS["train_merged_parquet"]
+PAYLOAD_PATH = REPO_ROOT / "tests" / "fixtures" / "test_payload.json"
 DEFAULT_API_URL = "http://127.0.0.1:8000/predict"
 
 
 def build_test_payload() -> dict:
     df = pd.read_parquet(DATA_PATH)
     sample = df.iloc[0].drop("isFraud").to_dict()
-
-    # Convert NaN to None for valid JSON
     sample = {k: (None if pd.isna(v) else v) for k, v in sample.items()}
     return {"features": sample}
 
 
 def save_test_payload(payload: dict, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:
         json.dump(payload, f)
-
     print(f"Saved {path}")
 
 

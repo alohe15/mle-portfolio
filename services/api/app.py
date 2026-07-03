@@ -7,19 +7,27 @@ Run locally:
     uvicorn services.api.app:app --reload --app-dir .
 """
 
-from fastapi import FastAPI
-from pydantic import BaseModel
-import lightgbm as lgb
-import pandas as pd
-import numpy as np
+from __future__ import annotations
+
+import json
 import time
 from pathlib import Path
+
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-MODEL_PATH = REPO_ROOT / "models" / "baseline_lightgbm.txt"
-DATA_PATH = REPO_ROOT / "data" / "train_merged.parquet"
+PATHS = json.loads((REPO_ROOT / "configs" / "paths.json").read_text())
+TRAINING = json.loads((REPO_ROOT / "configs" / "training.json").read_text())
+
+MODEL_PATH = REPO_ROOT / PATHS["baseline_model"]
+DATA_PATH = REPO_ROOT / PATHS["train_merged_parquet"]
+DECISION_THRESHOLD = TRAINING["decision_threshold"]
 
 model = lgb.Booster(model_file=str(MODEL_PATH))
 FEATURE_NAMES = model.feature_name()
@@ -54,33 +62,32 @@ def build_feature_frame(features: dict) -> pd.DataFrame:
 
     return df
 
+
 class PredictionRequest(BaseModel):
-    features: dict  # {"TransactionAmt": 100.0, "card1": 1234, ...}
+    features: dict
+
 
 class PredictionResponse(BaseModel):
     fraud_probability: float
-    prediction: int  # 1 = fraud, 0 = legit
+    prediction: int
     latency_ms: float
+
 
 @app.post("/predict")
 def predict(request: PredictionRequest):
     start = time.perf_counter()
 
     df = build_feature_frame(request.features)
-
-    # Score
     prob = model.predict(df)[0]
-
     elapsed_ms = (time.perf_counter() - start) * 1000
 
     return PredictionResponse(
         fraud_probability=round(float(prob), 6),
-        prediction=int(prob >= 0.5),
+        prediction=int(prob >= DECISION_THRESHOLD),
         latency_ms=round(elapsed_ms, 2),
     )
+
 
 @app.get("/health")
 def health():
     return {"status": "healthy", "model_features": len(FEATURE_NAMES)}
-
-

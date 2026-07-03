@@ -10,23 +10,30 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+import sys
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score, precision_score, recall_score
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = REPO_ROOT / "data" / "train_merged.parquet"
-MODELS_DIR = REPO_ROOT / "models"
-METRICS_PATH = MODELS_DIR / "baseline_lightgbm_metrics.json"
-MODEL_PATH = MODELS_DIR / "baseline_lightgbm.txt"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from load_config import load_config, repo_path
 
-TARGET = "isFraud"
-DROP_COLS = {"TransactionID", TARGET}
-TRAIN_FRACTION = 0.8
-DECISION_THRESHOLD = 0.5
-RANDOM_STATE = 42
+paths = load_config("paths")
+train_config = load_config("training")
+lgb_config = train_config["lightgbm"]
+
+DATA_PATH = repo_path(paths["train_merged_parquet"])
+MODELS_DIR = repo_path("models")
+METRICS_PATH = repo_path(paths["baseline_metrics"])
+MODEL_PATH = repo_path(paths["baseline_model"])
+
+TARGET = train_config["target"]
+DROP_COLS = set(train_config["drop_cols_baseline"])
+TRAIN_FRACTION = train_config["train_fraction"]
+DECISION_THRESHOLD = train_config["decision_threshold"]
+RANDOM_STATE = train_config["random_state"]
 
 
 def load_and_split(data_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -84,7 +91,6 @@ def evaluate_at_flag_rate(
 
 def majority_class_baseline(y_train: np.ndarray, y_test: np.ndarray) -> dict[str, float]:
     train_fraud_rate = float(y_train.mean())
-    # Constant score = train prevalence (no-skill ranking baseline for AUC-PR).
     y_score = np.full(len(y_test), train_fraud_rate)
     y_pred = np.zeros(len(y_test), dtype=int)
     return {
@@ -102,7 +108,6 @@ def majority_class_baseline(y_train: np.ndarray, y_test: np.ndarray) -> dict[str
 def random_ranking_baseline(
     y_test: np.ndarray, flag_rate: float, rng: np.random.Generator
 ) -> dict[str, float]:
-    """No-skill ranking baseline: uniform random scores at a fixed flag rate."""
     scores = rng.random(len(y_test))
     metrics = evaluate_at_flag_rate(y_test, scores, flag_rate)
     metrics["strategy"] = "random_ranking"
@@ -165,24 +170,28 @@ def main() -> None:
 
     scale_pos_weight = float((y_train == 0).sum() / max((y_train == 1).sum(), 1))
     model = lgb.LGBMClassifier(
-        objective="binary",
-        n_estimators=500,
-        learning_rate=0.05,
-        num_leaves=64,
-        subsample=0.8,
-        colsample_bytree=0.8,
+        objective=lgb_config["objective"],
+        n_estimators=lgb_config["n_estimators"],
+        learning_rate=lgb_config["learning_rate"],
+        num_leaves=lgb_config["num_leaves"],
+        subsample=lgb_config["subsample"],
+        colsample_bytree=lgb_config["colsample_bytree"],
         scale_pos_weight=scale_pos_weight,
         random_state=RANDOM_STATE,
-        n_jobs=-1,
-        verbose=-1,
+        n_jobs=lgb_config["n_jobs"],
+        verbose=lgb_config["verbose"],
     )
     model.fit(
         x_train,
         y_train,
         categorical_feature=cat_cols,
         eval_set=[(x_test, y_test)],
-        eval_metric="average_precision",
-        callbacks=[lgb.early_stopping(stopping_rounds=50, verbose=False)],
+        eval_metric=lgb_config["eval_metric"],
+        callbacks=[
+            lgb.early_stopping(
+                stopping_rounds=lgb_config["early_stopping_rounds"], verbose=False
+            )
+        ],
     )
 
     y_score = model.predict_proba(x_test)[:, 1]
@@ -252,20 +261,6 @@ def main() -> None:
         lift = model_val - base
         print(f"{metric + '*':<12} {base:>12.4f} {model_val:>12.4f} {lift:>+12.4f}")
     print("  * at prevalence-matched flag rate")
-    print()
-    print("Business notes:")
-    print(
-        "  • Baseline (random ranking) at the same flag rate gives ~prevalence precision "
-        "and recall; LightGBM precision lift shows fewer false alerts per review."
-    )
-    print(
-        "  • At a 0.5 probability cutoff, neither model flags transactions because "
-        "fraud scores stay well below 0.5 — expected for ~3.5% prevalence."
-    )
-    print(
-        "  • At a prevalence-matched operating point (flag ~3.5% highest-risk scores), "
-        "precision/recall reflect a fixed manual-review budget."
-    )
     print()
     print(f"Model saved to: {MODEL_PATH}")
     print(f"Metrics saved to: {METRICS_PATH}")

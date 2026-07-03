@@ -219,9 +219,14 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Data
-data/
-test_payload.json
+# Data (raw inputs and processed artifacts — not code)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Test fixtures generated at runtime
+tests/fixtures/
 
 # Trained model artifacts (stored locally in models/)
 models/**/*

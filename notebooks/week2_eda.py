@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "project-1-detect-fraud" / "data"
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "outputs"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "evals" / "figures"
 
 train_transaction = pd.read_csv(DATA_DIR / "train_transaction.csv")
 train_identity = pd.read_csv(DATA_DIR / "train_identity.csv")

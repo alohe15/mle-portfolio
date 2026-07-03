@@ -5,25 +5,32 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+import sys
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score, precision_score, recall_score
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-TRAIN_PATH = REPO_ROOT / "data" / "train_featured.parquet"
-TEST_PATH = REPO_ROOT / "data" / "test_featured.parquet"
-BASELINE_METRICS_PATH = REPO_ROOT / "models" / "baseline_lightgbm_metrics.json"
-MODELS_DIR = REPO_ROOT / "models"
-METRICS_PATH = MODELS_DIR / "engineered_lightgbm_metrics.json"
-MODEL_PATH = MODELS_DIR / "engineered_lightgbm.txt"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from load_config import load_config, repo_path
 
-TARGET = "isFraud"
-DROP_COLS = {"TransactionID", TARGET, "uid"}
-TRAIN_FRACTION = 0.8
-DECISION_THRESHOLD = 0.5
-RANDOM_STATE = 42
+paths = load_config("paths")
+train_config = load_config("training")
+lgb_config = train_config["lightgbm"]
+
+TRAIN_PATH = repo_path(paths["train_featured_parquet"])
+TEST_PATH = repo_path(paths["test_featured_parquet"])
+BASELINE_METRICS_PATH = repo_path(paths["baseline_metrics"])
+MODELS_DIR = repo_path("models")
+METRICS_PATH = repo_path(paths["engineered_metrics"])
+MODEL_PATH = repo_path(paths["engineered_model"])
+
+TARGET = train_config["target"]
+DROP_COLS = set(train_config["drop_cols_engineered"])
+TRAIN_FRACTION = train_config["train_fraction"]
+DECISION_THRESHOLD = train_config["decision_threshold"]
+RANDOM_STATE = train_config["random_state"]
 
 
 def prepare_features(
@@ -95,24 +102,28 @@ def main() -> None:
 
     scale_pos_weight = float((y_train == 0).sum() / max((y_train == 1).sum(), 1))
     model = lgb.LGBMClassifier(
-        objective="binary",
-        n_estimators=500,
-        learning_rate=0.05,
-        num_leaves=64,
-        subsample=0.8,
-        colsample_bytree=0.8,
+        objective=lgb_config["objective"],
+        n_estimators=lgb_config["n_estimators"],
+        learning_rate=lgb_config["learning_rate"],
+        num_leaves=lgb_config["num_leaves"],
+        subsample=lgb_config["subsample"],
+        colsample_bytree=lgb_config["colsample_bytree"],
         scale_pos_weight=scale_pos_weight,
         random_state=RANDOM_STATE,
-        n_jobs=-1,
-        verbose=-1,
+        n_jobs=lgb_config["n_jobs"],
+        verbose=lgb_config["verbose"],
     )
     model.fit(
         x_train,
         y_train,
         categorical_feature=cat_cols,
         eval_set=[(x_test, y_test)],
-        eval_metric="average_precision",
-        callbacks=[lgb.early_stopping(stopping_rounds=50, verbose=False)],
+        eval_metric=lgb_config["eval_metric"],
+        callbacks=[
+            lgb.early_stopping(
+                stopping_rounds=lgb_config["early_stopping_rounds"], verbose=False
+            )
+        ],
     )
 
     y_score = model.predict_proba(x_test)[:, 1]

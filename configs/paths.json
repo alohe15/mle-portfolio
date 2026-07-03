@@ -1,0 +1,14 @@
+{
+  "raw_dir": "data/raw",
+  "processed_dir": "data/processed",
+  "train_transaction_csv": "data/raw/train_transaction.csv",
+  "train_identity_csv": "data/raw/train_identity.csv",
+  "train_merged_parquet": "data/processed/train_merged.parquet",
+  "train_featured_parquet": "data/processed/train_featured.parquet",
+  "test_featured_parquet": "data/processed/test_featured.parquet",
+  "engineered_feature_names": "data/processed/engineered_feature_names.txt",
+  "baseline_model": "models/baseline_lightgbm.txt",
+  "baseline_metrics": "models/baseline_lightgbm_metrics.json",
+  "engineered_model": "models/engineered_lightgbm.txt",
+  "engineered_metrics": "models/engineered_lightgbm_metrics.json"
+}
