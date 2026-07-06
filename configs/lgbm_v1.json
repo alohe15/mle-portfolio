@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Raw baseline — all 432 merged columns, no engineered features",
+  "description": "Raw baseline — all raw merged columns, no engineered features",
   "parent_version": null,
   "dataset_version": 1,
   "dataset_config_path": "configs/dataset_v1.json",
@@ -14,12 +14,9 @@
     "metric": "average_precision",
     "n_estimators": 1000,
     "learning_rate": 0.05,
-    "num_leaves": 64,
-    "subsample": 0.8,
-    "colsample_bytree": 0.8,
-    "scale_pos_weight": 27.46,
+    "num_leaves": 63,
+    "scale_pos_weight": 27.0,
     "early_stopping_rounds": 100,
-    "n_jobs": -1,
     "verbose": -1
   },
   "early_stopping": {
