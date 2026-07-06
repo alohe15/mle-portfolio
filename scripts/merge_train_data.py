@@ -1,19 +1,16 @@
 from pathlib import Path
-import sys
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from load_config import load_config, repo_path
+REPO_ROOT = Path(__file__).resolve().parent.parent
+RAW_DIR = REPO_ROOT / "data" / "raw"
 
-paths = load_config("paths")
-
-train_transaction = pd.read_csv(repo_path(paths["train_transaction_csv"]))
-train_identity = pd.read_csv(repo_path(paths["train_identity_csv"]))
+train_transaction = pd.read_csv(RAW_DIR / "train_transaction.csv")
+train_identity = pd.read_csv(RAW_DIR / "train_identity.csv")
 
 merged = train_transaction.merge(train_identity, on="TransactionID", how="left")
 
-output_path = repo_path(paths["train_merged_parquet"])
+output_path = RAW_DIR / "train_merged.parquet"
 output_path.parent.mkdir(parents=True, exist_ok=True)
 merged.to_parquet(output_path, index=False)
 

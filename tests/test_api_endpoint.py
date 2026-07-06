@@ -19,8 +19,7 @@ from urllib import error, request
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PATHS = json.loads((REPO_ROOT / "configs" / "paths.json").read_text())
-DATA_PATH = REPO_ROOT / PATHS["train_merged_parquet"]
+DATA_PATH = REPO_ROOT / "data" / "raw" / "train_merged.parquet"
 PAYLOAD_PATH = REPO_ROOT / "tests" / "fixtures" / "test_payload.json"
 DEFAULT_API_URL = "http://127.0.0.1:8000/predict"
 

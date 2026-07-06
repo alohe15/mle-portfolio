@@ -222,13 +222,21 @@ __marimo__/
 # Data (raw inputs and processed artifacts — not code)
 data/raw/*
 !data/raw/.gitkeep
-data/processed/*
+# Processed datasets (parquet binaries gitignored; manifests and feature lists tracked)
+data/processed/**/*.parquet
 !data/processed/.gitkeep
+!data/processed/*_manifest.json
+!data/processed/feature_list_*.json
 
 # Test fixtures generated at runtime
 tests/fixtures/
 
-# Trained model artifacts (stored locally in models/)
-models/**/*
+# Trained model binaries (metrics, manifests, and registry tracked)
+models/**/*.txt
+models/**/*.pkl
 !models/.gitkeep
 !models/README.md
+!models/registry.json
+!models/*_metrics.json
+!models/*_manifest.json
+.DS_Store

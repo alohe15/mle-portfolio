@@ -1,0 +1,12 @@
+{
+  "dataset_version": 1,
+  "description": "Raw left merge of train_transaction and train_identity on TransactionID — no feature engineering",
+  "parent_version": null,
+  "raw_source": "data/raw/train_merged.parquet",
+  "output_path": "data/processed/dataset_v1_raw_merged.parquet",
+  "transformations": [],
+  "dropped_columns": [],
+  "drop_reasons": {},
+  "inherited_transformations_from": null,
+  "final_column_count": 434
+}

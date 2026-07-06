@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "description": "Raw baseline — all 432 merged columns, no engineered features",
+  "parent_version": null,
+  "dataset_version": 1,
+  "dataset_config_path": "configs/dataset_v1.json",
+  "split": {
+    "method": "temporal",
+    "train_fraction": 0.8,
+    "sort_column": "TransactionDT"
+  },
+  "lgbm_params": {
+    "objective": "binary",
+    "metric": "average_precision",
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "num_leaves": 64,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "scale_pos_weight": 27.46,
+    "early_stopping_rounds": 100,
+    "n_jobs": -1,
+    "verbose": -1
+  },
+  "early_stopping": {
+    "metric": "average_precision",
+    "patience": 100,
+    "min_delta": 0.0
+  }
+}
