@@ -1,4 +1,4 @@
-"""Bootstrap significance test for AUC-PR differences between model versions.
+"""Bootstrap significance test for metric differences between model versions.
 
 Usage:
     python evals/bootstrap_significance.py --baseline 1 --candidate 2
@@ -29,6 +29,7 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from train import (
     collect_all_transformations,
+    evaluate_at_flag_rate,
     find_dataset_manifest,
     load_json,
     parquet_path_from_manifest,
@@ -79,22 +80,22 @@ def apply_requires_fit_transforms(
             continue
 
         name = transform["name"]
+        params = transform.get("params", {})
         if name in fitted_transforms:
             encoder = fitted_transforms[name]
-            train_df = encoder.transform(train_df)
-            test_df = encoder.transform(test_df)
+            train_df = encoder.transform(train_df, params)
+            test_df = encoder.transform(test_df, params)
             continue
 
         obj = resolve_transform(transform["function"])
-        params = transform.get("params", {})
         if not inspect.isclass(obj):
             raise ValueError(
                 f"Transformation {name!r} requires fit/transform but is not a class"
             )
-        instance = obj(**params) if params else obj()
-        instance.fit(train_df)
-        train_df = instance.transform(train_df)
-        test_df = instance.transform(test_df)
+        instance = obj()
+        instance.fit(train_df, params)
+        train_df = instance.transform(train_df, params)
+        test_df = instance.transform(test_df, params)
 
     return train_df, test_df
 
@@ -178,6 +179,52 @@ def bootstrap_auc_pr_differences(
     return baseline_values, candidate_values, differences
 
 
+def bootstrap_recall_at_budget_differences(
+    y_true: np.ndarray,
+    baseline_scores: np.ndarray,
+    candidate_scores: np.ndarray,
+    flag_rate: float,
+    n_iterations: int,
+    random_state: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Bootstrap recall at a fixed prevalence-matched flag rate (training fraud rate)."""
+    rng = np.random.default_rng(random_state)
+    n_rows = len(y_true)
+    baseline_values = np.empty(n_iterations, dtype=float)
+    candidate_values = np.empty(n_iterations, dtype=float)
+    differences = np.empty(n_iterations, dtype=float)
+
+    for iteration in range(n_iterations):
+        sample_idx = rng.integers(0, n_rows, size=n_rows)
+        y_sample = y_true[sample_idx]
+        baseline_sample = baseline_scores[sample_idx]
+        candidate_sample = candidate_scores[sample_idx]
+
+        baseline_recall = evaluate_at_flag_rate(y_sample, baseline_sample, flag_rate)["recall"]
+        candidate_recall = evaluate_at_flag_rate(y_sample, candidate_sample, flag_rate)["recall"]
+        baseline_values[iteration] = baseline_recall
+        candidate_values[iteration] = candidate_recall
+        differences[iteration] = candidate_recall - baseline_recall
+
+    return baseline_values, candidate_values, differences
+
+
+def summarize_bootstrap_differences(
+    baseline_values: np.ndarray,
+    candidate_values: np.ndarray,
+    differences: np.ndarray,
+) -> dict[str, float | str]:
+    ci_low, ci_high = np.percentile(differences, [2.5, 97.5])
+    return {
+        "mean_baseline": float(np.mean(baseline_values)),
+        "mean_candidate": float(np.mean(candidate_values)),
+        "mean_difference": float(np.mean(differences)),
+        "ci_low": float(ci_low),
+        "ci_high": float(ci_high),
+        "verdict": classify_result(float(ci_low), float(ci_high)),
+    }
+
+
 def classify_result(ci_low: float, ci_high: float) -> str:
     if ci_low > 0:
         return "statistically significant improvement"
@@ -214,40 +261,65 @@ def run_significance_test(baseline_version: int, candidate_version: int) -> None
         candidate_entry, candidate_train, candidate_test, candidate_target
     )
 
-    baseline_boot, candidate_boot, differences = bootstrap_auc_pr_differences(
+    train_fraud_rate = float(baseline_train[baseline_target].mean())
+
+    baseline_auc_boot, candidate_auc_boot, auc_differences = bootstrap_auc_pr_differences(
         y_test,
         baseline_scores,
         candidate_scores,
         n_iterations=N_BOOTSTRAP,
         random_state=RANDOM_STATE,
     )
+    auc_summary = summarize_bootstrap_differences(
+        baseline_auc_boot, candidate_auc_boot, auc_differences
+    )
 
-    mean_baseline = float(np.mean(baseline_boot))
-    mean_candidate = float(np.mean(candidate_boot))
-    mean_difference = float(np.mean(differences))
-    ci_low, ci_high = np.percentile(differences, [2.5, 97.5])
-    ci_low = float(ci_low)
-    ci_high = float(ci_high)
-    verdict = classify_result(ci_low, ci_high)
+    baseline_recall_boot, candidate_recall_boot, recall_differences = (
+        bootstrap_recall_at_budget_differences(
+            y_test,
+            baseline_scores,
+            candidate_scores,
+            flag_rate=train_fraud_rate,
+            n_iterations=N_BOOTSTRAP,
+            random_state=RANDOM_STATE,
+        )
+    )
+    recall_summary = summarize_bootstrap_differences(
+        baseline_recall_boot, candidate_recall_boot, recall_differences
+    )
 
-    print("Bootstrap AUC-PR Significance Test")
+    print("Bootstrap Significance Test")
     print("=" * 64)
     print(f"Baseline version:   v{baseline_version} ({baseline_entry['description']})")
     print(f"Candidate version:  v{candidate_version} ({candidate_entry['description']})")
     print(f"Test rows:          {len(y_test):,}")
     print(f"Bootstrap samples:  {N_BOOTSTRAP}")
+    print(f"Recall flag rate:   {train_fraud_rate:.4%} (training-set fraud rate)")
     print()
-    print(f"Mean AUC-PR (baseline):   {mean_baseline:.4f}")
-    print(f"Mean AUC-PR (candidate):  {mean_candidate:.4f}")
-    print(f"Mean difference:          {mean_difference:+.4f}")
-    print(f"95% CI for difference:    [{ci_low:+.4f}, {ci_high:+.4f}]")
+    print("AUC-PR")
+    print("-" * 64)
+    print(f"Mean (baseline):          {auc_summary['mean_baseline']:.4f}")
+    print(f"Mean (candidate):         {auc_summary['mean_candidate']:.4f}")
+    print(f"Mean difference:          {auc_summary['mean_difference']:+.4f}")
+    print(
+        f"95% CI for difference:    [{auc_summary['ci_low']:+.4f}, {auc_summary['ci_high']:+.4f}]"
+    )
+    print(f"Result:                   {auc_summary['verdict']}")
     print()
-    print(f"Result: {verdict}")
+    print("Recall @ budget")
+    print("-" * 64)
+    print(f"Mean (baseline):          {recall_summary['mean_baseline']:.4f}")
+    print(f"Mean (candidate):         {recall_summary['mean_candidate']:.4f}")
+    print(f"Mean difference:          {recall_summary['mean_difference']:+.4f}")
+    print(
+        f"95% CI for difference:    [{recall_summary['ci_low']:+.4f}, {recall_summary['ci_high']:+.4f}]"
+    )
+    print(f"Result:                   {recall_summary['verdict']}")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Bootstrap test for AUC-PR difference between two model versions."
+        description="Bootstrap test for AUC-PR and recall@budget differences between two model versions."
     )
     parser.add_argument(
         "--baseline",

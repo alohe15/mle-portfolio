@@ -348,10 +348,10 @@ def apply_requires_fit_transforms(
         # .fit(train_df) and .transform(df) methods, following the
         # sklearn-style pattern. Plain functions can't hold fitted state.
         if inspect.isclass(obj):
-            instance = obj(**params) if params else obj()
-            instance.fit(train_df)
-            train_df = instance.transform(train_df)
-            test_df = instance.transform(test_df)
+            instance = obj()
+            instance.fit(train_df, params)
+            train_df = instance.transform(train_df, params)
+            test_df = instance.transform(test_df, params)
             fitted[name] = instance
             continue
 
@@ -573,6 +573,13 @@ def train_model(config_path: Path) -> None:
         train_df, test_df, dataset_config
     )
 
+    for _, transform in collect_all_transformations(dataset_config):
+        if not transform.get("requires_fit"):
+            continue
+        for col in transform.get("output_columns", []):
+            if col not in feature_list:
+                feature_list.append(col)
+
     # -----------------------------------------------------------------------
     # Step 5: Prepare feature matrices and target arrays
     # -----------------------------------------------------------------------
@@ -750,7 +757,7 @@ def train_model(config_path: Path) -> None:
             "config_path": repo_relative_path(config_path.resolve()),
             "dataset_config_path": model_config["dataset_config_path"],
             "created_at": metrics_doc["timestamp"],
-            "is_serving": True,
+            "is_serving": model_config.get("is_serving", False),
         }
     )
 

@@ -100,22 +100,22 @@ def apply_requires_fit_transforms(
             continue
 
         name = transform["name"]
+        params = transform.get("params", {})
         if name in fitted_transforms:
             encoder = fitted_transforms[name]
-            train_df = encoder.transform(train_df)
-            test_df = encoder.transform(test_df)
+            train_df = encoder.transform(train_df, params)
+            test_df = encoder.transform(test_df, params)
             continue
 
         obj = resolve_transform(transform["function"])
-        params = transform.get("params", {})
         if not inspect.isclass(obj):
             raise ValueError(
                 f"Transformation {name!r} requires fit/transform but is not a class"
             )
-        instance = obj(**params) if params else obj()
-        instance.fit(train_df)
-        train_df = instance.transform(train_df)
-        test_df = instance.transform(test_df)
+        instance = obj()
+        instance.fit(train_df, params)
+        train_df = instance.transform(train_df, params)
+        test_df = instance.transform(test_df, params)
 
     return train_df, test_df
 

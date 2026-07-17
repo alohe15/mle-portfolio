@@ -1,0 +1,2306 @@
+{
+  "dataset_version": 2,
+  "created_at": "2026-07-06T23:05:18Z",
+  "config_path": "configs/dataset_v2.json",
+  "row_count": 590540,
+  "column_count": 457,
+  "columns": {
+    "TransactionID": {
+      "dtype": "int64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "isFraud": {
+      "dtype": "int64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "TransactionDT": {
+      "dtype": "int64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "TransactionAmt": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "ProductCD": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "card1": {
+      "dtype": "int64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "card2": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.015126833068039422
+    },
+    "card3": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0026501168422122124
+    },
+    "card4": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.00267043722694483
+    },
+    "card5": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.007212043214684865
+    },
+    "card6": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.0026602770345785214
+    },
+    "addr1": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1112642666034477
+    },
+    "addr2": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1112642666034477
+    },
+    "dist1": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.596523520845328
+    },
+    "dist2": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9362837403054831
+    },
+    "P_emaildomain": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.1599485216920107
+    },
+    "R_emaildomain": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7675161716395164
+    },
+    "C1": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C2": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C3": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C4": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C5": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C6": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C7": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C8": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C9": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C10": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C11": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C12": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C13": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "C14": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0
+    },
+    "D1": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "D2": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.4754919226470688
+    },
+    "D3": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.44514850814508755
+    },
+    "D4": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2860466691502693
+    },
+    "D5": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.524674027161581
+    },
+    "D6": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8760676668811597
+    },
+    "D7": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9340992989467267
+    },
+    "D8": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8731229044603245
+    },
+    "D9": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8731229044603245
+    },
+    "D10": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1287330240119213
+    },
+    "D11": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "D12": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8904104717715988
+    },
+    "D13": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8950926270870728
+    },
+    "D14": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8946946862193924
+    },
+    "D15": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1509008703898127
+    },
+    "M1": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.4590713584177194
+    },
+    "M2": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.4590713584177194
+    },
+    "M3": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.4590713584177194
+    },
+    "M4": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.47658753005723575
+    },
+    "M5": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.5934940901547736
+    },
+    "M6": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.28678836319300977
+    },
+    "M7": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.5863531682866528
+    },
+    "M8": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.5863311545365258
+    },
+    "M9": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.5863311545365258
+    },
+    "V1": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V2": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V3": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V4": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V5": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V6": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V7": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V8": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V9": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V10": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V11": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.47293494090154775
+    },
+    "V12": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V13": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V14": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V15": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V16": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V17": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V18": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V19": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V20": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V21": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V22": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V23": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V24": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V25": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V26": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V27": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V28": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V29": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V30": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V31": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V32": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V33": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V34": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.1288193856470349
+    },
+    "V35": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V36": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V37": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V38": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V39": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V40": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V41": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V42": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V43": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V44": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V45": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V46": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V47": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V48": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V49": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V50": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V51": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V52": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.2861262573238053
+    },
+    "V53": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V54": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V55": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V56": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V57": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V58": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V59": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V60": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V61": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V62": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V63": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V64": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V65": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V66": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V67": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V68": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V69": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V70": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V71": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V72": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V73": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V74": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.13055169844549055
+    },
+    "V75": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V76": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V77": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V78": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V79": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V80": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V81": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V82": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V83": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V84": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V85": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V86": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V87": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V88": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V89": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V90": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V91": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V92": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V93": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V94": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.15098723202492634
+    },
+    "V95": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V96": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V97": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V98": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V99": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V100": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V101": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V102": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V103": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V104": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V105": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V106": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V107": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V108": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V109": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V110": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V111": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V112": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V113": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V114": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V115": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V116": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V117": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V118": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V119": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V120": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V121": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V122": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V123": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V124": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V125": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V126": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V127": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V128": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V129": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V130": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V131": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V132": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V133": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V134": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V135": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V136": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V137": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0005317167338368274
+    },
+    "V138": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V139": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V140": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V141": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V142": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V143": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V144": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V145": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V146": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V147": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V148": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V149": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V150": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V151": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V152": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V153": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V154": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V155": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V156": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V157": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V158": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V159": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V160": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V161": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V162": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V163": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612371727571375
+    },
+    "V164": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V165": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V166": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8612270125647712
+    },
+    "V167": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V168": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V169": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V170": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V171": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V172": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V173": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V174": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V175": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V176": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V177": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V178": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V179": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V180": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V181": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V182": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V183": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V184": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V185": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V186": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V187": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V188": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V189": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V190": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V191": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V192": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V193": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V194": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V195": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V196": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V197": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V198": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V199": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V200": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V201": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V202": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V203": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V204": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V205": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V206": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V207": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V208": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V209": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V210": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7632353439225116
+    },
+    "V211": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V212": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V213": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V214": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V215": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V216": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.763553696616656
+    },
+    "V217": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V218": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V219": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V220": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V221": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V222": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V223": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V224": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V225": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V226": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V227": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V228": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V229": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V230": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V231": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V232": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V233": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V234": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V235": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V236": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V237": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V238": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V239": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V240": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V241": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V242": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V243": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V244": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V245": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V246": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V247": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V248": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V249": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V250": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V251": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V252": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V253": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V254": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V255": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V256": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V257": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V258": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V259": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V260": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V261": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V262": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V263": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V264": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V265": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V266": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V267": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V268": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V269": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V270": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V271": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V272": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7605310393876791
+    },
+    "V273": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V274": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V275": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V276": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V277": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V278": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7791343516103905
+    },
+    "V279": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V280": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V281": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V282": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V283": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V284": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V285": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V286": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V287": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V288": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V289": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V290": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V291": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V292": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V293": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V294": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V295": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V296": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V297": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V298": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V299": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V300": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V301": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V302": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V303": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V304": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V305": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V306": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V307": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V308": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V309": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V310": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V311": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V312": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V313": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V314": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V315": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.0021488806854743116
+    },
+    "V316": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V317": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V318": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V319": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V320": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V321": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 2.0320384732617603e-05
+    },
+    "V322": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V323": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V324": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V325": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V326": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V327": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V328": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V329": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V330": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V331": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V332": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V333": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V334": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V335": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V336": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V337": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V338": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "V339": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8605496664070174
+    },
+    "id_01": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7557608290716971
+    },
+    "id_02": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7614522301622244
+    },
+    "id_03": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8876892335828225
+    },
+    "id_04": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8876892335828225
+    },
+    "id_05": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7682375452975243
+    },
+    "id_06": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7682375452975243
+    },
+    "id_07": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9912707013919464
+    },
+    "id_08": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9912707013919464
+    },
+    "id_09": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8731229044603245
+    },
+    "id_10": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8731229044603245
+    },
+    "id_11": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7612727334304196
+    },
+    "id_12": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7557608290716971
+    },
+    "id_13": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7844007179869272
+    },
+    "id_14": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8644562603718631
+    },
+    "id_15": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7612608798726589
+    },
+    "id_16": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7809801198902699
+    },
+    "id_17": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7639973583499847
+    },
+    "id_18": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9236072069631185
+    },
+    "id_19": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7640837199850984
+    },
+    "id_20": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.7641802418125783
+    },
+    "id_21": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9912639279303688
+    },
+    "id_22": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9912469942764249
+    },
+    "id_23": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.9912469942764249
+    },
+    "id_24": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9919615944728554
+    },
+    "id_25": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9913096487960172
+    },
+    "id_26": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.9912571544687913
+    },
+    "id_27": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.9912469942764249
+    },
+    "id_28": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7612727334304196
+    },
+    "id_29": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7612727334304196
+    },
+    "id_30": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.868654113184543
+    },
+    "id_31": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7624513157449114
+    },
+    "id_32": {
+      "dtype": "float64",
+      "origin": "raw",
+      "null_rate": 0.8686185525112609
+    },
+    "id_33": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.8758949436109323
+    },
+    "id_34": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.8682477054898906
+    },
+    "id_35": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7612608798726589
+    },
+    "id_36": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7612608798726589
+    },
+    "id_37": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7612608798726589
+    },
+    "id_38": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7612608798726589
+    },
+    "DeviceType": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7615572188166763
+    },
+    "DeviceInfo": {
+      "dtype": "str",
+      "origin": "raw",
+      "null_rate": 0.7990551021099332
+    },
+    "email_match": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "TransactionAmt_log1p": {
+      "dtype": "float64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "TransactionAmt_cents": {
+      "dtype": "float64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V1_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V2_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V3_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V4_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V5_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V6_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V7_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V8_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V9_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V10_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V11_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V14_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V15_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V16_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V17_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V18_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V19_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V20_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V21_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V22_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    }
+  },
+  "target_column": "isFraud",
+  "fraud_rate": 0.03499000914417313,
+  "feature_list_path": "data/processed/feature_list_v2.json",
+  "requires_fit_columns": [
+    "card1_freq",
+    "addr1_freq",
+    "P_emaildomain_freq",
+    "card2_freq",
+    "uid_tx_count",
+    "uid_amt_mean",
+    "uid_amt_std"
+  ]
+}

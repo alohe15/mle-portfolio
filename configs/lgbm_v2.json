@@ -1,10 +1,11 @@
 {
-  "version": 1,
-  "description": "Raw baseline — all raw merged columns, no engineered features",
-  "is_serving": true,
-  "parent_version": null,
-  "dataset_version": 1,
-  "dataset_config_path": "configs/dataset_v1.json",
+  "version": 2,
+  "short_description": "feature_eng",
+  "description": "Feature engineering migration: email_match, TransactionAmt transforms, missingness indicators, frequency encoding, UID aggregations",
+  "parent_version": 1,
+  "dataset_version": 2,
+  "dataset_config_path": "configs/dataset_v2.json",
+  "is_serving": false,
   "split": {
     "method": "temporal",
     "train_fraction": 0.8,
@@ -13,10 +14,10 @@
   "lgbm_params": {
     "objective": "binary",
     "metric": "average_precision",
-    "n_estimators": 1000,
+    "n_estimators": 2000,
     "learning_rate": 0.05,
     "num_leaves": 63,
-    "scale_pos_weight": 27.0,
+    "scale_pos_weight": null,
     "early_stopping_rounds": 100,
     "verbose": -1
   },
