@@ -1,0 +1,30 @@
+{
+  "version": 3,
+  "short_description": "l1_feature_selection",
+  "description": "L1 regularization (reg_alpha=1.0) for feature selection — drives low-signal feature weights to zero",
+  "parent_version": 2,
+  "dataset_version": 2,
+  "dataset_config_path": "configs/dataset_v2.json",
+  "is_serving": false,
+  "split": {
+    "method": "temporal",
+    "train_fraction": 0.8,
+    "sort_column": "TransactionDT"
+  },
+  "lgbm_params": {
+    "objective": "binary",
+    "metric": "average_precision",
+    "n_estimators": 2000,
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "reg_alpha": 1.0,
+    "scale_pos_weight": null,
+    "early_stopping_rounds": 100,
+    "verbose": -1
+  },
+  "early_stopping": {
+    "metric": "average_precision",
+    "patience": 100,
+    "min_delta": 0.0
+  }
+}
