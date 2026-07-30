@@ -1,0 +1,23 @@
+Bootstrap Significance Test
+================================================================
+Baseline version:   v1 (Raw baseline — all raw merged columns, no engineered features)
+Candidate version:  v4 (Optuna-tuned hyperparameters (100 trials, best trial #65, tune-val AUC-PR=0.5528))
+Test rows:          118,108
+Bootstrap samples:  500
+Recall flag rate:   3.5135% (training-set fraud rate)
+
+AUC-PR
+----------------------------------------------------------------
+Mean (baseline):          0.5512
+Mean (candidate):         0.6310
+Mean difference:          +0.0798
+95% CI for difference:    [+0.0722, +0.0869]
+Result:                   statistically significant improvement
+
+Recall @ budget
+----------------------------------------------------------------
+Mean (baseline):          0.5368
+Mean (candidate):         0.5953
+Mean difference:          +0.0585
+95% CI for difference:    [+0.0482, +0.0683]
+Result:                   statistically significant improvement

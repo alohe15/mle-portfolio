@@ -1,0 +1,119 @@
+{
+  "version": 4,
+  "dataset_version": 2,
+  "description": "Optuna-tuned hyperparameters (100 trials, best trial #65, tune-val AUC-PR=0.5528)",
+  "model_path": "models/lgbm_v4_tuned_hyperparams.txt",
+  "manifest_path": "models/lgbm_v4_tuned_hyperparams_manifest.json",
+  "config_path": "configs/lgbm_v4.json",
+  "timestamp": "2026-07-30T00:13:30Z",
+  "sample": {
+    "split": "test",
+    "n_total": 118108,
+    "n_sampled": 5000,
+    "random_state": 42
+  },
+  "top_n_reported": 20,
+  "top_features": [
+    {
+      "rank": 1,
+      "feature": "C13",
+      "mean_abs_shap": 0.6387103934204463
+    },
+    {
+      "rank": 2,
+      "feature": "P_emaildomain",
+      "mean_abs_shap": 0.36340853737880496
+    },
+    {
+      "rank": 3,
+      "feature": "card1_freq",
+      "mean_abs_shap": 0.30161692167423004
+    },
+    {
+      "rank": 4,
+      "feature": "V70",
+      "mean_abs_shap": 0.2984993713193699
+    },
+    {
+      "rank": 5,
+      "feature": "C1",
+      "mean_abs_shap": 0.2697096438026019
+    },
+    {
+      "rank": 6,
+      "feature": "TransactionAmt",
+      "mean_abs_shap": 0.26334665647526795
+    },
+    {
+      "rank": 7,
+      "feature": "uid_tx_count",
+      "mean_abs_shap": 0.2505467072044601
+    },
+    {
+      "rank": 8,
+      "feature": "TransactionAmt_cents",
+      "mean_abs_shap": 0.24791338458178902
+    },
+    {
+      "rank": 9,
+      "feature": "card1",
+      "mean_abs_shap": 0.24702007754625294
+    },
+    {
+      "rank": 10,
+      "feature": "C14",
+      "mean_abs_shap": 0.24322752079486837
+    },
+    {
+      "rank": 11,
+      "feature": "dist1",
+      "mean_abs_shap": 0.24269121776671818
+    },
+    {
+      "rank": 12,
+      "feature": "uid_amt_mean",
+      "mean_abs_shap": 0.22996740845190217
+    },
+    {
+      "rank": 13,
+      "feature": "addr1",
+      "mean_abs_shap": 0.22680149433646876
+    },
+    {
+      "rank": 14,
+      "feature": "id_31",
+      "mean_abs_shap": 0.21020191237643654
+    },
+    {
+      "rank": 15,
+      "feature": "uid_amt_std",
+      "mean_abs_shap": 0.20969358582119327
+    },
+    {
+      "rank": 16,
+      "feature": "D1",
+      "mean_abs_shap": 0.20589620176319867
+    },
+    {
+      "rank": 17,
+      "feature": "card2_freq",
+      "mean_abs_shap": 0.2053164007066594
+    },
+    {
+      "rank": 18,
+      "feature": "C2",
+      "mean_abs_shap": 0.1983119953547295
+    },
+    {
+      "rank": 19,
+      "feature": "C11",
+      "mean_abs_shap": 0.19652955422402202
+    },
+    {
+      "rank": 20,
+      "feature": "card2",
+      "mean_abs_shap": 0.18822900968590328
+    }
+  ],
+  "figure_path": "evals/figures/lgbm_v4_tuned_hyperparams_shap_top20.png"
+}

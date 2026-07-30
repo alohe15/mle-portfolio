@@ -1,0 +1,23 @@
+Bootstrap Significance Test
+================================================================
+Baseline version:   v2 (Feature engineering migration: email_match, TransactionAmt transforms, missingness indicators, frequency encoding, UID aggregations)
+Candidate version:  v4 (Optuna-tuned hyperparameters (100 trials, best trial #65, tune-val AUC-PR=0.5528))
+Test rows:          118,108
+Bootstrap samples:  500
+Recall flag rate:   3.5135% (training-set fraud rate)
+
+AUC-PR
+----------------------------------------------------------------
+Mean (baseline):          0.5698
+Mean (candidate):         0.6310
+Mean difference:          +0.0612
+95% CI for difference:    [+0.0550, +0.0672]
+Result:                   statistically significant improvement
+
+Recall @ budget
+----------------------------------------------------------------
+Mean (baseline):          0.5453
+Mean (candidate):         0.5953
+Mean difference:          +0.0500
+95% CI for difference:    [+0.0412, +0.0578]
+Result:                   statistically significant improvement
