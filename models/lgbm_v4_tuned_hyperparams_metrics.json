@@ -1,0 +1,26 @@
+{
+  "version": 4,
+  "config_path": "configs/lgbm_v4.json",
+  "dataset_version": 2,
+  "timestamp": "2026-07-30T00:09:02Z",
+  "dataset": {
+    "train_rows": 472432,
+    "test_rows": 118108,
+    "fraud_rate_train": 0.03513521522674162,
+    "fraud_rate_test": 0.034409184813899145
+  },
+  "metrics": {
+    "auc_pr": 0.630892671950055,
+    "auc_roc": 0.9220768966225772,
+    "precision_at_budget": 0.5833734939759037,
+    "recall_at_budget": 0.5957185039370079,
+    "f1_at_budget": 0.589481373265157,
+    "operating_threshold": 0.07907402081788094,
+    "best_iteration": 2999
+  },
+  "training": {
+    "wall_time_seconds": 255.71904025000003,
+    "n_features": 461,
+    "n_estimators_used": 2999
+  }
+}

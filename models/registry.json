@@ -34,5 +34,17 @@
     "dataset_config_path": "configs/dataset_v2.json",
     "created_at": "2026-07-18T19:04:31Z",
     "is_serving": false
+  },
+  {
+    "version": 4,
+    "dataset_version": 2,
+    "description": "Optuna-tuned hyperparameters (100 trials, best trial #65, tune-val AUC-PR=0.5528)",
+    "model_path": "models/lgbm_v4_tuned_hyperparams.txt",
+    "manifest_path": "models/lgbm_v4_tuned_hyperparams_manifest.json",
+    "metrics_path": "models/lgbm_v4_tuned_hyperparams_metrics.json",
+    "config_path": "configs/lgbm_v4.json",
+    "dataset_config_path": "configs/dataset_v2.json",
+    "created_at": "2026-07-30T00:09:02Z",
+    "is_serving": false
   }
 ]
