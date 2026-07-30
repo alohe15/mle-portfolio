@@ -1,0 +1,32 @@
+{
+  "study_name": "lgbm_v4_hyperparam_tuning",
+  "n_trials": 100,
+  "n_trials_complete": 100,
+  "best_trial_number": 65,
+  "best_tune_val_auc_pr": 0.5527726461936123,
+  "best_params": {
+    "bagging_fraction": 0.85,
+    "num_leaves": 127,
+    "min_data_in_leaf": 20,
+    "feature_fraction": 0.5,
+    "reg_alpha": 0.1,
+    "reg_lambda": 0.1,
+    "max_depth": -1,
+    "scale_pos_weight": 27.0,
+    "bagging_freq": 1,
+    "learning_rate": 0.05,
+    "n_estimators": 3000
+  },
+  "best_iteration": 747,
+  "tune_split": {
+    "tune_train_rows_full": 354324,
+    "tune_train_rows_subsampled": 35432,
+    "subsample_fraction": 0.1,
+    "tune_val_rows": 118108,
+    "tune_train_fraud_rate": 0.033839467148340484,
+    "tune_val_fraud_rate": 0.03904053916754157
+  },
+  "seed": 42,
+  "wall_time_seconds": 3033.8414660000008,
+  "base_config": "configs/lgbm_v3.json"
+}
