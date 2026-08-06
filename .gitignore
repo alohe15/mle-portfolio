@@ -239,4 +239,6 @@ models/**/*.pkl
 !models/registry.json
 !models/*_metrics.json
 !models/*_manifest.json
+# Generated evaluation figures (JSON attribution data remains tracked)
+evals/figures/*.png
 .DS_Store
