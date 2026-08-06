@@ -46,5 +46,17 @@
     "dataset_config_path": "configs/dataset_v2.json",
     "created_at": "2026-07-30T00:09:02Z",
     "is_serving": true
+  },
+  {
+    "version": 5,
+    "dataset_version": 2,
+    "description": "Lower learning rate (0.01) with raised tree ceiling (15000) to resolve v4 capacity saturation",
+    "model_path": "models/lgbm_v5_lower_learning_rate.txt",
+    "manifest_path": "models/lgbm_v5_lower_learning_rate_manifest.json",
+    "metrics_path": "models/lgbm_v5_lower_learning_rate_metrics.json",
+    "config_path": "configs/lgbm_v5.json",
+    "dataset_config_path": "configs/dataset_v2.json",
+    "created_at": "2026-08-05T23:36:38Z",
+    "is_serving": false
   }
 ]

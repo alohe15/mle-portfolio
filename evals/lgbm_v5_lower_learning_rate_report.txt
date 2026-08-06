@@ -1,0 +1,93 @@
+════════════════════════════════════════════════════════════════
+         lgbm_v5 — Lower Learning Rate / Capacity Fix
+════════════════════════════════════════════════════════════════
+
+HEADER
+──────
+Branch:           v5-lower-learning-rate
+Dataset:          v2 (unchanged from v4)
+Parent model:     v4 (AUC-PR 0.6309, best_iteration 2999/3000)
+Hypothesis:       Lower learning rate (0.01) + raised ceiling (15000)
+                  resolves v4's tree capacity saturation
+
+METHODOLOGY
+───────────
+• Same dataset_v2, same 461 features
+• Changed: learning_rate 0.05 → 0.01, n_estimators 3000 → 15000
+• All other hyperparameters identical to v4
+• Temporal 80/20 split on TransactionDT
+
+CAPACITY DIAGNOSTIC
+───────────────────
+v4 best_iteration: 2999 / 3000 (saturated)
+v5 best_iteration: 15000 / 15000 (headroom: 0 trees unused)
+Converged naturally: No
+
+PERFORMANCE COMPARISON (v1 → v5)
+────────────────────────────────
+Version  Dataset  Description                          AUC-PR   AUC-ROC   Recall     Prec       F1    Thresh   Iters
+v1       v1       Raw baseline — all raw merged col    0.5511    0.8961   0.5374   0.5263   0.5318    0.5928     953
+v2       v2       Feature engineering migration: em    0.5698    0.8983   0.5460   0.5347   0.5403    0.4893    1321
+v3       v2       L1 regularization (reg_alpha=1.0)    0.5721    0.8978   0.5522   0.5407   0.5464    0.3768    1993
+v4       v2       Optuna-tuned hyperparameters (100    0.6309    0.9221   0.5957   0.5834   0.5895    0.0791    2999
+v5       v2       Lower learning rate (0.01) with r    0.6377    0.9254   0.5999   0.5875   0.5936    0.0740   15000
+
+BOOTSTRAP SIGNIFICANCE (500 iterations)
+───────────────────────────────────────
+v5 vs v1:  Δ AUC-PR = +0.0866 [95% CI: (+0.0796, +0.0938)] — Significant: Yes
+v5 vs v2:  Δ AUC-PR = +0.0680 [95% CI: (+0.0623, +0.0736)] — Significant: Yes
+v5 vs v3:  Δ AUC-PR = +0.0656 [95% CI: (+0.0604, +0.0708)] — Significant: Yes
+v5 vs v4:  Δ AUC-PR = +0.0068 [95% CI: (+0.0046, +0.0093)] — Significant: Yes
+
+⚠️  5 models against same test set. Bonferroni α = 0.0125 for 4 comparisons.
+
+SHAP ATTRIBUTION (Top 20) — if AUC-PR improved
+───────────────────────────────────────────────
+Rank  Feature                   Mean |SHAP|    v4 Rank    Δ Rank
+1     C13                          0.597180          1        +0
+2     P_emaildomain                0.359105          2        +0
+3     card1_freq                   0.278176          3        +0
+4     C1                           0.273609          5        +1
+5     dist1                        0.245068         11        +6
+6     TransactionAmt               0.242850          6        +0
+7     V70                          0.238848          4        -3
+8     C14                          0.237193         10        +2
+9     uid_tx_count                 0.231542          7        -2
+10    TransactionAmt_cents         0.231081          8        -2
+11    card1                        0.229101          9        -2
+12    uid_amt_mean                 0.228773         12        +0
+13    addr1                        0.212193         13        +0
+14    uid_amt_std                  0.209504         15        +1
+15    C11                          0.203351         19        +4
+16    id_31                        0.200085         14        -2
+17    card6                        0.199690          —         —
+18    card2_freq                   0.194332         17        -1
+19    D1                           0.193964         16        -3
+20    C2                           0.190499         18        -2
+
+SERVING DECISION
+────────────────
+Decision:  FLIP
+Rationale: The paired 95% bootstrap CI for v5 − v4 clears zero.
+
+FLAGS
+─────
+• best_iteration: 15000 / 15000
+• Multiple comparisons: 5th model against same holdout
+• Training time: ~41.4m (expected ~5× v4)
+
+NEXT STEPS
+──────────
+• Capacity was not resolved: investigate other bottlenecks
+
+ARTIFACTS
+─────────
+File                                                               Status      Exists?
+configs/lgbm_v5.json                                               committed   ✓
+models/lgbm_v5_lower_learning_rate.txt                             gitignored  ✓
+models/lgbm_v5_lower_learning_rate_metrics.json                    committed   ✓
+models/lgbm_v5_lower_learning_rate_manifest.json                   committed   ✓
+models/lgbm_v5_lower_learning_rate_fitted_transforms.pkl           gitignored  ✓
+models/registry.json                                               committed   ✓
+evals/shap/lgbm_v5_lower_learning_rate_shap.json                   committed   ✓
+════════════════════════════════════════════════════════════════

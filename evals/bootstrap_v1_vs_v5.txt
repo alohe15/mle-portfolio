@@ -1,0 +1,23 @@
+Bootstrap Significance Test
+================================================================
+Baseline version:   v1 (Raw baseline — all raw merged columns, no engineered features)
+Candidate version:  v5 (Lower learning rate (0.01) with raised tree ceiling (15000) to resolve v4 capacity saturation)
+Test rows:          118,108
+Bootstrap samples:  500
+Recall flag rate:   3.5135% (training-set fraud rate)
+
+AUC-PR
+----------------------------------------------------------------
+Mean (baseline):          0.5512
+Mean (candidate):         0.6378
+Mean difference:          +0.0866
+95% CI for difference:    [+0.0796, +0.0938]
+Result:                   statistically significant improvement
+
+Recall @ budget
+----------------------------------------------------------------
+Mean (baseline):          0.5368
+Mean (candidate):         0.5993
+Mean difference:          +0.0625
+95% CI for difference:    [+0.0519, +0.0717]
+Result:                   statistically significant improvement

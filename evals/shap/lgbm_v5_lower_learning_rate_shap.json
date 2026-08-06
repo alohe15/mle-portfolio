@@ -1,0 +1,119 @@
+{
+  "version": 5,
+  "dataset_version": 2,
+  "description": "Lower learning rate (0.01) with raised tree ceiling (15000) to resolve v4 capacity saturation",
+  "model_path": "models/lgbm_v5_lower_learning_rate.txt",
+  "manifest_path": "models/lgbm_v5_lower_learning_rate_manifest.json",
+  "config_path": "configs/lgbm_v5.json",
+  "timestamp": "2026-08-06T00:00:32Z",
+  "sample": {
+    "split": "test",
+    "n_total": 118108,
+    "n_sampled": 5000,
+    "random_state": 42
+  },
+  "top_n_reported": 20,
+  "top_features": [
+    {
+      "rank": 1,
+      "feature": "C13",
+      "mean_abs_shap": 0.5971801369297238
+    },
+    {
+      "rank": 2,
+      "feature": "P_emaildomain",
+      "mean_abs_shap": 0.3591046706193678
+    },
+    {
+      "rank": 3,
+      "feature": "card1_freq",
+      "mean_abs_shap": 0.27817557302151
+    },
+    {
+      "rank": 4,
+      "feature": "C1",
+      "mean_abs_shap": 0.2736093223842536
+    },
+    {
+      "rank": 5,
+      "feature": "dist1",
+      "mean_abs_shap": 0.2450679116547487
+    },
+    {
+      "rank": 6,
+      "feature": "TransactionAmt",
+      "mean_abs_shap": 0.24285029418005694
+    },
+    {
+      "rank": 7,
+      "feature": "V70",
+      "mean_abs_shap": 0.23884794947391327
+    },
+    {
+      "rank": 8,
+      "feature": "C14",
+      "mean_abs_shap": 0.23719283233168525
+    },
+    {
+      "rank": 9,
+      "feature": "uid_tx_count",
+      "mean_abs_shap": 0.23154153177161374
+    },
+    {
+      "rank": 10,
+      "feature": "TransactionAmt_cents",
+      "mean_abs_shap": 0.23108124625440302
+    },
+    {
+      "rank": 11,
+      "feature": "card1",
+      "mean_abs_shap": 0.22910062977989137
+    },
+    {
+      "rank": 12,
+      "feature": "uid_amt_mean",
+      "mean_abs_shap": 0.228772866109069
+    },
+    {
+      "rank": 13,
+      "feature": "addr1",
+      "mean_abs_shap": 0.21219265195506765
+    },
+    {
+      "rank": 14,
+      "feature": "uid_amt_std",
+      "mean_abs_shap": 0.209504347212563
+    },
+    {
+      "rank": 15,
+      "feature": "C11",
+      "mean_abs_shap": 0.20335115111263855
+    },
+    {
+      "rank": 16,
+      "feature": "id_31",
+      "mean_abs_shap": 0.20008452680662991
+    },
+    {
+      "rank": 17,
+      "feature": "card6",
+      "mean_abs_shap": 0.199690372047619
+    },
+    {
+      "rank": 18,
+      "feature": "card2_freq",
+      "mean_abs_shap": 0.19433229543374572
+    },
+    {
+      "rank": 19,
+      "feature": "D1",
+      "mean_abs_shap": 0.19396405121484808
+    },
+    {
+      "rank": 20,
+      "feature": "C2",
+      "mean_abs_shap": 0.19049878220377825
+    }
+  ],
+  "figure_path": "evals/figures/lgbm_v5_lower_learning_rate_shap_top20.png"
+}

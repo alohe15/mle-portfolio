@@ -1,0 +1,23 @@
+Bootstrap Significance Test
+================================================================
+Baseline version:   v3 (L1 regularization (reg_alpha=1.0) for feature selection — drives low-signal feature weights to zero)
+Candidate version:  v5 (Lower learning rate (0.01) with raised tree ceiling (15000) to resolve v4 capacity saturation)
+Test rows:          118,108
+Bootstrap samples:  500
+Recall flag rate:   3.5135% (training-set fraud rate)
+
+AUC-PR
+----------------------------------------------------------------
+Mean (baseline):          0.5723
+Mean (candidate):         0.6378
+Mean difference:          +0.0656
+95% CI for difference:    [+0.0604, +0.0708]
+Result:                   statistically significant improvement
+
+Recall @ budget
+----------------------------------------------------------------
+Mean (baseline):          0.5515
+Mean (candidate):         0.5993
+Mean difference:          +0.0478
+95% CI for difference:    [+0.0399, +0.0558]
+Result:                   statistically significant improvement
