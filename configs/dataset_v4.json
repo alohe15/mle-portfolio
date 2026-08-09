@@ -1,0 +1,50 @@
+{
+  "dataset_version": 4,
+  "description": "D1-normalized UID (card1_addr1_D1n) + UID aggregation features: TransactionAmt/D4/D9/D10/D11/D15 mean+std, C1-C14 mean, M1-M9 mean, D15n std, UID frequency, P_emaildomain/dist1 nunique per UID. Also adds D1n-D15n normalized columns.",
+  "parent_version": 2,
+  "raw_source": "data/raw/train_merged.parquet",
+  "output_path": "data/processed/dataset_v4_uid_d1_aggs.parquet",
+  "transformations": [
+    {
+      "name": "d_normalization",
+      "type": "engineered",
+      "description": "Normalize D1-D15: Dn = floor(TransactionDT/86400 - D_col). Per-client near-constants following Deotte 1st-place methodology.",
+      "inputs": ["TransactionDT", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15"],
+      "output_columns": ["D1n", "D2n", "D3n", "D4n", "D5n", "D6n", "D7n", "D8n", "D9n", "D10n", "D11n", "D12n", "D13n", "D14n", "D15n"],
+      "function": "feature_engineering.normalize_d_columns",
+      "params": {}
+    },
+    {
+      "name": "uid_d1_aggregations",
+      "type": "engineered",
+      "description": "Construct uid = card1_addr1_floor(day-D1). Compute per-UID aggregation features: TransactionAmt/D4/D9/D10/D11/D15 mean+std, C1-C14 mean, M1-M9 mean, D15n std, UID frequency, P_emaildomain/dist1 nunique.",
+      "inputs": ["card1", "addr1", "TransactionDT", "D1", "D4", "D9", "D10", "D11", "D15", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14", "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "TransactionAmt", "P_emaildomain", "dist1", "D15n"],
+      "output_columns": [
+        "uid_d1_fe",
+        "TransactionAmt_uid_d1_mean", "TransactionAmt_uid_d1_std",
+        "D4_uid_d1_mean", "D4_uid_d1_std",
+        "D9_uid_d1_mean", "D9_uid_d1_std",
+        "D10_uid_d1_mean", "D10_uid_d1_std",
+        "D11_uid_d1_mean", "D11_uid_d1_std",
+        "D15_uid_d1_mean", "D15_uid_d1_std",
+        "C1_uid_d1_mean", "C2_uid_d1_mean", "C3_uid_d1_mean", "C4_uid_d1_mean",
+        "C5_uid_d1_mean", "C6_uid_d1_mean", "C7_uid_d1_mean", "C8_uid_d1_mean",
+        "C9_uid_d1_mean", "C10_uid_d1_mean", "C11_uid_d1_mean", "C12_uid_d1_mean",
+        "C13_uid_d1_mean", "C14_uid_d1_mean",
+        "M1_uid_d1_mean", "M2_uid_d1_mean", "M3_uid_d1_mean", "M4_uid_d1_mean",
+        "M5_uid_d1_mean", "M6_uid_d1_mean", "M7_uid_d1_mean", "M8_uid_d1_mean",
+        "M9_uid_d1_mean",
+        "D15n_uid_d1_std",
+        "uid_d1_P_emaildomain_nunique",
+        "uid_d1_dist1_nunique"
+      ],
+      "function": "feature_engineering.UidD1Aggregator",
+      "params": {},
+      "requires_fit": true
+    }
+  ],
+  "dropped_columns": [],
+  "drop_reasons": {},
+  "inherited_transformations_from": 2,
+  "final_column_count": 472
+}

@@ -205,6 +205,163 @@ class UidAggregator:
         return df
 
 
+def normalize_d_columns(df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    """Normalize D1-D15 timedelta columns by subtracting from transaction day.
+
+    For each D column, computes floor(TransactionDT / 86400 - D_col).
+    This converts raw timedeltas into per-client near-constants,
+    following Chris Deotte's 1st-place IEEE-CIS methodology.
+
+    Inputs: TransactionDT, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15
+    Outputs: D1n, D2n, D3n, D4n, D5n, D6n, D7n, D8n, D9n, D10n, D11n, D12n, D13n, D14n, D15n
+    """
+    d_cols = [f"D{i}" for i in range(1, 16)]
+    day = df["TransactionDT"] / np.float32(86400)
+    for d_col in d_cols:
+        if d_col in df.columns:
+            df[f"{d_col}n"] = np.floor(day - df[d_col])
+    return df
+
+
+def _m_column_to_numeric(series: pd.Series) -> pd.Series:
+    """Encode M-column categoricals for numeric aggregation (T/F/M0-M2)."""
+    if pd.api.types.is_numeric_dtype(series):
+        return series.astype("float32")
+    return series.map({"T": 1.0, "F": 0.0, "M0": 0.0, "M1": 1.0, "M2": 2.0}).astype(
+        "float32"
+    )
+
+
+class UidD1Aggregator:
+    """Construct D1-normalized UID and compute UID-level aggregation features.
+
+    UID construction: uid = str(card1) + '_' + str(addr1) + '_' + str(floor(day - D1))
+    where day = TransactionDT / 86400.
+
+    This follows Chris Deotte's 1st-place IEEE-CIS methodology. The UID itself
+    is used only as a grouping key and is NOT included as a model feature.
+
+    Aggregation features computed per UID:
+    - TransactionAmt: mean, std
+    - D4, D9, D10, D11, D15 (raw values): mean, std
+    - C1-C14: mean
+    - M1-M9: mean (T/F/M0-M2 encoded to numeric for aggregation only)
+    - D15n (normalized): std  (confidence signal: std=0 implies single client)
+    - UID frequency (count)
+    - P_emaildomain nunique per UID
+    - dist1 nunique per UID
+
+    Inputs: card1, addr1, TransactionDT, D1, D4, D9, D10, D11, D15,
+            C1-C14, M1-M9, TransactionAmt, P_emaildomain, dist1, D15n
+    Outputs: uid_d1_fe,
+             TransactionAmt_uid_d1_mean, TransactionAmt_uid_d1_std,
+             D4_uid_d1_mean, D4_uid_d1_std,
+             D9_uid_d1_mean, D9_uid_d1_std,
+             D10_uid_d1_mean, D10_uid_d1_std,
+             D11_uid_d1_mean, D11_uid_d1_std,
+             D15_uid_d1_mean, D15_uid_d1_std,
+             C1_uid_d1_mean, C2_uid_d1_mean, ..., C14_uid_d1_mean,
+             M1_uid_d1_mean, M2_uid_d1_mean, ..., M9_uid_d1_mean,
+             D15n_uid_d1_std,
+             uid_d1_P_emaildomain_nunique,
+             uid_d1_dist1_nunique
+
+    requires_fit: true
+    """
+
+    def __init__(self) -> None:
+        self.params: dict = {}
+        self.agg_tables: dict[str, pd.Series] = {}
+        self.uid_freq: pd.Series | None = None
+        self.nunique_tables: dict[str, pd.Series] = {}
+
+    def _build_uid(self, df: pd.DataFrame) -> pd.Series:
+        """Construct the D1-normalized UID string. Internal helper."""
+        day = df["TransactionDT"] / np.float32(86400)
+        d1n = np.floor(day - df["D1"])
+        return (
+            df["card1"].astype(str)
+            + "_"
+            + df["addr1"].astype(str)
+            + "_"
+            + d1n.astype(str)
+        )
+
+    def fit(self, train_df: pd.DataFrame, params: dict | None = None) -> UidD1Aggregator:
+        """Compute all aggregation lookup tables from training data only."""
+        self.params = params or {}
+        uid = self._build_uid(train_df)
+
+        # --- Frequency encoding ---
+        self.uid_freq = uid.value_counts()
+
+        # --- Numeric aggregations (mean, std) ---
+        agg_cols_mean_std = {
+            "TransactionAmt": ["mean", "std"],
+            "D4": ["mean", "std"],
+            "D9": ["mean", "std"],
+            "D10": ["mean", "std"],
+            "D11": ["mean", "std"],
+            "D15": ["mean", "std"],
+        }
+        for col, stats in agg_cols_mean_std.items():
+            if col not in train_df.columns:
+                continue
+            grouped = train_df.groupby(uid)[col]
+            for stat in stats:
+                key = f"{col}_uid_d1_{stat}"
+                self.agg_tables[key] = grouped.agg(stat)
+
+        # --- C-feature means ---
+        for i in range(1, 15):
+            col = f"C{i}"
+            if col in train_df.columns:
+                key = f"{col}_uid_d1_mean"
+                self.agg_tables[key] = train_df.groupby(uid)[col].mean()
+
+        # --- M-feature means (encode categoricals for aggregation only) ---
+        for i in range(1, 10):
+            col = f"M{i}"
+            if col in train_df.columns:
+                key = f"{col}_uid_d1_mean"
+                m_numeric = _m_column_to_numeric(train_df[col])
+                self.agg_tables[key] = m_numeric.groupby(uid).mean()
+
+        # --- D15n std (client confidence signal) ---
+        if "D15n" in train_df.columns:
+            self.agg_tables["D15n_uid_d1_std"] = train_df.groupby(uid)["D15n"].std()
+
+        # --- Nunique counts ---
+        for col in ["P_emaildomain", "dist1"]:
+            if col in train_df.columns:
+                key = f"uid_d1_{col}_nunique"
+                self.nunique_tables[key] = train_df.groupby(uid)[col].nunique()
+
+        return self
+
+    def transform(self, df: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
+        """Apply fitted lookup tables to any DataFrame."""
+        if self.uid_freq is None:
+            raise RuntimeError("UidD1Aggregator.transform called before fit")
+
+        uid = self._build_uid(df)
+
+        # Frequency encoding
+        df["uid_d1_fe"] = uid.map(self.uid_freq).fillna(0).astype("float32")
+
+        # Numeric aggregations
+        for key, lookup in self.agg_tables.items():
+            df[key] = uid.map(lookup).astype("float32")
+            # NaN for unseen UIDs — LightGBM handles natively
+
+        # Nunique counts
+        for key, lookup in self.nunique_tables.items():
+            df[key] = uid.map(lookup).astype("float32")
+
+        # Do NOT add uid column itself — it is a grouping key, not a feature
+        return df
+
+
 def create_both_emails_present(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     """Flag rows where both payer and recipient email domains are present.
 
