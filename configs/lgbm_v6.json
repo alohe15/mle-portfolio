@@ -1,0 +1,36 @@
+{
+  "version": 6,
+  "short_description": "dn_only",
+  "description": "D-normalization only (D1n-D15n), no UID aggregations. Isolates validated D-normalization signal. Same hyperparameters as v5.",
+  "parent_version": 5,
+  "dataset_version": 3,
+  "dataset_config_path": "configs/dataset_v3.json",
+  "is_serving": false,
+  "split": {
+    "method": "temporal",
+    "train_fraction": 0.8,
+    "sort_column": "TransactionDT"
+  },
+  "lgbm_params": {
+    "objective": "binary",
+    "metric": "average_precision",
+    "n_estimators": 15000,
+    "learning_rate": 0.01,
+    "num_leaves": 127,
+    "min_data_in_leaf": 20,
+    "feature_fraction": 0.5,
+    "bagging_fraction": 0.85,
+    "bagging_freq": 1,
+    "reg_alpha": 0.1,
+    "reg_lambda": 0.1,
+    "max_depth": -1,
+    "scale_pos_weight": 27.0,
+    "early_stopping_rounds": 100,
+    "verbose": -1
+  },
+  "early_stopping": {
+    "metric": "average_precision",
+    "patience": 100,
+    "min_delta": 0.0
+  }
+}

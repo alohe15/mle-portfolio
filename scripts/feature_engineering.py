@@ -524,5 +524,26 @@ def main() -> None:
     print(f"Saved {len(new_feature_cols)} engineered feature names to {feature_names_path}")
 
 
+def normalize_d_columns(df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    """Normalize D1-D15 timedelta columns by subtracting from transaction day.
+
+    Computes floor(TransactionDT / 86400 - D_col) for each D column.
+    This converts raw timedeltas into per-client near-constants,
+    following Chris Deotte's 1st-place IEEE-CIS methodology.
+    D1 was discovered to represent 'days since credit card first used';
+    normalizing it yields a value approximately constant per client.
+    The same logic applies to D2-D15 with varying specificity.
+
+    Inputs: TransactionDT, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15
+    Outputs: D1n, D2n, D3n, D4n, D5n, D6n, D7n, D8n, D9n, D10n, D11n, D12n, D13n, D14n, D15n
+    """
+    d_cols = [f"D{i}" for i in range(1, 16)]
+    day = df["TransactionDT"] / np.float32(86400)
+    for d_col in d_cols:
+        if d_col in df.columns:
+            df[f"{d_col}n"] = np.floor(day - df[d_col])
+    return df
+
+
 if __name__ == "__main__":
     main()

@@ -1,0 +1,275 @@
+{
+  "version": 6,
+  "dataset_version": 3,
+  "description": "D-normalization only (D1n-D15n), no UID aggregations. Isolates validated D-normalization signal. Same hyperparameters as v5.",
+  "model_path": "models/lgbm_v6_dn_only.txt",
+  "manifest_path": "models/lgbm_v6_dn_only_manifest.json",
+  "config_path": "configs/lgbm_v6.json",
+  "timestamp": "2026-08-10T00:14:51Z",
+  "sample": {
+    "split": "test",
+    "n_total": 118108,
+    "n_sampled": 5000,
+    "random_state": 42
+  },
+  "top_n_reported": 30,
+  "top_features": [
+    {
+      "rank": 1,
+      "feature": "C13",
+      "mean_abs_shap": 0.5009246343468355
+    },
+    {
+      "rank": 2,
+      "feature": "D10n",
+      "mean_abs_shap": 0.3702301986201572
+    },
+    {
+      "rank": 3,
+      "feature": "P_emaildomain",
+      "mean_abs_shap": 0.32121249967657345
+    },
+    {
+      "rank": 4,
+      "feature": "D11n",
+      "mean_abs_shap": 0.2791505006481619
+    },
+    {
+      "rank": 5,
+      "feature": "card1_freq",
+      "mean_abs_shap": 0.2507135318855138
+    },
+    {
+      "rank": 6,
+      "feature": "dist1",
+      "mean_abs_shap": 0.23766653635312388
+    },
+    {
+      "rank": 7,
+      "feature": "TransactionAmt",
+      "mean_abs_shap": 0.22098858639082627
+    },
+    {
+      "rank": 8,
+      "feature": "C14",
+      "mean_abs_shap": 0.20918246216329098
+    },
+    {
+      "rank": 9,
+      "feature": "card1",
+      "mean_abs_shap": 0.19863631312779872
+    },
+    {
+      "rank": 10,
+      "feature": "D1n",
+      "mean_abs_shap": 0.1946114354444234
+    },
+    {
+      "rank": 11,
+      "feature": "TransactionAmt_cents",
+      "mean_abs_shap": 0.1926024101324306
+    },
+    {
+      "rank": 12,
+      "feature": "C1",
+      "mean_abs_shap": 0.1852838090986893
+    },
+    {
+      "rank": 13,
+      "feature": "uid_amt_mean",
+      "mean_abs_shap": 0.1831706812073686
+    },
+    {
+      "rank": 14,
+      "feature": "card2_freq",
+      "mean_abs_shap": 0.18054136785790784
+    },
+    {
+      "rank": 15,
+      "feature": "V70",
+      "mean_abs_shap": 0.1767320397352485
+    },
+    {
+      "rank": 16,
+      "feature": "card6",
+      "mean_abs_shap": 0.17647894345242693
+    },
+    {
+      "rank": 17,
+      "feature": "DeviceInfo",
+      "mean_abs_shap": 0.17318984839182497
+    },
+    {
+      "rank": 18,
+      "feature": "C11",
+      "mean_abs_shap": 0.17056119519470678
+    },
+    {
+      "rank": 19,
+      "feature": "id_31",
+      "mean_abs_shap": 0.16310841373737273
+    },
+    {
+      "rank": 20,
+      "feature": "addr1",
+      "mean_abs_shap": 0.16218653816434256
+    },
+    {
+      "rank": 21,
+      "feature": "D4n",
+      "mean_abs_shap": 0.15844596816980192
+    },
+    {
+      "rank": 22,
+      "feature": "C2",
+      "mean_abs_shap": 0.15645135771071295
+    },
+    {
+      "rank": 23,
+      "feature": "M5",
+      "mean_abs_shap": 0.15423644252823834
+    },
+    {
+      "rank": 24,
+      "feature": "D15n",
+      "mean_abs_shap": 0.14585524667159291
+    },
+    {
+      "rank": 25,
+      "feature": "id_30",
+      "mean_abs_shap": 0.1430736291065216
+    },
+    {
+      "rank": 26,
+      "feature": "uid_amt_std",
+      "mean_abs_shap": 0.141667235153223
+    },
+    {
+      "rank": 27,
+      "feature": "card2",
+      "mean_abs_shap": 0.13977603542312284
+    },
+    {
+      "rank": 28,
+      "feature": "ProductCD",
+      "mean_abs_shap": 0.13702961741194633
+    },
+    {
+      "rank": 29,
+      "feature": "C5",
+      "mean_abs_shap": 0.1297226778391076
+    },
+    {
+      "rank": 30,
+      "feature": "V82",
+      "mean_abs_shap": 0.12791831761784836
+    }
+  ],
+  "dn_features": [
+    {
+      "feature": "D1n",
+      "shap_rank": 10,
+      "mean_abs_shap": 0.1946114354444234,
+      "gain_rank": 2,
+      "gain_pct": 2.8960044406386958
+    },
+    {
+      "feature": "D2n",
+      "shap_rank": 31,
+      "mean_abs_shap": 0.12710331278853476,
+      "gain_rank": 24,
+      "gain_pct": 1.5909812617104746
+    },
+    {
+      "feature": "D3n",
+      "shap_rank": 40,
+      "mean_abs_shap": 0.08898306550100357,
+      "gain_rank": 51,
+      "gain_pct": 0.52358412132736
+    },
+    {
+      "feature": "D4n",
+      "shap_rank": 21,
+      "mean_abs_shap": 0.15844596816980192,
+      "gain_rank": 22,
+      "gain_pct": 1.6093359988461244
+    },
+    {
+      "feature": "D5n",
+      "shap_rank": 45,
+      "mean_abs_shap": 0.07107483856858508,
+      "gain_rank": 58,
+      "gain_pct": 0.42658718020806824
+    },
+    {
+      "feature": "D6n",
+      "shap_rank": 60,
+      "mean_abs_shap": 0.04622052258998992,
+      "gain_rank": 87,
+      "gain_pct": 0.22554928264640595
+    },
+    {
+      "feature": "D7n",
+      "shap_rank": 194,
+      "mean_abs_shap": 0.005177847409999795,
+      "gain_rank": 170,
+      "gain_pct": 0.05594126935638535
+    },
+    {
+      "feature": "D8n",
+      "shap_rank": 58,
+      "mean_abs_shap": 0.05062365672645566,
+      "gain_rank": 60,
+      "gain_pct": 0.40247669183317397
+    },
+    {
+      "feature": "D9n",
+      "shap_rank": 141,
+      "mean_abs_shap": 0.010022298880902688,
+      "gain_rank": 86,
+      "gain_pct": 0.2262876722047116
+    },
+    {
+      "feature": "D10n",
+      "shap_rank": 2,
+      "mean_abs_shap": 0.3702301986201572,
+      "gain_rank": 16,
+      "gain_pct": 1.8655201398383232
+    },
+    {
+      "feature": "D11n",
+      "shap_rank": 4,
+      "mean_abs_shap": 0.2791505006481619,
+      "gain_rank": 29,
+      "gain_pct": 1.0569993884650137
+    },
+    {
+      "feature": "D12n",
+      "shap_rank": 92,
+      "mean_abs_shap": 0.02071458534008888,
+      "gain_rank": 82,
+      "gain_pct": 0.23486047511217473
+    },
+    {
+      "feature": "D13n",
+      "shap_rank": 63,
+      "mean_abs_shap": 0.043782813083038136,
+      "gain_rank": 79,
+      "gain_pct": 0.23915133235190958
+    },
+    {
+      "feature": "D14n",
+      "shap_rank": 84,
+      "mean_abs_shap": 0.025172649801181564,
+      "gain_rank": 76,
+      "gain_pct": 0.26567651905856826
+    },
+    {
+      "feature": "D15n",
+      "shap_rank": 24,
+      "mean_abs_shap": 0.14585524667159291,
+      "gain_rank": 10,
+      "gain_pct": 2.2018038862807003
+    }
+  ]
+}

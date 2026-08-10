@@ -1,0 +1,22 @@
+{
+  "dataset_version": 3,
+  "description": "D-normalization only: adds D1n-D15n (floor(day - D_col)) as 15 new features. No UID aggregation features. Isolates the D-normalization signal validated stable on v7 (7.4% gain, flat OOS AP).",
+  "parent_version": 2,
+  "raw_source": "data/raw/train_merged.parquet",
+  "output_path": "data/processed/dataset_v3_dn_only.parquet",
+  "transformations": [
+    {
+      "name": "d_normalization",
+      "type": "engineered",
+      "description": "Normalize D1-D15: Dn = floor(TransactionDT/86400 - D_col). Per-client near-constants per Deotte 1st-place methodology.",
+      "inputs": ["TransactionDT", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15"],
+      "output_columns": ["D1n", "D2n", "D3n", "D4n", "D5n", "D6n", "D7n", "D8n", "D9n", "D10n", "D11n", "D12n", "D13n", "D14n", "D15n"],
+      "function": "feature_engineering.normalize_d_columns",
+      "params": {}
+    }
+  ],
+  "dropped_columns": [],
+  "drop_reasons": {},
+  "inherited_transformations_from": 2,
+  "final_column_count": 472
+}
