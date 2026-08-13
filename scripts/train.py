@@ -276,6 +276,11 @@ def train_model(config_path: Path) -> None:
         split_cfg,
         config_path=repo_relative_path(config_path.resolve()),
     )
+    print(
+        f"Split: train={len(train_df)} ({train_df[target_column].mean():.4f} fraud) | "
+        f"val={len(val_df)} ({val_df[target_column].mean():.4f} fraud) | "
+        f"test={len(test_df)} ({test_df[target_column].mean():.4f} fraud)"
+    )
     train_df, val_df, test_df, fitted_transforms = apply_requires_fit_transforms(
         train_df, val_df, test_df, dataset_config
     )
@@ -324,8 +329,10 @@ def train_model(config_path: Path) -> None:
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "dataset": {
             "train_rows": int(len(train_df)),
+            "val_rows": int(len(val_df)),
             "test_rows": int(len(test_df)),
             "fraud_rate_train": float(y_train.mean()),
+            "fraud_rate_val": float(y_val.mean()),
             "fraud_rate_test": float(y_test.mean()),
         },
         "metrics": {
@@ -382,7 +389,8 @@ def train_model(config_path: Path) -> None:
     print(
         f"Trained v{version} on dataset_v{dataset_version}: "
         f"AUC-PR={metrics_doc['metrics']['auc_pr']:.4f} | "
-        f"{len(feature_list)} features | {best_iteration} rounds"
+        f"{len(feature_list)} features | {best_iteration} rounds | "
+        f"split={len(train_df)}/{len(val_df)}/{len(test_df)}"
     )
 
 
