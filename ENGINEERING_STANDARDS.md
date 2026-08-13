@@ -218,7 +218,9 @@ configs/lgbm_v{N}.json
   "dataset_config_path": "configs/dataset_v3.json",
   "split": {
     "method": "temporal",
-    "train_fraction": 0.8,
+    "train_fraction": 0.70,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
     "sort_column": "TransactionDT"
   },
   "lgbm_params": {
@@ -238,6 +240,8 @@ configs/lgbm_v{N}.json
   }
 }
 ```
+
+**Split discipline:** The three fractions must sum to 1.0. All three slices are contiguous in time: train = earliest rows, val = middle rows, test = latest rows. The validation split is used for early stopping and model-selection decisions. The test split is evaluated exactly once after all decisions are frozen. **NEVER** use the test split for early stopping, hyperparameter selection, or any model decision.
 
 Note: the `features` block from the old standard is GONE. The feature list is now derived from the dataset version. The training script reads the dataset config's `feature_list_path` from the dataset manifest. One source of truth, no duplication.
 
@@ -262,9 +266,11 @@ Every training run MUST produce a metrics JSON file with this exact schema:
   "dataset_version": 3,
   "timestamp": "2026-07-04T14:30:00Z",
   "dataset": {
-    "train_rows": 472432,
-    "test_rows": 118108,
+    "train_rows": 413378,
+    "val_rows": 88581,
+    "test_rows": 88581,
     "fraud_rate_train": 0.035,
+    "fraud_rate_val": 0.034,
     "fraud_rate_test": 0.034
   },
   "metrics": {
@@ -409,8 +415,8 @@ The main training script (`scripts/train.py`) MUST:
 1. Accept `--config path/to/config.json` as its only required argument.
 2. Load the model config.
 3. Load the dataset version specified by `dataset_version` in the config. Locate the dataset parquet and feature list via the dataset manifest.
-4. Apply the temporal split defined in the config.
-5. For any transformation in the dataset config with `"requires_fit": true`, fit on the training split only, then transform both splits.
+4. Apply the three-way temporal split (train / val / test) defined in the config. Use the validation split for early stopping. Evaluate final metrics on the test split only. The test split MUST NOT be passed to `eval_set`, used for hyperparameter selection, or referenced in any model decision.
+5. For any transformation in the dataset config with `"requires_fit": true`, fit on the training split only, then transform all three splits (train, val, test).
 6. Train the model using only the columns in the feature list.
 7. Save exactly three files: `{model}.txt`, `{model}_metrics.json`, `{model}_manifest.json`.
 8. Append a new entry to `models/registry.json`.
