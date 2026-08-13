@@ -118,23 +118,49 @@ def artifact_slug(model_config: dict, dataset_config: dict) -> str:
     return slug or f"v{model_config['version']}"
 
 
-def temporal_split(df: pd.DataFrame, split_config: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
+def temporal_split(
+    df: pd.DataFrame,
+    split_config: dict,
+    *,
+    config_path: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     method = split_config["method"]
     if method != "temporal":
         raise ValueError(f"Unsupported split method: {method!r}")
 
+    if "val_fraction" not in split_config:
+        config_label = config_path or "unknown"
+        raise ValueError(
+            f"Config {config_label} uses the deprecated two-way split. "
+            "Create a new config with train_fraction, val_fraction, and test_fraction "
+            "per §3 of ENGINEERING_STANDARDS.md."
+        )
+
+    train_frac = split_config["train_fraction"]
+    val_frac = split_config["val_fraction"]
+    assert abs(train_frac + val_frac + split_config["test_fraction"] - 1.0) < 1e-6, (
+        f"Split fractions must sum to 1.0, got "
+        f"{train_frac + val_frac + split_config['test_fraction']}"
+    )
+
     sort_column = split_config["sort_column"]
-    train_fraction = split_config["train_fraction"]
     df = df.sort_values(sort_column).reset_index(drop=True)
-    split_idx = int(len(df) * train_fraction)
-    return df.iloc[:split_idx].copy(), df.iloc[split_idx:].copy()
+    n = len(df)
+    train_end = int(n * train_frac)
+    val_end = int(n * (train_frac + val_frac))
+
+    train_df = df.iloc[:train_end].copy()
+    val_df = df.iloc[train_end:val_end].copy()
+    test_df = df.iloc[val_end:].copy()
+    return train_df, val_df, test_df
 
 
 def apply_requires_fit_transforms(
     train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
     test_df: pd.DataFrame,
     dataset_config: dict,
-) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict[str, object]]:
     fitted: dict[str, object] = {}
     for _, transform in collect_all_transformations(dataset_config):
         if not transform.get("requires_fit"):
@@ -148,6 +174,7 @@ def apply_requires_fit_transforms(
             instance = obj(**params) if params else obj()
             instance.fit(train_df)
             train_df = instance.transform(train_df)
+            val_df = instance.transform(val_df)
             test_df = instance.transform(test_df)
             fitted[name] = instance
             continue
@@ -157,32 +184,38 @@ def apply_requires_fit_transforms(
             "is not a class."
         )
 
-    return train_df, test_df, fitted
+    return train_df, val_df, test_df, fitted
 
 
 def prepare_features(
     train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
     test_df: pd.DataFrame,
     feature_list: list[str],
-) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
     missing = [col for col in feature_list if col not in train_df.columns]
     if missing:
         raise ValueError(f"Feature list columns missing from dataset: {missing}")
 
     x_train = train_df[feature_list].copy()
+    x_val = val_df[feature_list].copy()
     x_test = test_df[feature_list].copy()
     cat_cols = x_train.select_dtypes(include=["object", "string"]).columns.tolist()
 
     for col in cat_cols:
         x_train[col] = x_train[col].fillna("__MISSING__").astype(str)
+        x_val[col] = x_val[col].fillna("__MISSING__").astype(str)
         x_test[col] = x_test[col].fillna("__MISSING__").astype(str)
         categories = pd.Index(
-            pd.concat([x_train[col], x_test[col]], ignore_index=True).unique()
+            pd.concat(
+                [x_train[col], x_val[col], x_test[col]], ignore_index=True
+            ).unique()
         )
         x_train[col] = pd.Categorical(x_train[col], categories=categories)
+        x_val[col] = pd.Categorical(x_val[col], categories=categories)
         x_test[col] = pd.Categorical(x_test[col], categories=categories)
 
-    return x_train, x_test, cat_cols
+    return x_train, x_val, x_test, cat_cols
 
 
 def evaluate_at_flag_rate(
@@ -237,13 +270,21 @@ def train_model(config_path: Path) -> None:
     fitted_transforms_path = MODELS_DIR / f"{model_base}_fitted_transforms.pkl"
 
     df = pd.read_parquet(parquet_path)
-    train_df, test_df = temporal_split(df, model_config["split"])
-    train_df, test_df, fitted_transforms = apply_requires_fit_transforms(
-        train_df, test_df, dataset_config
+    split_cfg = model_config["split"]
+    train_df, val_df, test_df = temporal_split(
+        df,
+        split_cfg,
+        config_path=repo_relative_path(config_path.resolve()),
+    )
+    train_df, val_df, test_df, fitted_transforms = apply_requires_fit_transforms(
+        train_df, val_df, test_df, dataset_config
     )
 
-    x_train, x_test, cat_cols = prepare_features(train_df, test_df, feature_list)
+    x_train, x_val, x_test, cat_cols = prepare_features(
+        train_df, val_df, test_df, feature_list
+    )
     y_train = train_df[target_column].to_numpy()
+    y_val = val_df[target_column].to_numpy()
     y_test = test_df[target_column].to_numpy()
 
     lgbm_params = dict(model_config["lgbm_params"])
@@ -256,13 +297,14 @@ def train_model(config_path: Path) -> None:
         x_train,
         y_train,
         categorical_feature=cat_cols,
-        eval_set=[(x_test, y_test)],
+        eval_set=[(x_val, y_val)],
         eval_metric=eval_metric,
         callbacks=[
             lgb.early_stopping(stopping_rounds=early_stopping_rounds, verbose=False)
         ],
     )
 
+    # --- Final evaluation on held-out test set (never seen during training or early stopping) ---
     y_score = model.predict_proba(x_test)[:, 1]
     train_fraud_rate = float(y_train.mean())
     operating = evaluate_at_flag_rate(y_test, y_score, train_fraud_rate)
