@@ -9,12 +9,17 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS_DIR = REPO_ROOT / "scripts"
+
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 
 TARGET_COLUMN = "isFraud"
 NON_FEATURE_COLUMNS = frozenset({"TransactionID", "TransactionDT", TARGET_COLUMN})
@@ -75,14 +80,25 @@ def resolve_transform(function_ref: str):
 
 def apply_transformation(df: pd.DataFrame, transform: dict) -> pd.DataFrame:
     if transform.get("requires_fit"):
-        raise ValueError(
-            f"Transformation {transform['name']!r} requires fit/transform and must be "
-            "handled by the training script, not the dataset build script."
+        print(
+            f"Skipping requires_fit transform {transform['name']!r} — handled by train.py"
         )
+        return df
 
     func = resolve_transform(transform["function"])
     params = transform.get("params", {})
     return func(df, params)
+
+
+def collect_requires_fit_columns(config: dict) -> list[str]:
+    """Output columns from requires_fit transforms (computed at training time)."""
+    columns: list[str] = []
+    inherited = collect_inherited_transformations(config)
+    all_transforms = [t for _, t in inherited] + config.get("transformations", [])
+    for transform in all_transforms:
+        if transform.get("requires_fit"):
+            columns.extend(transform.get("output_columns", []))
+    return columns
 
 
 def build_feature_list(columns: list[str]) -> list[str]:
@@ -157,6 +173,7 @@ def build_dataset(config_path: Path) -> None:
         dataset_version,
     )
     feature_list = build_feature_list(df.columns.tolist())
+    requires_fit_columns = collect_requires_fit_columns(config)
     new_columns = set(df.columns) - raw_columns
     n_dropped = len(dropped_columns)
 
@@ -175,6 +192,7 @@ def build_dataset(config_path: Path) -> None:
         "target_column": TARGET_COLUMN,
         "fraud_rate": float(df[TARGET_COLUMN].mean()),
         "feature_list_path": repo_relative_path(feature_list_path),
+        "requires_fit_columns": requires_fit_columns,
     }
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     feature_list_path.write_text(json.dumps(feature_list, indent=2) + "\n")

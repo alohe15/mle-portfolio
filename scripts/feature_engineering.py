@@ -78,7 +78,13 @@ def create_id_null_count(df: pd.DataFrame, params: dict) -> pd.DataFrame:
 
 
 def create_email_match(df: pd.DataFrame, params: dict) -> pd.DataFrame:
-    """Add email_match column when both email domains match.
+    """Binary flag when payer and recipient email domains match.
+
+    Week 1 EDA showed email domain mismatch correlates with fraud; P_emaildomain
+    is a top SHAP driver in v1. This gives the model a direct split on a pattern
+    it otherwise learns indirectly from two high-cardinality categoricals.
+
+    Both null → 0 (no signal, not a match — we cannot confirm domains align).
 
     Inputs: P_emaildomain, R_emaildomain
     Outputs: email_match
@@ -89,6 +95,114 @@ def create_email_match(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         & (df["P_emaildomain"] == df["R_emaildomain"])
     ).astype(int)
     return df
+
+
+def create_transaction_amt_features(df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    """Log-scale and fractional-part transforms for TransactionAmt.
+
+    log1p compresses the heavy right skew so LightGBM needs fewer splits to
+    separate small vs large amounts. log1p (not log) handles TransactionAmt=0.
+
+    TransactionAmt_cents captures the fractional dollar part; fraud sometimes
+    clusters at round amounts or specific cent values (Kaggle competition lore).
+
+    Inputs: TransactionAmt
+    Outputs: TransactionAmt_log1p, TransactionAmt_cents
+    """
+    df["TransactionAmt_log1p"] = np.log1p(df["TransactionAmt"])
+    # Modulo 1 extracts cents; row-level, no cross-row statistics.
+    df["TransactionAmt_cents"] = df["TransactionAmt"] % 1
+    return df
+
+
+def create_missingness_indicators(df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    """Binary null indicators for columns with fraud-differential missingness.
+
+    EDA Section A3 showed missingness patterns differ between fraud and
+    non-fraud. Explicit indicators let LightGBM use missingness as a first-class
+    split and capture cross-feature missingness interactions.
+
+    Inputs: columns listed in params["columns"]
+    Outputs: {col}_is_null for each column in params["columns"]
+    """
+    for col in params["columns"]:
+        df[f"{col}_is_null"] = df[col].isnull().astype(int)
+    return df
+
+
+class FrequencyEncoder:
+    """Frequency-encode high-cardinality categoricals from training-split counts.
+
+    Rare values are often suspicious; frequency 0.0 handles unseen values at
+    inference without inventing a pseudo-count (no small-epsilon hack).
+
+    Inputs: columns specified in params["columns"]
+    Outputs: {col}_freq for each input column
+    """
+
+    def __init__(self) -> None:
+        self.freq_maps_: dict[str, dict] = {}
+
+    def fit(self, df: pd.DataFrame, params: dict | None = None) -> FrequencyEncoder:
+        params = params or {}
+        columns = params["columns"]
+        self.freq_maps_ = {
+            col: df[col].value_counts(normalize=True).to_dict() for col in columns
+        }
+        return self
+
+    def transform(self, df: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
+        params = params or {}
+        df = df.copy()
+        for col in params["columns"]:
+            freq_map = self.freq_maps_[col]
+            # Unseen values at transform time → 0.0 (never seen in training).
+            df[f"{col}_freq"] = df[col].map(freq_map).fillna(0.0)
+        return df
+
+
+class UidAggregator:
+    """Per-UID aggregate features using (card1, addr1) as a cardholder proxy.
+
+    card1 and addr1 are top SHAP features in v1; together they approximate
+    "same cardholder" in Kaggle solutions. Captures velocity and spend patterns
+    a single row cannot express. Training-split statistics only — no time windows
+    in v2 (v3+ improvement).
+
+    Inputs: card1, addr1, TransactionAmt
+    Outputs: uid_tx_count, uid_amt_mean, uid_amt_std
+    """
+
+    def __init__(self) -> None:
+        self.uid_stats_: pd.DataFrame | None = None
+
+    def fit(self, df: pd.DataFrame, params: dict | None = None) -> UidAggregator:
+        stats = (
+            df.groupby(["card1", "addr1"], dropna=False)["TransactionAmt"]
+            .agg(["count", "mean", "std"])
+            .rename(columns={"count": "uid_tx_count", "mean": "uid_amt_mean", "std": "uid_amt_std"})
+        )
+        # Single-transaction UIDs have undefined std → 0 (no variance signal).
+        stats["uid_amt_std"] = stats["uid_amt_std"].fillna(0.0)
+        self.uid_stats_ = stats
+        return self
+
+    def transform(self, df: pd.DataFrame, params: dict | None = None) -> pd.DataFrame:
+        if self.uid_stats_ is None:
+            raise RuntimeError("UidAggregator.transform called before fit")
+
+        df = df.copy()
+        merged = df.merge(
+            self.uid_stats_,
+            left_on=["card1", "addr1"],
+            right_index=True,
+            how="left",
+        )
+        # Unseen UIDs at inference: count=0, mean=NaN, std=0.
+        df["uid_tx_count"] = merged["uid_tx_count"].fillna(0)
+        df["uid_amt_mean"] = merged["uid_amt_mean"]
+        df["uid_amt_std"] = merged["uid_amt_std"].fillna(0.0)
+        return df
 
 
 def create_both_emails_present(df: pd.DataFrame, params: dict) -> pd.DataFrame:
@@ -298,8 +412,8 @@ class UidAmountStatsEncoder:
         return create_uid_amt_stats(df.copy(), self._fit_params)
 
 
-class FrequencyEncoder:
-    """Fit frequency maps on train, then encode any split."""
+class LegacyFrequencyEncoder:
+    """Legacy frequency encoder used by feature_engineering.py main() demo pipeline."""
 
     def __init__(self, **params: object):
         self.frequency_encode_columns = params.get(
@@ -307,7 +421,7 @@ class FrequencyEncoder:
         )
         self._fit_params: dict = {}
 
-    def fit(self, df: pd.DataFrame) -> FrequencyEncoder:
+    def fit(self, df: pd.DataFrame) -> LegacyFrequencyEncoder:
         freq_maps = {
             col: df[col].value_counts(dropna=False)
             for col in self.frequency_encode_columns
@@ -363,7 +477,7 @@ def _engineer_splits(
     train_df = create_v_block_aggregates(train_df, {})
     test_df = create_v_block_aggregates(test_df, {})
 
-    frequency = FrequencyEncoder().fit(train_df)
+    frequency = LegacyFrequencyEncoder().fit(train_df)
     train_df = frequency.transform(train_df)
     test_df = frequency.transform(test_df)
     return train_df, test_df

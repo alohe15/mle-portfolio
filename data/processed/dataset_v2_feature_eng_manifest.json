@@ -1,9 +1,9 @@
 {
-  "dataset_version": 1,
-  "created_at": "2026-07-05T23:39:57Z",
-  "config_path": "configs/dataset_v1.json",
+  "dataset_version": 2,
+  "created_at": "2026-07-06T23:05:18Z",
+  "config_path": "configs/dataset_v2.json",
   "row_count": 590540,
-  "column_count": 434,
+  "column_count": 457,
   "columns": {
     "TransactionID": {
       "dtype": "int64",
@@ -2174,9 +2174,133 @@
       "dtype": "str",
       "origin": "raw",
       "null_rate": 0.7990551021099332
+    },
+    "email_match": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "TransactionAmt_log1p": {
+      "dtype": "float64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "TransactionAmt_cents": {
+      "dtype": "float64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V1_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V2_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V3_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V4_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V5_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V6_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V7_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V8_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V9_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V10_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V11_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V14_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V15_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V16_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V17_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V18_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V19_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V20_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V21_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
+    },
+    "V22_is_null": {
+      "dtype": "int64",
+      "origin": "engineered_v2",
+      "null_rate": 0.0
     }
   },
   "target_column": "isFraud",
   "fraud_rate": 0.03499000914417313,
-  "feature_list_path": "data/processed/feature_list_v1.json"
+  "feature_list_path": "data/processed/feature_list_v2.json",
+  "requires_fit_columns": [
+    "card1_freq",
+    "addr1_freq",
+    "P_emaildomain_freq",
+    "card2_freq",
+    "uid_tx_count",
+    "uid_amt_mean",
+    "uid_amt_std"
+  ]
 }

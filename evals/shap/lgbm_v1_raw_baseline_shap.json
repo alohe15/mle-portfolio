@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "dataset_version": 1,
+  "description": "Raw baseline \u2014 all raw merged columns, no engineered features",
+  "model_path": "models/lgbm_v1_raw_baseline.txt",
+  "manifest_path": "models/lgbm_v1_raw_baseline_manifest.json",
+  "config_path": "configs/lgbm_v1.json",
+  "timestamp": "2026-07-06T22:19:13Z",
+  "sample": {
+    "split": "test",
+    "n_total": 118108,
+    "n_sampled": 5000,
+    "random_state": 42
+  },
+  "top_n_reported": 20,
+  "top_features": [
+    {
+      "rank": 1,
+      "feature": "C13",
+      "mean_abs_shap": 0.35584518054415815
+    },
+    {
+      "rank": 2,
+      "feature": "P_emaildomain",
+      "mean_abs_shap": 0.29087767133303716
+    },
+    {
+      "rank": 3,
+      "feature": "TransactionAmt",
+      "mean_abs_shap": 0.2886056072729663
+    },
+    {
+      "rank": 4,
+      "feature": "card1",
+      "mean_abs_shap": 0.22191985706701634
+    },
+    {
+      "rank": 5,
+      "feature": "card2",
+      "mean_abs_shap": 0.21127048958170958
+    },
+    {
+      "rank": 6,
+      "feature": "C14",
+      "mean_abs_shap": 0.207504071356536
+    },
+    {
+      "rank": 7,
+      "feature": "addr1",
+      "mean_abs_shap": 0.18485959081349207
+    },
+    {
+      "rank": 8,
+      "feature": "D2",
+      "mean_abs_shap": 0.17771466476312917
+    },
+    {
+      "rank": 9,
+      "feature": "V70",
+      "mean_abs_shap": 0.17745239955086037
+    },
+    {
+      "rank": 10,
+      "feature": "card6",
+      "mean_abs_shap": 0.16183121681273277
+    },
+    {
+      "rank": 11,
+      "feature": "card5",
+      "mean_abs_shap": 0.15907294644577324
+    },
+    {
+      "rank": 12,
+      "feature": "D1",
+      "mean_abs_shap": 0.15756766819123746
+    },
+    {
+      "rank": 13,
+      "feature": "C1",
+      "mean_abs_shap": 0.14044235248736073
+    },
+    {
+      "rank": 14,
+      "feature": "id_30",
+      "mean_abs_shap": 0.13665369045895978
+    },
+    {
+      "rank": 15,
+      "feature": "dist1",
+      "mean_abs_shap": 0.13482396539855515
+    },
+    {
+      "rank": 16,
+      "feature": "D15",
+      "mean_abs_shap": 0.12940334088798067
+    },
+    {
+      "rank": 17,
+      "feature": "M4",
+      "mean_abs_shap": 0.12890274595561785
+    },
+    {
+      "rank": 18,
+      "feature": "id_31",
+      "mean_abs_shap": 0.121639736967572
+    },
+    {
+      "rank": 19,
+      "feature": "C11",
+      "mean_abs_shap": 0.1187811337827006
+    },
+    {
+      "rank": 20,
+      "feature": "ProductCD",
+      "mean_abs_shap": 0.11733986098218613
+    }
+  ],
+  "figure_path": "evals/figures/lgbm_v1_raw_baseline_shap_top20.png"
+}
