@@ -1,10 +1,11 @@
 {
-  "version": 1,
-  "description": "Raw baseline — all raw merged columns, no engineered features",
-  "is_serving": true,
-  "parent_version": null,
-  "dataset_version": 1,
-  "dataset_config_path": "configs/dataset_v1.json",
+  "version": 3,
+  "short_description": "l1_feature_selection",
+  "description": "L1 regularization (reg_alpha=1.0) for feature selection — drives low-signal feature weights to zero",
+  "parent_version": 2,
+  "dataset_version": 2,
+  "dataset_config_path": "configs/dataset_v2.json",
+  "is_serving": false,
   "split": {
     "method": "temporal",
     "train_fraction": 0.8,
@@ -13,10 +14,11 @@
   "lgbm_params": {
     "objective": "binary",
     "metric": "average_precision",
-    "n_estimators": 1000,
+    "n_estimators": 2000,
     "learning_rate": 0.05,
     "num_leaves": 63,
-    "scale_pos_weight": 27.0,
+    "reg_alpha": 1.0,
+    "scale_pos_weight": null,
     "early_stopping_rounds": 100,
     "verbose": -1
   },

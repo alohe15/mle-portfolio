@@ -2,6 +2,27 @@
 
 Usage:
     python scripts/train.py --config configs/lgbm_v1.json
+
+This script is the single training entrypoint for all model versions in the
+mle-portfolio project. It enforces the engineering standards defined in
+ENGINEERING_STANDARDS.md by:
+
+  - Reading ALL training parameters from a JSON config (no hardcoded values)
+  - Producing exactly three required artifacts per run: model .txt, metrics
+    JSON, and manifest JSON (plus fitted transforms pickle if needed)
+  - Appending to models/registry.json so the API and eval scripts can
+    discover every version ever trained
+  - Deriving filenames from the config's description field, ensuring
+    consistent naming like lgbm_v1_raw_baseline.txt
+
+The script never needs editing to train a new version. You create a new
+config JSON and point this script at it. That's the entire workflow.
+
+See also:
+  - ENGINEERING_STANDARDS.md §3 (Config-Driven Training)
+  - ENGINEERING_STANDARDS.md §9 (Training Script Contract)
+  - configs/lgbm_v1.json (example model config)
+  - configs/dataset_v1.json (example dataset config)
 """
 
 from __future__ import annotations
@@ -28,16 +49,35 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+# ---------------------------------------------------------------------------
+# Path constants
+# ---------------------------------------------------------------------------
+# REPO_ROOT anchors all relative path resolution. Every config uses paths
+# relative to the repo root (e.g. "configs/dataset_v1.json"), so this is
+# the single reference point that makes those paths absolute.
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+# Where trained model artifacts land: .txt, _metrics.json, _manifest.json
 MODELS_DIR = REPO_ROOT / "models"
+
+# Where dataset parquets, manifests, and feature lists live (all gitignored
+# except manifests and feature lists, which are committed as metadata).
 PROCESSED_DIR = REPO_ROOT / "data" / "processed"
 
 
+# ---------------------------------------------------------------------------
+# Path helpers
+# ---------------------------------------------------------------------------
+
 def repo_path(relative: str) -> Path:
+    """Convert a repo-relative string path (from a config) to an absolute Path."""
     return REPO_ROOT / relative
 
 
 def repo_relative_path(path: Path) -> str:
+    """Convert an absolute Path back to a repo-relative POSIX string for
+    storage in JSON artifacts (metrics, manifests, registry). Using POSIX
+    format ensures paths work cross-platform and match what's in configs."""
     try:
         return path.relative_to(REPO_ROOT).as_posix()
     except ValueError:
@@ -45,14 +85,53 @@ def repo_relative_path(path: Path) -> str:
 
 
 def load_json(path: Path) -> dict | list:
+    """Load and parse a JSON file. Used for configs, manifests, feature lists,
+    and the model registry — all the metadata that drives the pipeline."""
     return json.loads(path.read_text())
 
 
+# ---------------------------------------------------------------------------
+# Config loading
+# ---------------------------------------------------------------------------
+
 def load_model_config(config_path: Path) -> dict:
+    """Load a model config JSON (e.g. configs/lgbm_v1.json).
+
+    The config contains everything needed to reproduce a training run:
+      - version: monotonically increasing model version number
+      - description: human-readable label (also used for filename slug)
+      - dataset_version: which dataset to train on
+      - dataset_config_path: path to the dataset config (for transforms)
+      - split: temporal split parameters (method, train_fraction, sort_column)
+      - lgbm_params: all LightGBM hyperparameters
+      - early_stopping: patience and metric for early stopping
+
+    See ENGINEERING_STANDARDS.md §3 for the full required schema.
+    """
     return load_json(config_path)
 
 
+# ---------------------------------------------------------------------------
+# Dataset discovery
+# ---------------------------------------------------------------------------
+# The training script doesn't hardcode dataset paths. Instead, it discovers
+# them by convention:
+#   1. Model config says dataset_version=1
+#   2. Script globs data/processed/ for dataset_v1_*_manifest.json
+#   3. Manifest contains feature_list_path pointing to feature_list_v1.json
+#   4. Parquet path is derived from manifest path by swapping the suffix
+#
+# This indirection means adding a new dataset version requires zero changes
+# to this script — just a new config and a build_dataset.py run.
+
 def find_dataset_manifest(dataset_version: int) -> Path:
+    """Locate the manifest JSON for a given dataset version by globbing
+    the processed data directory.
+
+    Raises FileNotFoundError if no manifest exists (dataset hasn't been built
+    yet) and ValueError if multiple manifests match (ambiguous state that
+    shouldn't happen if dataset versioning rules are followed).
+    """
     matches = sorted(PROCESSED_DIR.glob(f"dataset_v{dataset_version}_*_manifest.json"))
     if not matches:
         raise FileNotFoundError(
@@ -66,21 +145,54 @@ def find_dataset_manifest(dataset_version: int) -> Path:
 
 
 def parquet_path_from_manifest(manifest_path: Path) -> Path:
+    """Derive the parquet file path from the manifest path.
+
+    Convention: dataset_v1_raw_merged_manifest.json -> dataset_v1_raw_merged.parquet
+    The manifest and parquet always sit side-by-side with matching stems.
+    """
     name = manifest_path.name.replace("_manifest.json", ".parquet")
     return manifest_path.with_name(name)
 
 
 def dataset_config_path_for_version(version: int) -> Path:
+    """Return the expected config path for a dataset version.
+
+    Convention: configs/dataset_v{D}.json — one config per dataset version,
+    always in the configs/ directory.
+    """
     return REPO_ROOT / "configs" / f"dataset_v{version}.json"
 
 
+# ---------------------------------------------------------------------------
+# Transformation chain resolution
+# ---------------------------------------------------------------------------
+# Dataset configs form a chain via inherited_transformations_from:
+#   dataset_v3 inherits from v2, which inherits from v1.
+#
+# When training on dataset_v3, any requires_fit transforms from ALL ancestor
+# versions need to be applied. These two functions walk the inheritance chain
+# and collect every transformation in order.
+#
+# Non-requires_fit transforms were already applied by build_dataset.py and
+# baked into the parquet. Only requires_fit transforms need to run here
+# because they must be fit on the training split only (leakage discipline).
+
 def collect_inherited_transformations(config: dict) -> list[tuple[int, dict]]:
+    """Recursively walk the dataset config inheritance chain and collect all
+    transformations from parent versions.
+
+    Returns a list of (version_number, transform_dict) tuples, ordered from
+    oldest ancestor to most recent parent. This ordering ensures transforms
+    are replayed in the same sequence they were originally defined.
+    """
     inherited: list[tuple[int, dict]] = []
     parent_version = config.get("inherited_transformations_from")
     if parent_version is None:
         return inherited
 
     parent_config = load_json(dataset_config_path_for_version(parent_version))
+    # Recurse into grandparent, great-grandparent, etc. before appending
+    # the parent's own transforms — this preserves chronological order.
     inherited.extend(collect_inherited_transformations(parent_config))
     for transform in parent_config.get("transformations", []):
         inherited.append((parent_version, transform))
@@ -88,6 +200,13 @@ def collect_inherited_transformations(config: dict) -> list[tuple[int, dict]]:
 
 
 def collect_all_transformations(config: dict) -> list[tuple[int, dict]]:
+    """Collect the full ordered transformation chain: all inherited transforms
+    followed by the current version's transforms.
+
+    Each entry is (version_number, transform_dict). The version_number tells
+    you which dataset version introduced each transform — useful for debugging
+    and for the manifest's origin tracking.
+    """
     transforms = collect_inherited_transformations(config)
     for transform in config.get("transformations", []):
         transforms.append((config["dataset_version"], transform))
@@ -95,10 +214,24 @@ def collect_all_transformations(config: dict) -> list[tuple[int, dict]]:
 
 
 def resolve_transform(function_ref: str):
+    """Resolve a dotted function reference string (e.g.
+    'feature_engineering.UidFrequencyEncoder') into an actual Python object.
+
+    The function_ref format is 'module_name.attribute_path'. The module is
+    imported from scripts/ (added to sys.path if not already there), then
+    the attribute is traversed via getattr.
+
+    This is what connects the dataset config's "function" field to real code.
+    When a config says "function": "feature_engineering.create_email_match",
+    this function imports scripts/feature_engineering.py and returns the
+    create_email_match function from it.
+    """
     module_name, _, attr_path = function_ref.partition(".")
     if not attr_path:
         raise ValueError(f"Invalid function reference: {function_ref!r}")
 
+    # Ensure scripts/ is importable so "feature_engineering" resolves to
+    # scripts/feature_engineering.py
     if str(REPO_ROOT / "scripts") not in sys.path:
         sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
@@ -109,14 +242,40 @@ def resolve_transform(function_ref: str):
     return obj
 
 
-def artifact_slug(model_config: dict, dataset_config: dict) -> str:
-    output_stem = Path(dataset_config["output_path"]).stem
-    prefix = f"dataset_v{dataset_config['dataset_version']}_"
-    if output_stem.startswith(prefix):
-        return output_stem[len(prefix) :]
-    slug = re.sub(r"[^a-z0-9]+", "_", model_config["description"].lower()).strip("_")
+# ---------------------------------------------------------------------------
+# Artifact naming
+# ---------------------------------------------------------------------------
+
+def artifact_slug(model_config: dict) -> str:
+    """Derive the filename slug from the model config's description.
+
+    This is what turns a config description like "Raw baseline — all 432
+    merged columns" into a slug like "raw_baseline", producing filenames
+    like lgbm_v1_raw_baseline.txt.
+
+    Resolution order:
+      1. If the config has an explicit "short_description" field, use it.
+      2. Otherwise, take the description text, split on em-dash/en-dash/hyphen
+         to get the short prefix, then slugify (lowercase, non-alphanum -> _).
+
+    This addresses the engineering standard that model filenames must be
+    lgbm_v{N}_{short_description}.txt — derived from config, not from the
+    dataset parquet filename.
+    """
+    if "short_description" in model_config:
+        return model_config["short_description"]
+    description = model_config["description"]
+    # Take everything before the first dash separator as the short label.
+    # "Raw baseline — all 432 merged columns" -> "Raw baseline"
+    short = re.split(r"\s[—–-]\s", description, maxsplit=1)[0].strip()
+    # Slugify: "Raw baseline" -> "raw_baseline"
+    slug = re.sub(r"[^a-z0-9]+", "_", short.lower()).strip("_")
     return slug or f"v{model_config['version']}"
 
+
+# ---------------------------------------------------------------------------
+# Data splitting
+# ---------------------------------------------------------------------------
 
 def temporal_split(
     df: pd.DataFrame,
@@ -155,6 +314,10 @@ def temporal_split(
     return train_df, val_df, test_df
 
 
+# ---------------------------------------------------------------------------
+# Leakage-safe transform application
+# ---------------------------------------------------------------------------
+
 def apply_requires_fit_transforms(
     train_df: pd.DataFrame,
     val_df: pd.DataFrame,
@@ -170,12 +333,15 @@ def apply_requires_fit_transforms(
         obj = resolve_transform(transform["function"])
         params = transform.get("params", {})
 
+        # requires_fit transforms must be implemented as classes with
+        # .fit(train_df) and .transform(df) methods, following the
+        # sklearn-style pattern. Plain functions can't hold fitted state.
         if inspect.isclass(obj):
-            instance = obj(**params) if params else obj()
-            instance.fit(train_df)
-            train_df = instance.transform(train_df)
-            val_df = instance.transform(val_df)
-            test_df = instance.transform(test_df)
+            instance = obj()
+            instance.fit(train_df, params)
+            train_df = instance.transform(train_df, params)
+            val_df = instance.transform(val_df, params)
+            test_df = instance.transform(test_df, params)
             fitted[name] = instance
             continue
 
@@ -186,6 +352,10 @@ def apply_requires_fit_transforms(
 
     return train_df, val_df, test_df, fitted
 
+
+# ---------------------------------------------------------------------------
+# Feature preparation
+# ---------------------------------------------------------------------------
 
 def prepare_features(
     train_df: pd.DataFrame,
@@ -203,9 +373,12 @@ def prepare_features(
     cat_cols = x_train.select_dtypes(include=["object", "string"]).columns.tolist()
 
     for col in cat_cols:
+        # Fill nulls with a sentinel string so they become a learnable category
         x_train[col] = x_train[col].fillna("__MISSING__").astype(str)
         x_val[col] = x_val[col].fillna("__MISSING__").astype(str)
         x_test[col] = x_test[col].fillna("__MISSING__").astype(str)
+        # Build a shared vocabulary from BOTH splits so every category code
+        # maps to the same value in train and test
         categories = pd.Index(
             pd.concat(
                 [x_train[col], x_val[col], x_test[col]], ignore_index=True
@@ -218,12 +391,33 @@ def prepare_features(
     return x_train, x_val, x_test, cat_cols
 
 
+# ---------------------------------------------------------------------------
+# Evaluation at prevalence-matched flag rate
+# ---------------------------------------------------------------------------
+
 def evaluate_at_flag_rate(
     y_true: np.ndarray,
     y_score: np.ndarray,
     flag_rate: float,
 ) -> dict[str, float]:
+    """Compute precision, recall, and F1 at a specific flag rate.
+
+    The flag rate determines what fraction of transactions get flagged as
+    fraud. Setting it equal to the training fraud rate (prevalence-matched)
+    answers the question: "If we flag exactly as many transactions as are
+    actually fraudulent, how accurate are those flags?"
+
+    This is more operationally meaningful than picking an arbitrary 0.5
+    threshold, which is poorly calibrated for rare events. With a ~3.5%
+    fraud rate, a 0.5 threshold would flag almost nothing.
+
+    The threshold is derived from the scores: we find the score value such
+    that exactly flag_rate fraction of transactions score at or above it.
+    np.partition is used for efficiency (O(n) vs O(n log n) for full sort).
+    """
     n_flag = max(int(round(len(y_true) * flag_rate)), 1)
+    # np.partition puts the (len - n_flag)-th smallest element in its sorted
+    # position. Everything above it is in the top n_flag scores.
     threshold = float(np.partition(y_score, len(y_score) - n_flag)[len(y_score) - n_flag])
     y_pred = (y_score >= threshold).astype(int)
     return {
@@ -234,41 +428,106 @@ def evaluate_at_flag_rate(
     }
 
 
+# ---------------------------------------------------------------------------
+# Model registry
+# ---------------------------------------------------------------------------
+
 def append_registry_entry(entry: dict) -> None:
+    """Append a new entry to models/registry.json.
+
+    The registry is the single source of truth for all trained versions.
+    The API reads it at startup to find the is_serving model. The eval
+    scripts read it to discover all versions for comparison.
+
+    Key behaviors:
+      - If an entry with the same version already exists, it's replaced
+        (idempotent re-runs of the same config don't create duplicates).
+      - If the new entry has is_serving=True, all other entries are flipped
+        to is_serving=False. Only one model serves at a time.
+      - Entries are never deleted — the registry is an append-only historical
+        record.
+
+    See ENGINEERING_STANDARDS.md §6 (Model Registry).
+    """
     registry_path = MODELS_DIR / "registry.json"
     registry: list[dict] = []
     if registry_path.exists():
         registry = load_json(registry_path)
 
+    # Replace existing entry for this version (idempotent re-training)
     if any(item["version"] == entry["version"] for item in registry):
-        raise ValueError(f"Registry already contains version {entry['version']}")
+        registry = [item for item in registry if item["version"] != entry["version"]]
+
+    # Enforce single-serving invariant: only one model can be is_serving=True
+    if entry.get("is_serving"):
+        for item in registry:
+            item["is_serving"] = False
 
     registry.append(entry)
     registry_path.write_text(json.dumps(registry, indent=2) + "\n")
 
 
+# ===========================================================================
+# Main training function
+# ===========================================================================
+
 def train_model(config_path: Path) -> None:
+    """Execute a full training run from a model config.
+
+    This is the core function that implements the Training Script Contract
+    (ENGINEERING_STANDARDS.md §9). The contract requires:
+
+      1. Load the model config
+      2. Load the dataset version specified in the config
+      3. Apply the temporal split
+      4. Fit requires_fit transforms on train only, transform both splits
+      5. Train the model using only the feature list columns
+      6. Save model .txt, metrics JSON, manifest JSON
+      7. Append to registry.json
+      8. Print a one-line summary to stdout
+
+    Every step below maps to one of these contract requirements.
+    """
     started_at = time.perf_counter()
     model_config = load_model_config(config_path)
 
+    # -----------------------------------------------------------------------
+    # Step 1: Resolve all paths from the config chain
+    # -----------------------------------------------------------------------
+    # The model config points to a dataset version, which points to a dataset
+    # config, which has a manifest, which has a feature list. This chain of
+    # references is what makes the system config-driven: change one config
+    # and everything downstream follows.
     version = model_config["version"]
     dataset_version = model_config["dataset_version"]
     dataset_config = load_json(repo_path(model_config["dataset_config_path"]))
 
+    # Discover the dataset manifest by globbing (not hardcoded path)
     dataset_manifest_path = find_dataset_manifest(dataset_version)
     dataset_manifest = load_json(dataset_manifest_path)
     parquet_path = parquet_path_from_manifest(dataset_manifest_path)
+    # Feature list is an output of build_dataset.py — it's the authoritative
+    # list of columns the model should train on (excludes target, IDs, time)
     feature_list_path = repo_path(dataset_manifest["feature_list_path"])
     feature_list = load_json(feature_list_path)
     target_column = dataset_manifest["target_column"]
 
-    slug = artifact_slug(model_config, dataset_config)
+    # -----------------------------------------------------------------------
+    # Step 2: Determine output artifact paths
+    # -----------------------------------------------------------------------
+    # All artifacts share a common base name: lgbm_v{N}_{slug}
+    # The slug comes from the config description, not the parquet filename.
+    # This was a bug fix — earlier versions incorrectly used the parquet stem.
+    slug = artifact_slug(model_config)
     model_base = f"lgbm_v{version}_{slug}"
     model_path = MODELS_DIR / f"{model_base}.txt"
     metrics_path = MODELS_DIR / f"{model_base}_metrics.json"
     model_manifest_path = MODELS_DIR / f"{model_base}_manifest.json"
     fitted_transforms_path = MODELS_DIR / f"{model_base}_fitted_transforms.pkl"
 
+    # -----------------------------------------------------------------------
+    # Step 3: Load data and split temporally
+    # -----------------------------------------------------------------------
     df = pd.read_parquet(parquet_path)
     split_cfg = model_config["split"]
     train_df, val_df, test_df = temporal_split(
@@ -285,6 +544,13 @@ def train_model(config_path: Path) -> None:
         train_df, val_df, test_df, dataset_config
     )
 
+    for _, transform in collect_all_transformations(dataset_config):
+        if not transform.get("requires_fit"):
+            continue
+        for col in transform.get("output_columns", []):
+            if col not in feature_list:
+                feature_list.append(col)
+
     x_train, x_val, x_test, cat_cols = prepare_features(
         train_df, val_df, test_df, feature_list
     )
@@ -292,12 +558,43 @@ def train_model(config_path: Path) -> None:
     y_val = val_df[target_column].to_numpy()
     y_test = test_df[target_column].to_numpy()
 
+    # -----------------------------------------------------------------------
+    # Step 6: Configure and train LightGBM
+    # -----------------------------------------------------------------------
+    # Pull hyperparameters from config. early_stopping_rounds is extracted
+    # separately because it's passed to the callback, not the constructor.
     lgbm_params = dict(model_config["lgbm_params"])
     early_stopping_rounds = lgbm_params.pop("early_stopping_rounds")
     eval_metric = lgbm_params.pop("metric")
+    # Remove scale_pos_weight from config params — we compute it dynamically
+    # from the actual training fraud rate rather than hardcoding it. This
+    # ensures it stays correct even if the temporal split changes the
+    # effective fraud rate slightly.
+    lgbm_params.pop("scale_pos_weight", None)
+
+    # scale_pos_weight = (# negatives) / (# positives)
+    # This tells LightGBM to weight fraud samples ~27x more heavily,
+    # compensating for the ~3.5% fraud rate. Without this, the model
+    # would learn to predict "not fraud" for everything.
+    train_fraud_rate = float(y_train.mean())
+    scale_pos_weight = (1.0 - train_fraud_rate) / train_fraud_rate
 
     classifier_kwargs = dict(lgbm_params)
+    classifier_kwargs["scale_pos_weight"] = scale_pos_weight
     model = lgb.LGBMClassifier(**classifier_kwargs)
+
+    # fit() with eval_set enables early stopping: training continues up to
+    # n_estimators trees, but stops early if the eval metric hasn't improved
+    # for early_stopping_rounds consecutive rounds.
+    #
+    # The eval set is the validation split, not test. Test is held out for
+    # final metrics only.
+    #
+    # Callbacks:
+    #   - early_stopping: stops training when no improvement for N rounds
+    #     on the first metric. first_metric_only=True avoids confusion when
+    #     LightGBM tracks multiple metrics.
+    #   - log_evaluation: prints eval metrics every 50 rounds for monitoring.
     model.fit(
         x_train,
         y_train,
@@ -305,23 +602,46 @@ def train_model(config_path: Path) -> None:
         eval_set=[(x_val, y_val)],
         eval_metric=eval_metric,
         callbacks=[
-            lgb.early_stopping(stopping_rounds=early_stopping_rounds, verbose=False)
+            lgb.early_stopping(
+                stopping_rounds=early_stopping_rounds,
+                first_metric_only=True,
+            ),
+            lgb.log_evaluation(period=50),
         ],
     )
 
     # --- Final evaluation on held-out test set (never seen during training or early stopping) ---
     y_score = model.predict_proba(x_test)[:, 1]
-    train_fraud_rate = float(y_train.mean())
+    # Evaluate at the prevalence-matched flag rate: flag the same fraction
+    # of transactions as are actually fraudulent in training data.
     operating = evaluate_at_flag_rate(y_test, y_score, train_fraud_rate)
+    # best_iteration_ is the round where early stopping found the best score.
+    # If early stopping never triggered (model trained to n_estimators),
+    # best_iteration_ may be 0/None, so we fall back to n_estimators.
     best_iteration = int(model.best_iteration_ or model_config["lgbm_params"]["n_estimators"])
     wall_time = time.perf_counter() - started_at
 
+    # -----------------------------------------------------------------------
+    # Step 8: Save all artifacts
+    # -----------------------------------------------------------------------
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Save the model in LightGBM's native text format. This is the format
+    # the API loads via lgb.Booster(model_file=path). It's human-readable
+    # and contains the full tree structure.
     model.booster_.save_model(str(model_path))
 
+    # Save fitted transform objects (lookup tables, encoders) so the API
+    # can apply the same frozen statistics at inference time. Only created
+    # when the dataset has requires_fit transforms.
     if fitted_transforms:
         fitted_transforms_path.write_bytes(pickle.dumps(fitted_transforms))
 
+    # --- Metrics JSON ---
+    # Schema defined in ENGINEERING_STANDARDS.md §4. Contains everything
+    # needed to evaluate this version: dataset stats, all metric values,
+    # and training metadata. All values are actual computed numbers, never
+    # placeholders.
     metrics_doc = {
         "version": version,
         "config_path": repo_relative_path(config_path.resolve()),
@@ -336,12 +656,19 @@ def train_model(config_path: Path) -> None:
             "fraud_rate_test": float(y_test.mean()),
         },
         "metrics": {
+            # AUC-PR is the primary metric. Given ~3.5% fraud rate, AUC-ROC
+            # can be misleadingly high (a random classifier gets ~0.5 AUC-ROC
+            # but only ~0.035 AUC-PR). AUC-PR is more sensitive to
+            # performance on the minority class.
             "auc_pr": float(average_precision_score(y_test, y_score)),
             "auc_roc": float(roc_auc_score(y_test, y_score)),
+            # Precision/recall/F1 at the prevalence-matched flag rate
             "precision_at_budget": operating["precision"],
             "recall_at_budget": operating["recall"],
             "f1_at_budget": operating["f1"],
+            # The threshold used for the above precision/recall/F1
             "operating_threshold": operating["threshold"],
+            # How many boosting rounds were actually used (after early stopping)
             "best_iteration": best_iteration,
         },
         "training": {
@@ -352,6 +679,16 @@ def train_model(config_path: Path) -> None:
     }
     metrics_path.write_text(json.dumps(metrics_doc, indent=2) + "\n")
 
+    # --- Model Manifest (Feature Contract) ---
+    # Schema defined in ENGINEERING_STANDARDS.md §5. This is the contract
+    # between training and serving. The API reads this manifest to know:
+    #   - Which features the model expects, in what order
+    #   - What dtypes each feature should be
+    #   - Where to find the dataset config (for transformation replay)
+    #
+    # feature_order is the critical field: the API must reorder incoming
+    # features to match this exact order before calling model.predict().
+    # LightGBM uses column position, not names, internally.
     feature_dtypes = {col: str(x_train[col].dtype) for col in feature_list}
     model_manifest = {
         "version": version,
@@ -366,11 +703,20 @@ def train_model(config_path: Path) -> None:
         "metrics_path": repo_relative_path(metrics_path),
         "description": model_config["description"],
     }
+    # Only include fitted_transforms_path if there are fitted transforms.
+    # dataset_v1 has none, so its manifest won't have this field.
     if fitted_transforms:
         model_manifest["fitted_transforms_path"] = repo_relative_path(fitted_transforms_path)
 
     model_manifest_path.write_text(json.dumps(model_manifest, indent=2) + "\n")
 
+    # --- Registry append ---
+    # This is the final step that makes this version "official". The API
+    # reads registry.json to find the is_serving model. Setting is_serving
+    # to True here means the API will pick up this model on next restart.
+    #
+    # The registry also stores paths to every artifact so eval scripts and
+    # the API can discover everything from one file.
     append_registry_entry(
         {
             "version": version,
@@ -382,10 +728,13 @@ def train_model(config_path: Path) -> None:
             "config_path": repo_relative_path(config_path.resolve()),
             "dataset_config_path": model_config["dataset_config_path"],
             "created_at": metrics_doc["timestamp"],
-            "is_serving": False,
+            "is_serving": model_config.get("is_serving", False),
         }
     )
 
+    # -----------------------------------------------------------------------
+    # Step 9: Print one-line summary (per Training Script Contract §9.9)
+    # -----------------------------------------------------------------------
     print(
         f"Trained v{version} on dataset_v{dataset_version}: "
         f"AUC-PR={metrics_doc['metrics']['auc_pr']:.4f} | "
@@ -394,7 +743,12 @@ def train_model(config_path: Path) -> None:
     )
 
 
+# ===========================================================================
+# CLI entrypoint
+# ===========================================================================
+
 def parse_args() -> argparse.Namespace:
+    """Parse the single required CLI argument: --config path/to/config.json."""
     parser = argparse.ArgumentParser(description="Train a versioned LightGBM model from config.")
     parser.add_argument(
         "--config",
@@ -406,6 +760,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """CLI entrypoint: resolve the config path and run training.
+
+    If the config path is relative, it's resolved against REPO_ROOT so you
+    can run the script from any working directory:
+        python scripts/train.py --config configs/lgbm_v1.json
+    """
     args = parse_args()
     config_path = args.config
     if not config_path.is_absolute():

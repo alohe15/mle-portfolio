@@ -2,13 +2,37 @@
   {
     "version": 1,
     "dataset_version": 1,
-    "description": "Raw baseline \u2014 all 432 merged columns, no engineered features",
-    "model_path": "models/lgbm_v1_raw_merged.txt",
-    "manifest_path": "models/lgbm_v1_raw_merged_manifest.json",
-    "metrics_path": "models/lgbm_v1_raw_merged_metrics.json",
+    "description": "Raw baseline \u2014 all raw merged columns, no engineered features",
+    "model_path": "models/lgbm_v1_raw_baseline.txt",
+    "manifest_path": "models/lgbm_v1_raw_baseline_manifest.json",
+    "metrics_path": "models/lgbm_v1_raw_baseline_metrics.json",
     "config_path": "configs/lgbm_v1.json",
     "dataset_config_path": "configs/dataset_v1.json",
-    "created_at": "2026-07-05T00:58:55Z",
+    "created_at": "2026-07-06T19:27:08Z",
     "is_serving": true
+  },
+  {
+    "version": 2,
+    "dataset_version": 2,
+    "description": "Feature engineering migration: email_match, TransactionAmt transforms, missingness indicators, frequency encoding, UID aggregations",
+    "model_path": "models/lgbm_v2_feature_eng.txt",
+    "manifest_path": "models/lgbm_v2_feature_eng_manifest.json",
+    "metrics_path": "models/lgbm_v2_feature_eng_metrics.json",
+    "config_path": "configs/lgbm_v2.json",
+    "dataset_config_path": "configs/dataset_v2.json",
+    "created_at": "2026-07-06T23:07:11Z",
+    "is_serving": false
+  },
+  {
+    "version": 3,
+    "dataset_version": 2,
+    "description": "L1 regularization (reg_alpha=1.0) for feature selection \u2014 drives low-signal feature weights to zero",
+    "model_path": "models/lgbm_v3_l1_feature_selection.txt",
+    "manifest_path": "models/lgbm_v3_l1_feature_selection_manifest.json",
+    "metrics_path": "models/lgbm_v3_l1_feature_selection_metrics.json",
+    "config_path": "configs/lgbm_v3.json",
+    "dataset_config_path": "configs/dataset_v2.json",
+    "created_at": "2026-07-18T19:04:31Z",
+    "is_serving": false
   }
 ]

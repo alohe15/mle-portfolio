@@ -1,0 +1,75 @@
+{
+  "dataset_version": 2,
+  "description": "Initial feature engineering migration: email_match, TransactionAmt transforms, missingness indicators, frequency encoding, UID aggregations",
+  "parent_version": 1,
+  "raw_source": "data/raw/train_merged.parquet",
+  "output_path": "data/processed/dataset_v2_feature_eng.parquet",
+  "transformations": [
+    {
+      "name": "email_match",
+      "type": "engineered",
+      "description": "Binary flag: 1 if P_emaildomain == R_emaildomain, else 0",
+      "inputs": ["P_emaildomain", "R_emaildomain"],
+      "output_columns": ["email_match"],
+      "function": "feature_engineering.create_email_match",
+      "params": {}
+    },
+    {
+      "name": "transaction_amt_features",
+      "type": "engineered",
+      "description": "Log1p and fractional-cent transforms for TransactionAmt",
+      "inputs": ["TransactionAmt"],
+      "output_columns": ["TransactionAmt_log1p", "TransactionAmt_cents"],
+      "function": "feature_engineering.create_transaction_amt_features",
+      "params": {}
+    },
+    {
+      "name": "missingness_indicators",
+      "type": "engineered",
+      "description": "Binary null indicators for V-features with highest fraud-differential missingness (EDA Section A3)",
+      "inputs": [
+        "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10",
+        "V11", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22"
+      ],
+      "output_columns": [
+        "V1_is_null", "V2_is_null", "V3_is_null", "V4_is_null", "V5_is_null",
+        "V6_is_null", "V7_is_null", "V8_is_null", "V9_is_null", "V10_is_null",
+        "V11_is_null", "V14_is_null", "V15_is_null", "V16_is_null", "V17_is_null",
+        "V18_is_null", "V19_is_null", "V20_is_null", "V21_is_null", "V22_is_null"
+      ],
+      "function": "feature_engineering.create_missingness_indicators",
+      "params": {
+        "columns": [
+          "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10",
+          "V11", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22"
+        ]
+      }
+    },
+    {
+      "name": "frequency_encoding",
+      "type": "engineered",
+      "description": "Frequency-encode high-cardinality categoricals from training-split counts",
+      "inputs": ["card1", "addr1", "P_emaildomain", "card2"],
+      "output_columns": ["card1_freq", "addr1_freq", "P_emaildomain_freq", "card2_freq"],
+      "function": "feature_engineering.FrequencyEncoder",
+      "params": {
+        "columns": ["card1", "addr1", "P_emaildomain", "card2"]
+      },
+      "requires_fit": true
+    },
+    {
+      "name": "uid_aggregations",
+      "type": "engineered",
+      "description": "Per-UID transaction count and amount statistics using (card1, addr1) proxy",
+      "inputs": ["card1", "addr1", "TransactionAmt"],
+      "output_columns": ["uid_tx_count", "uid_amt_mean", "uid_amt_std"],
+      "function": "feature_engineering.UidAggregator",
+      "params": {},
+      "requires_fit": true
+    }
+  ],
+  "dropped_columns": [],
+  "drop_reasons": {},
+  "inherited_transformations_from": 1,
+  "final_column_count": 457
+}
