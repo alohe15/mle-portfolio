@@ -34,5 +34,17 @@
     "dataset_config_path": "configs/dataset_v2.json",
     "created_at": "2026-07-18T19:04:31Z",
     "is_serving": false
+  },
+  {
+    "version": 4,
+    "dataset_version": 2,
+    "description": "Clean re-baseline \u2014 dataset_v2 features under three-way temporal split with L1 regularization",
+    "model_path": "models/lgbm_v4_clean_rebaseline.txt",
+    "manifest_path": "models/lgbm_v4_clean_rebaseline_manifest.json",
+    "metrics_path": "models/lgbm_v4_clean_rebaseline_metrics.json",
+    "config_path": "configs/lgbm_v4.json",
+    "dataset_config_path": "configs/dataset_v2.json",
+    "created_at": "2026-08-15T22:42:49Z",
+    "is_serving": false
   }
 ]
