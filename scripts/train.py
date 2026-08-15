@@ -277,31 +277,41 @@ def artifact_slug(model_config: dict) -> str:
 # Data splitting
 # ---------------------------------------------------------------------------
 
-def temporal_split(df: pd.DataFrame, split_config: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Split the dataset by time, not randomly.
-
-    This is critical for fraud detection: a random split would leak future
-    transactions into training, inflating metrics. Real-world deployment
-    always predicts on transactions that come AFTER what the model was
-    trained on. The temporal split simulates this.
-
-    The split config specifies:
-      - method: "temporal" (the only supported method; raises if anything else)
-      - sort_column: "TransactionDT" (seconds from a reference timestamp)
-      - train_fraction: 0.8 (first 80% of chronologically-ordered rows)
-
-    Returns (train_df, test_df) as copies to avoid downstream SettingWithCopy
-    warnings.
-    """
+def temporal_split(
+    df: pd.DataFrame,
+    split_config: dict,
+    *,
+    config_path: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     method = split_config["method"]
     if method != "temporal":
         raise ValueError(f"Unsupported split method: {method!r}")
 
+    if "val_fraction" not in split_config:
+        config_label = config_path or "unknown"
+        raise ValueError(
+            f"Config {config_label} uses the deprecated two-way split. "
+            "Create a new config with train_fraction, val_fraction, and test_fraction "
+            "per §3 of ENGINEERING_STANDARDS.md."
+        )
+
+    train_frac = split_config["train_fraction"]
+    val_frac = split_config["val_fraction"]
+    assert abs(train_frac + val_frac + split_config["test_fraction"] - 1.0) < 1e-6, (
+        f"Split fractions must sum to 1.0, got "
+        f"{train_frac + val_frac + split_config['test_fraction']}"
+    )
+
     sort_column = split_config["sort_column"]
-    train_fraction = split_config["train_fraction"]
     df = df.sort_values(sort_column).reset_index(drop=True)
-    split_idx = int(len(df) * train_fraction)
-    return df.iloc[:split_idx].copy(), df.iloc[split_idx:].copy()
+    n = len(df)
+    train_end = int(n * train_frac)
+    val_end = int(n * (train_frac + val_frac))
+
+    train_df = df.iloc[:train_end].copy()
+    val_df = df.iloc[train_end:val_end].copy()
+    test_df = df.iloc[val_end:].copy()
+    return train_df, val_df, test_df
 
 
 # ---------------------------------------------------------------------------
@@ -310,31 +320,10 @@ def temporal_split(df: pd.DataFrame, split_config: dict) -> tuple[pd.DataFrame, 
 
 def apply_requires_fit_transforms(
     train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
     test_df: pd.DataFrame,
     dataset_config: dict,
-) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
-    """Apply transformations that require fitting (e.g. frequency encoders,
-    UID aggregation lookups) in a leakage-safe manner.
-
-    The key invariant: fit on train only, transform both splits.
-
-    Non-requires_fit transforms (like email_match, which is a pure row-level
-    computation with no learned statistics) were already applied by
-    build_dataset.py and baked into the parquet. Those don't need
-    train-only fitting because they don't aggregate across rows.
-
-    requires_fit transforms (like frequency encoders that compute "how many
-    times has this card been seen") DO aggregate across rows, so computing
-    them on the full dataset before splitting would leak test-set statistics
-    into training features. That's why they're handled here, after the split.
-
-    The fitted objects (lookup tables, encoders) are returned so they can be
-    serialized to a pickle file. The API loads this pickle at startup to
-    apply the same frozen statistics at inference time — it never recomputes
-    them.
-
-    See ENGINEERING_STANDARDS.md §2g (Leakage Discipline for Dataset Builds).
-    """
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict[str, object]]:
     fitted: dict[str, object] = {}
     for _, transform in collect_all_transformations(dataset_config):
         if not transform.get("requires_fit"):
@@ -351,6 +340,7 @@ def apply_requires_fit_transforms(
             instance = obj()
             instance.fit(train_df, params)
             train_df = instance.transform(train_df, params)
+            val_df = instance.transform(val_df, params)
             test_df = instance.transform(test_df, params)
             fitted[name] = instance
             continue
@@ -360,7 +350,7 @@ def apply_requires_fit_transforms(
             "is not a class."
         )
 
-    return train_df, test_df, fitted
+    return train_df, val_df, test_df, fitted
 
 
 # ---------------------------------------------------------------------------
@@ -369,58 +359,36 @@ def apply_requires_fit_transforms(
 
 def prepare_features(
     train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
     test_df: pd.DataFrame,
     feature_list: list[str],
-) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
-    """Select and prepare the feature columns for LightGBM training.
-
-    Three things happen here:
-
-    1. Column selection: only columns in the feature list are kept. The
-       feature list is an output of build_dataset.py — it excludes the
-       target (isFraud), TransactionID, and TransactionDT. This ensures
-       the model only sees legitimate features.
-
-    2. Validation: if any feature list column is missing from the dataframe,
-       this raises immediately rather than producing a silent shape mismatch.
-       This catches config drift (feature list says column X exists but the
-       parquet doesn't have it).
-
-    3. Categorical handling: object/string columns are converted to pandas
-       Categoricals with a SHARED vocabulary across train and test. This is
-       critical — LightGBM's categorical feature support requires consistent
-       category codes between train and test. Without the shared vocabulary,
-       category code 5 in train could mean "Visa" while code 5 in test means
-       "Mastercard", producing garbage predictions.
-
-       Nulls in categoricals are filled with "__MISSING__" to give LightGBM
-       an explicit category to learn from rather than relying on its internal
-       NaN handling for categoricals (which behaves differently from its
-       numeric NaN handling).
-
-    Returns (x_train, x_test, categorical_column_names).
-    """
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
     missing = [col for col in feature_list if col not in train_df.columns]
     if missing:
         raise ValueError(f"Feature list columns missing from dataset: {missing}")
 
     x_train = train_df[feature_list].copy()
+    x_val = val_df[feature_list].copy()
     x_test = test_df[feature_list].copy()
     cat_cols = x_train.select_dtypes(include=["object", "string"]).columns.tolist()
 
     for col in cat_cols:
         # Fill nulls with a sentinel string so they become a learnable category
         x_train[col] = x_train[col].fillna("__MISSING__").astype(str)
+        x_val[col] = x_val[col].fillna("__MISSING__").astype(str)
         x_test[col] = x_test[col].fillna("__MISSING__").astype(str)
         # Build a shared vocabulary from BOTH splits so every category code
         # maps to the same value in train and test
         categories = pd.Index(
-            pd.concat([x_train[col], x_test[col]], ignore_index=True).unique()
+            pd.concat(
+                [x_train[col], x_val[col], x_test[col]], ignore_index=True
+            ).unique()
         )
         x_train[col] = pd.Categorical(x_train[col], categories=categories)
+        x_val[col] = pd.Categorical(x_val[col], categories=categories)
         x_test[col] = pd.Categorical(x_test[col], categories=categories)
 
-    return x_train, x_test, cat_cols
+    return x_train, x_val, x_test, cat_cols
 
 
 # ---------------------------------------------------------------------------
@@ -561,16 +529,19 @@ def train_model(config_path: Path) -> None:
     # Step 3: Load data and split temporally
     # -----------------------------------------------------------------------
     df = pd.read_parquet(parquet_path)
-    train_df, test_df = temporal_split(df, model_config["split"])
-
-    # -----------------------------------------------------------------------
-    # Step 4: Apply leakage-safe requires_fit transforms
-    # -----------------------------------------------------------------------
-    # For dataset_v1 (raw baseline), this is a no-op — there are no
-    # requires_fit transforms. For later versions with frequency encoders
-    # or UID aggregations, this fits on train and transforms both.
-    train_df, test_df, fitted_transforms = apply_requires_fit_transforms(
-        train_df, test_df, dataset_config
+    split_cfg = model_config["split"]
+    train_df, val_df, test_df = temporal_split(
+        df,
+        split_cfg,
+        config_path=repo_relative_path(config_path.resolve()),
+    )
+    print(
+        f"Split: train={len(train_df)} ({train_df[target_column].mean():.4f} fraud) | "
+        f"val={len(val_df)} ({val_df[target_column].mean():.4f} fraud) | "
+        f"test={len(test_df)} ({test_df[target_column].mean():.4f} fraud)"
+    )
+    train_df, val_df, test_df, fitted_transforms = apply_requires_fit_transforms(
+        train_df, val_df, test_df, dataset_config
     )
 
     for _, transform in collect_all_transformations(dataset_config):
@@ -580,11 +551,11 @@ def train_model(config_path: Path) -> None:
             if col not in feature_list:
                 feature_list.append(col)
 
-    # -----------------------------------------------------------------------
-    # Step 5: Prepare feature matrices and target arrays
-    # -----------------------------------------------------------------------
-    x_train, x_test, cat_cols = prepare_features(train_df, test_df, feature_list)
+    x_train, x_val, x_test, cat_cols = prepare_features(
+        train_df, val_df, test_df, feature_list
+    )
     y_train = train_df[target_column].to_numpy()
+    y_val = val_df[target_column].to_numpy()
     y_test = test_df[target_column].to_numpy()
 
     # -----------------------------------------------------------------------
@@ -594,6 +565,7 @@ def train_model(config_path: Path) -> None:
     # separately because it's passed to the callback, not the constructor.
     lgbm_params = dict(model_config["lgbm_params"])
     early_stopping_rounds = lgbm_params.pop("early_stopping_rounds")
+    eval_metric = lgbm_params.pop("metric")
     # Remove scale_pos_weight from config params — we compute it dynamically
     # from the actual training fraud rate rather than hardcoding it. This
     # ensures it stays correct even if the temporal split changes the
@@ -615,9 +587,8 @@ def train_model(config_path: Path) -> None:
     # n_estimators trees, but stops early if the eval metric hasn't improved
     # for early_stopping_rounds consecutive rounds.
     #
-    # The eval set is the test split. In a production setting you'd use a
-    # separate validation split, but for this portfolio project the temporal
-    # test set serves both purposes.
+    # The eval set is the validation split, not test. Test is held out for
+    # final metrics only.
     #
     # Callbacks:
     #   - early_stopping: stops training when no improvement for N rounds
@@ -628,7 +599,8 @@ def train_model(config_path: Path) -> None:
         x_train,
         y_train,
         categorical_feature=cat_cols,
-        eval_set=[(x_test, y_test)],
+        eval_set=[(x_val, y_val)],
+        eval_metric=eval_metric,
         callbacks=[
             lgb.early_stopping(
                 stopping_rounds=early_stopping_rounds,
@@ -638,10 +610,7 @@ def train_model(config_path: Path) -> None:
         ],
     )
 
-    # -----------------------------------------------------------------------
-    # Step 7: Evaluate the trained model
-    # -----------------------------------------------------------------------
-    # predict_proba returns [P(class=0), P(class=1)] — we want column 1.
+    # --- Final evaluation on held-out test set (never seen during training or early stopping) ---
     y_score = model.predict_proba(x_test)[:, 1]
     # Evaluate at the prevalence-matched flag rate: flag the same fraction
     # of transactions as are actually fraudulent in training data.
@@ -680,8 +649,10 @@ def train_model(config_path: Path) -> None:
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "dataset": {
             "train_rows": int(len(train_df)),
+            "val_rows": int(len(val_df)),
             "test_rows": int(len(test_df)),
             "fraud_rate_train": float(y_train.mean()),
+            "fraud_rate_val": float(y_val.mean()),
             "fraud_rate_test": float(y_test.mean()),
         },
         "metrics": {
@@ -767,7 +738,8 @@ def train_model(config_path: Path) -> None:
     print(
         f"Trained v{version} on dataset_v{dataset_version}: "
         f"AUC-PR={metrics_doc['metrics']['auc_pr']:.4f} | "
-        f"{len(feature_list)} features | {best_iteration} rounds"
+        f"{len(feature_list)} features | {best_iteration} rounds | "
+        f"split={len(train_df)}/{len(val_df)}/{len(test_df)}"
     )
 
 
