@@ -46,5 +46,17 @@
     "dataset_config_path": "configs/dataset_v2.json",
     "created_at": "2026-08-15T22:42:49Z",
     "is_serving": false
+  },
+  {
+    "version": 5,
+    "dataset_version": 3,
+    "description": "Dn normalization \u2014 test calendar-normalized D-features",
+    "model_path": "models/lgbm_v5_dn_normalization.txt",
+    "manifest_path": "models/lgbm_v5_dn_normalization_manifest.json",
+    "metrics_path": "models/lgbm_v5_dn_normalization_metrics.json",
+    "config_path": "configs/lgbm_v5.json",
+    "dataset_config_path": "configs/dataset_v3.json",
+    "created_at": "2026-08-15T23:39:22Z",
+    "is_serving": false
   }
 ]

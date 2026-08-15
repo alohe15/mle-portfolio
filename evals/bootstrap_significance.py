@@ -71,10 +71,11 @@ def load_fitted_transforms(manifest: dict) -> dict[str, object]:
 
 def apply_requires_fit_transforms(
     train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
     test_df: pd.DataFrame,
     dataset_config: dict,
     fitted_transforms: dict[str, object],
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     for _, transform in collect_all_transformations(dataset_config):
         if not transform.get("requires_fit"):
             continue
@@ -84,6 +85,7 @@ def apply_requires_fit_transforms(
         if name in fitted_transforms:
             encoder = fitted_transforms[name]
             train_df = encoder.transform(train_df, params)
+            val_df = encoder.transform(val_df, params)
             test_df = encoder.transform(test_df, params)
             continue
 
@@ -95,45 +97,51 @@ def apply_requires_fit_transforms(
         instance = obj()
         instance.fit(train_df, params)
         train_df = instance.transform(train_df, params)
+        val_df = instance.transform(val_df, params)
         test_df = instance.transform(test_df, params)
 
-    return train_df, test_df
+    return train_df, val_df, test_df
 
 
-def load_version_splits(registry_entry: dict, split_config: dict) -> tuple[pd.DataFrame, pd.DataFrame, str]:
+def load_version_splits(
+    registry_entry: dict, split_config: dict
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, str]:
     dataset_version = registry_entry["dataset_version"]
     manifest_path = find_dataset_manifest(dataset_version)
     dataset_manifest = load_json(manifest_path)
     df = pd.read_parquet(parquet_path_from_manifest(manifest_path))
-    train_df, test_df = temporal_split(df, split_config)
-    return train_df, test_df, dataset_manifest["target_column"]
+    train_df, val_df, test_df = temporal_split(
+        df, split_config, config_path=registry_entry["config_path"]
+    )
+    return train_df, val_df, test_df, dataset_manifest["target_column"]
 
 
-def align_test_frames(
-    baseline_test: pd.DataFrame,
-    candidate_test: pd.DataFrame,
+def align_eval_frames(
+    baseline_eval: pd.DataFrame,
+    candidate_eval: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    if len(baseline_test) != len(candidate_test):
+    if len(baseline_eval) != len(candidate_eval):
         raise ValueError(
-            "Baseline and candidate test sets differ in size: "
-            f"{len(baseline_test)} vs {len(candidate_test)}"
+            "Baseline and candidate evaluation sets differ in size: "
+            f"{len(baseline_eval)} vs {len(candidate_eval)}"
         )
 
-    if "TransactionID" not in baseline_test.columns or "TransactionID" not in candidate_test.columns:
-        return baseline_test.reset_index(drop=True), candidate_test.reset_index(drop=True)
+    if "TransactionID" not in baseline_eval.columns or "TransactionID" not in candidate_eval.columns:
+        return baseline_eval.reset_index(drop=True), candidate_eval.reset_index(drop=True)
 
-    baseline_aligned = baseline_test.sort_values("TransactionID").reset_index(drop=True)
-    candidate_aligned = candidate_test.sort_values("TransactionID").reset_index(drop=True)
+    baseline_aligned = baseline_eval.sort_values("TransactionID").reset_index(drop=True)
+    candidate_aligned = candidate_eval.sort_values("TransactionID").reset_index(drop=True)
     if not baseline_aligned["TransactionID"].equals(candidate_aligned["TransactionID"]):
-        raise ValueError("Baseline and candidate test sets have different TransactionID values")
+        raise ValueError("Baseline and candidate evaluation sets have different TransactionID values")
     return baseline_aligned, candidate_aligned
 
 
 def score_version(
     registry_entry: dict,
     train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
     test_df: pd.DataFrame,
-    target_column: str,
+    eval_split: str,
 ) -> np.ndarray:
     manifest = load_json(repo_path(registry_entry["manifest_path"]))
     dataset_config = load_json(repo_path(registry_entry["dataset_config_path"]))
@@ -141,14 +149,18 @@ def score_version(
     fitted_transforms = load_fitted_transforms(manifest)
 
     train_df = train_df.copy()
+    val_df = val_df.copy()
     test_df = test_df.copy()
-    train_df, test_df = apply_requires_fit_transforms(
-        train_df, test_df, dataset_config, fitted_transforms
+    train_df, val_df, test_df = apply_requires_fit_transforms(
+        train_df, val_df, test_df, dataset_config, fitted_transforms
     )
 
-    _, x_test, _ = prepare_features(train_df, test_df, feature_list)
+    _, x_val, x_test, _ = prepare_features(
+        train_df, val_df, test_df, feature_list
+    )
+    eval_features = x_val if eval_split == "val" else x_test
     model = lgb.Booster(model_file=str(repo_path(registry_entry["model_path"])))
-    return model.predict(x_test)
+    return model.predict(eval_features)
 
 
 def bootstrap_auc_pr_differences(
@@ -233,7 +245,14 @@ def classify_result(ci_low: float, ci_high: float) -> str:
     return "inconclusive"
 
 
-def run_significance_test(baseline_version: int, candidate_version: int) -> None:
+def run_significance_test(
+    baseline_version: int,
+    candidate_version: int,
+    eval_split: str = "val",
+) -> None:
+    if eval_split not in {"val", "test"}:
+        raise ValueError(f"eval_split must be 'val' or 'test', got {eval_split!r}")
+
     registry = load_registry()
     baseline_entry = get_registry_entry(registry, baseline_version)
     candidate_entry = get_registry_entry(registry, candidate_version)
@@ -241,30 +260,39 @@ def run_significance_test(baseline_version: int, candidate_version: int) -> None
     candidate_config = load_json(repo_path(candidate_entry["config_path"]))
     split_config = candidate_config["split"]
 
-    baseline_train, baseline_test, baseline_target = load_version_splits(
+    baseline_train, baseline_val, baseline_test, baseline_target = load_version_splits(
         baseline_entry, split_config
     )
-    candidate_train, candidate_test, candidate_target = load_version_splits(
+    candidate_train, candidate_val, candidate_test, candidate_target = load_version_splits(
         candidate_entry, split_config
     )
-    baseline_test, candidate_test = align_test_frames(baseline_test, candidate_test)
 
-    y_test = candidate_test[candidate_target].to_numpy()
-    baseline_y = baseline_test[baseline_target].to_numpy()
-    if not np.array_equal(y_test, baseline_y):
-        raise ValueError("Baseline and candidate test targets do not match after alignment")
+    if eval_split == "val":
+        baseline_eval, candidate_eval = align_eval_frames(baseline_val, candidate_val)
+        # Re-bind aligned eval frames so scoring uses the same row order.
+        baseline_val, candidate_val = baseline_eval, candidate_eval
+    else:
+        baseline_eval, candidate_eval = align_eval_frames(baseline_test, candidate_test)
+        baseline_test, candidate_test = baseline_eval, candidate_eval
+
+    y_eval = candidate_eval[candidate_target].to_numpy()
+    baseline_y = baseline_eval[baseline_target].to_numpy()
+    if not np.array_equal(y_eval, baseline_y):
+        raise ValueError(
+            "Baseline and candidate evaluation targets do not match after alignment"
+        )
 
     baseline_scores = score_version(
-        baseline_entry, baseline_train, baseline_test, baseline_target
+        baseline_entry, baseline_train, baseline_val, baseline_test, eval_split
     )
     candidate_scores = score_version(
-        candidate_entry, candidate_train, candidate_test, candidate_target
+        candidate_entry, candidate_train, candidate_val, candidate_test, eval_split
     )
 
     train_fraud_rate = float(baseline_train[baseline_target].mean())
 
     baseline_auc_boot, candidate_auc_boot, auc_differences = bootstrap_auc_pr_differences(
-        y_test,
+        y_eval,
         baseline_scores,
         candidate_scores,
         n_iterations=N_BOOTSTRAP,
@@ -276,7 +304,7 @@ def run_significance_test(baseline_version: int, candidate_version: int) -> None
 
     baseline_recall_boot, candidate_recall_boot, recall_differences = (
         bootstrap_recall_at_budget_differences(
-            y_test,
+            y_eval,
             baseline_scores,
             candidate_scores,
             flag_rate=train_fraud_rate,
@@ -292,7 +320,8 @@ def run_significance_test(baseline_version: int, candidate_version: int) -> None
     print("=" * 64)
     print(f"Baseline version:   v{baseline_version} ({baseline_entry['description']})")
     print(f"Candidate version:  v{candidate_version} ({candidate_entry['description']})")
-    print(f"Test rows:          {len(y_test):,}")
+    print(f"Eval split:         {eval_split}")
+    print(f"Eval rows:          {len(y_eval):,}")
     print(f"Bootstrap samples:  {N_BOOTSTRAP}")
     print(f"Recall flag rate:   {train_fraud_rate:.4%} (training-set fraud rate)")
     print()
@@ -333,12 +362,18 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Candidate model version number (e.g. 2)",
     )
+    parser.add_argument(
+        "--eval-split",
+        choices=["val", "test"],
+        default="val",
+        help="Which temporal split to bootstrap (default: val).",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    run_significance_test(args.baseline, args.candidate)
+    run_significance_test(args.baseline, args.candidate, eval_split=args.eval_split)
 
 
 if __name__ == "__main__":
