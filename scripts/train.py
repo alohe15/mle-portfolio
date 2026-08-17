@@ -566,18 +566,15 @@ def train_model(config_path: Path) -> None:
     lgbm_params = dict(model_config["lgbm_params"])
     early_stopping_rounds = lgbm_params.pop("early_stopping_rounds")
     eval_metric = lgbm_params.pop("metric")
-    # Remove scale_pos_weight from config params — we compute it dynamically
-    # from the actual training fraud rate rather than hardcoding it. This
-    # ensures it stays correct even if the temporal split changes the
-    # effective fraud rate slightly.
-    lgbm_params.pop("scale_pos_weight", None)
-
-    # scale_pos_weight = (# negatives) / (# positives)
-    # This tells LightGBM to weight fraud samples ~27x more heavily,
-    # compensating for the ~3.5% fraud rate. Without this, the model
-    # would learn to predict "not fraud" for everything.
+    # scale_pos_weight: honor a numeric config value (e.g. Optuna-tuned).
+    # If the config leaves it null, compute (# negatives) / (# positives)
+    # from the training fraud rate so it stays correct if the split changes.
+    configured_spw = lgbm_params.pop("scale_pos_weight", None)
     train_fraud_rate = float(y_train.mean())
-    scale_pos_weight = (1.0 - train_fraud_rate) / train_fraud_rate
+    if configured_spw is None:
+        scale_pos_weight = (1.0 - train_fraud_rate) / train_fraud_rate
+    else:
+        scale_pos_weight = float(configured_spw)
 
     classifier_kwargs = dict(lgbm_params)
     classifier_kwargs["scale_pos_weight"] = scale_pos_weight
