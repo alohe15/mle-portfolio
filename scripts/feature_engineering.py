@@ -339,6 +339,24 @@ def create_v_block_aggregates(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     return df
 
 
+def normalize_d_columns(df: pd.DataFrame, params: dict) -> pd.DataFrame:
+    """Normalize D-columns by converting to days-before-transaction.
+
+    Computes floor(TransactionDT / 86400 - D_col) for each D-column,
+    removing the absolute calendar position while preserving the
+    behavioral signal (how many days before this transaction did event X occur).
+
+    Inputs: TransactionDT, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15
+    Outputs: D1n, D2n, D3n, D4n, D5n, D6n, D7n, D8n, D9n, D10n, D11n, D12n, D13n, D14n, D15n
+    """
+    transaction_day = np.floor(df["TransactionDT"] / 86400)
+    for i in range(1, 16):
+        d_col = f"D{i}"
+        if d_col in df.columns:
+            df[f"D{i}n"] = transaction_day - df[d_col]
+    return df
+
+
 def create_frequency_encodings(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     """Map train-split value counts onto each row as frequency features.
 
