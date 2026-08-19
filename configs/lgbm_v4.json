@@ -1,0 +1,32 @@
+{
+  "version": 4,
+  "short_description": "clean_rebaseline",
+  "description": "Clean re-baseline — dataset_v2 features under three-way temporal split with L1 regularization",
+  "parent_version": 3,
+  "dataset_version": 2,
+  "dataset_config_path": "configs/dataset_v2.json",
+  "is_serving": false,
+  "split": {
+    "method": "temporal",
+    "train_fraction": 0.70,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
+    "sort_column": "TransactionDT"
+  },
+  "lgbm_params": {
+    "objective": "binary",
+    "metric": "average_precision",
+    "n_estimators": 2000,
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "scale_pos_weight": null,
+    "early_stopping_rounds": 100,
+    "verbose": -1,
+    "reg_alpha": 1.0
+  },
+  "early_stopping": {
+    "metric": "average_precision",
+    "patience": 100,
+    "min_delta": 0.0
+  }
+}

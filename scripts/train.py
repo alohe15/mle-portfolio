@@ -610,8 +610,14 @@ def train_model(config_path: Path) -> None:
         ],
     )
 
-    # --- Final evaluation on held-out test set (never seen during training or early stopping) ---
+    # --- Final evaluation ---
+    # val_auc_pr is computed on the validation split that early stopping
+    # monitored. test_auc_pr is computed on the clean holdout, which is
+    # never passed to eval_set or used for any model decision.
+    y_val_score = model.predict_proba(x_val)[:, 1]
     y_score = model.predict_proba(x_test)[:, 1]
+    val_auc_pr = float(average_precision_score(y_val, y_val_score))
+    test_auc_pr = float(average_precision_score(y_test, y_score))
     # Evaluate at the prevalence-matched flag rate: flag the same fraction
     # of transactions as are actually fraudulent in training data.
     operating = evaluate_at_flag_rate(y_test, y_score, train_fraud_rate)
@@ -660,7 +666,9 @@ def train_model(config_path: Path) -> None:
             # can be misleadingly high (a random classifier gets ~0.5 AUC-ROC
             # but only ~0.035 AUC-PR). AUC-PR is more sensitive to
             # performance on the minority class.
-            "auc_pr": float(average_precision_score(y_test, y_score)),
+            "auc_pr": test_auc_pr,
+            "val_auc_pr": val_auc_pr,
+            "test_auc_pr": test_auc_pr,
             "auc_roc": float(roc_auc_score(y_test, y_score)),
             # Precision/recall/F1 at the prevalence-matched flag rate
             "precision_at_budget": operating["precision"],
@@ -737,7 +745,7 @@ def train_model(config_path: Path) -> None:
     # -----------------------------------------------------------------------
     print(
         f"Trained v{version} on dataset_v{dataset_version}: "
-        f"AUC-PR={metrics_doc['metrics']['auc_pr']:.4f} | "
+        f"val_auc_pr={val_auc_pr:.4f} | test_auc_pr={test_auc_pr:.4f} | "
         f"{len(feature_list)} features | {best_iteration} rounds | "
         f"split={len(train_df)}/{len(val_df)}/{len(test_df)}"
     )
