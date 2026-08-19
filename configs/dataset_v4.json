@@ -1,0 +1,25 @@
+{
+  "dataset_version": 4,
+  "description": "Identity-side frequency encodings — DeviceInfo, id_30, id_31 rarity signal",
+  "parent_version": 3,
+  "raw_source": "data/raw/train_merged.parquet",
+  "output_path": "data/processed/dataset_v4_identity_frequency_encoding.parquet",
+  "transformations": [
+    {
+      "name": "identity_frequency_encoding",
+      "type": "engineered",
+      "description": "Frequency-encode DeviceInfo, id_30, and id_31 from training-split counts",
+      "inputs": ["DeviceInfo", "id_30", "id_31"],
+      "output_columns": ["DeviceInfo_freq", "id_30_freq", "id_31_freq"],
+      "function": "feature_engineering.FrequencyEncoder",
+      "params": {
+        "columns": ["DeviceInfo", "id_30", "id_31"]
+      },
+      "requires_fit": true
+    }
+  ],
+  "dropped_columns": [],
+  "drop_reasons": {},
+  "inherited_transformations_from": 3,
+  "final_column_count": 475
+}

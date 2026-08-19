@@ -1,0 +1,136 @@
+{
+  "version": 6,
+  "dataset_version": 4,
+  "description": "Identity-side frequency encodings \u2014 test DeviceInfo/id_30/id_31 rarity",
+  "model_path": "models/lgbm_v6_identity_frequency_encoding.txt",
+  "manifest_path": "models/lgbm_v6_identity_frequency_encoding_manifest.json",
+  "config_path": "configs/lgbm_v6.json",
+  "timestamp": "2026-08-16T00:33:08Z",
+  "sample": {
+    "split": "val",
+    "n_total": 88581,
+    "n_sampled": 5000,
+    "random_state": 42
+  },
+  "top_n_reported": 20,
+  "top_features": [
+    {
+      "rank": 1,
+      "feature": "C13",
+      "mean_abs_shap": 0.39846283988288134
+    },
+    {
+      "rank": 2,
+      "feature": "card1_freq",
+      "mean_abs_shap": 0.3538973924300613
+    },
+    {
+      "rank": 3,
+      "feature": "D4n",
+      "mean_abs_shap": 0.3155539576558112
+    },
+    {
+      "rank": 4,
+      "feature": "P_emaildomain",
+      "mean_abs_shap": 0.30167247525090485
+    },
+    {
+      "rank": 5,
+      "feature": "TransactionAmt",
+      "mean_abs_shap": 0.2982463230214722
+    },
+    {
+      "rank": 6,
+      "feature": "D1n",
+      "mean_abs_shap": 0.25299599728406386
+    },
+    {
+      "rank": 7,
+      "feature": "V70",
+      "mean_abs_shap": 0.22435113340617244
+    },
+    {
+      "rank": 8,
+      "feature": "C14",
+      "mean_abs_shap": 0.22378664101745202
+    },
+    {
+      "rank": 9,
+      "feature": "uid_amt_mean",
+      "mean_abs_shap": 0.2220236298368591
+    },
+    {
+      "rank": 10,
+      "feature": "D15",
+      "mean_abs_shap": 0.19863100191190056
+    },
+    {
+      "rank": 11,
+      "feature": "dist1",
+      "mean_abs_shap": 0.19538698578187802
+    },
+    {
+      "rank": 12,
+      "feature": "card1",
+      "mean_abs_shap": 0.1937078488351246
+    },
+    {
+      "rank": 13,
+      "feature": "TransactionAmt_cents",
+      "mean_abs_shap": 0.18625824885954384
+    },
+    {
+      "rank": 14,
+      "feature": "card6",
+      "mean_abs_shap": 0.17747274071621735
+    },
+    {
+      "rank": 15,
+      "feature": "card2_freq",
+      "mean_abs_shap": 0.1595003619211479
+    },
+    {
+      "rank": 16,
+      "feature": "uid_amt_std",
+      "mean_abs_shap": 0.15590256987832118
+    },
+    {
+      "rank": 17,
+      "feature": "addr1",
+      "mean_abs_shap": 0.14892834949850828
+    },
+    {
+      "rank": 18,
+      "feature": "id_30",
+      "mean_abs_shap": 0.147572600475126
+    },
+    {
+      "rank": 19,
+      "feature": "C2",
+      "mean_abs_shap": 0.1455486818998251
+    },
+    {
+      "rank": 20,
+      "feature": "D15n",
+      "mean_abs_shap": 0.14325448566924093
+    }
+  ],
+  "target_features": [
+    {
+      "feature": "DeviceInfo_freq",
+      "rank": 125,
+      "mean_abs_shap": 0.010172689766861434
+    },
+    {
+      "feature": "id_30_freq",
+      "rank": 243,
+      "mean_abs_shap": 0.0016996972988801875
+    },
+    {
+      "feature": "id_31_freq",
+      "rank": 136,
+      "mean_abs_shap": 0.008456195906784592
+    }
+  ],
+  "figure_path": "evals/figures/shap_v6_identity_frequency_encoding.png"
+}
