@@ -1,7 +1,11 @@
-# Models
+# Models Directory
 
-Trained model artifacts for the IEEE-CIS fraud detection project.
+Trained model artifacts. Binary files (.txt, .pkl) are gitignored; JSON metadata is committed.
 
-Save serialized models, checkpoints, and per-run `*_metrics.json` here. Large binary files are gitignored; commit only lightweight artifacts (configs, small exports) when needed.
+## Current serving model
 
-Per-run metrics belong here. Cross-version comparison summaries live in `evals/`.
+**lgbm_v8** — Tree ceiling resolution for Optuna-tuned v7, dataset_v4
+- Config: `configs/lgbm_v8.json`
+- Test AUC-PR: 0.5909
+- Converged at iteration 11097 / 15000
+- Lock report: `docs/model_lock_report.md`

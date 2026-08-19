@@ -20,12 +20,24 @@ TABLE_COLUMNS = [
     ("version", "version"),
     ("dataset_version", "dataset_version"),
     ("description", "description"),
-    ("auc_pr", "auc_pr"),
+    ("test_auc_pr", "test_auc_pr"),
     ("precision_at_budget", "precision_at_budget"),
     ("recall_at_budget", "recall_at_budget"),
     ("best_iteration", "best_iteration"),
     ("n_features", "n_features"),
 ]
+
+
+def extract_test_auc_pr(metrics_doc: dict) -> float:
+    """Return holdout test AUC-PR, normalizing across metric schema variants."""
+    metrics = metrics_doc.get("metrics", metrics_doc)
+    test_auc_pr = metrics.get("test_auc_pr")
+    if test_auc_pr is not None:
+        return float(test_auc_pr)
+    auc_pr = metrics.get("auc_pr")
+    if auc_pr is not None:
+        return float(auc_pr)
+    raise KeyError("No test_auc_pr or auc_pr found in metrics document")
 
 
 def repo_path(relative: str) -> Path:
@@ -61,7 +73,7 @@ def build_comparison_rows(registry: list[dict]) -> list[dict]:
                 "version": entry["version"],
                 "dataset_version": entry["dataset_version"],
                 "description": entry["description"],
-                "auc_pr": metrics_doc["metrics"]["auc_pr"],
+                "test_auc_pr": extract_test_auc_pr(metrics_doc),
                 "precision_at_budget": metrics_doc["metrics"]["precision_at_budget"],
                 "recall_at_budget": metrics_doc["metrics"]["recall_at_budget"],
                 "best_iteration": metrics_doc["metrics"]["best_iteration"],
@@ -83,7 +95,7 @@ def format_table(rows: list[dict]) -> str:
                 "version": str(row["version"]),
                 "dataset_version": str(row["dataset_version"]),
                 "description": row["description"],
-                "auc_pr": f"{row['auc_pr']:.4f}",
+                "test_auc_pr": f"{row['test_auc_pr']:.4f}",
                 "precision_at_budget": f"{row['precision_at_budget']:.4f}",
                 "recall_at_budget": f"{row['recall_at_budget']:.4f}",
                 "best_iteration": str(row["best_iteration"]),
@@ -103,7 +115,7 @@ def format_table(rows: list[dict]) -> str:
             f"{row['version']:>{widths['version']}}  "
             f"{row['dataset_version']:>{widths['dataset_version']}}  "
             f"{row['description']:<{description_width}}  "
-            f"{row['auc_pr']:>{widths['auc_pr']}}  "
+            f"{row['test_auc_pr']:>{widths['test_auc_pr']}}  "
             f"{row['precision_at_budget']:>{widths['precision_at_budget']}}  "
             f"{row['recall_at_budget']:>{widths['recall_at_budget']}}  "
             f"{row['best_iteration']:>{widths['best_iteration']}}  "
@@ -114,7 +126,7 @@ def format_table(rows: list[dict]) -> str:
         f"{'version':>{widths['version']}}  "
         f"{'dataset_version':>{widths['dataset_version']}}  "
         f"{'description':<{description_width}}  "
-        f"{'auc_pr':>{widths['auc_pr']}}  "
+        f"{'test_auc_pr':>{widths['test_auc_pr']}}  "
         f"{'precision_at_budget':>{widths['precision_at_budget']}}  "
         f"{'recall_at_budget':>{widths['recall_at_budget']}}  "
         f"{'best_iteration':>{widths['best_iteration']}}  "

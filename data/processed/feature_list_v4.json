@@ -467,5 +467,15 @@
   "D12n",
   "D13n",
   "D14n",
-  "D15n"
+  "D15n",
+  "card1_freq",
+  "addr1_freq",
+  "P_emaildomain_freq",
+  "card2_freq",
+  "uid_tx_count",
+  "uid_amt_mean",
+  "uid_amt_std",
+  "DeviceInfo_freq",
+  "id_30_freq",
+  "id_31_freq"
 ]

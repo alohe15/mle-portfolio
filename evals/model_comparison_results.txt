@@ -1,16 +1,26 @@
 IEEE-CIS Fraud Detection — Model Comparison
 ================================================================
-Generated: 2026-07-18 19:04 UTC
+Generated: 2026-08-19 21:44 UTC
 Registry: models/registry.json
-Versions: 3
+Versions: 8
 
 Metrics sources:
   v1: models/lgbm_v1_raw_baseline_metrics.json
   v2: models/lgbm_v2_feature_eng_metrics.json
   v3: models/lgbm_v3_l1_feature_selection_metrics.json
+  v4: models/lgbm_v4_clean_rebaseline_metrics.json
+  v5: models/lgbm_v5_dn_normalization_metrics.json
+  v6: models/lgbm_v6_identity_frequency_encoding_metrics.json
+  v7: models/lgbm_v7_optuna_tuning_metrics.json
+  v8: models/lgbm_v8_tree_ceiling_test_metrics.json
 
-version  dataset_version  description                                                                                                                          auc_pr  precision_at_budget  recall_at_budget  best_iteration  n_features
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      1                1  Raw baseline — all raw merged columns, no engineered features                                                                        0.5511               0.5263            0.5374             953         431
-      2                2  Feature engineering migration: email_match, TransactionAmt transforms, missingness indicators, frequency encoding, UID aggregations  0.5698               0.5347            0.5460            1321         461
-      3                2  L1 regularization (reg_alpha=1.0) for feature selection — drives low-signal feature weights to zero                                  0.5721               0.5407            0.5522            1993         461
+version  dataset_version  description                                                                                                                          test_auc_pr  precision_at_budget  recall_at_budget  best_iteration  n_features
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      1                1  Raw baseline — all raw merged columns, no engineered features                                                                             0.5511               0.5263            0.5374             953         431
+      2                2  Feature engineering migration: email_match, TransactionAmt transforms, missingness indicators, frequency encoding, UID aggregations       0.5698               0.5347            0.5460            1321         461
+      3                2  L1 regularization (reg_alpha=1.0) for feature selection — drives low-signal feature weights to zero                                       0.5721               0.5407            0.5522            1993         461
+      4                2  Clean re-baseline — dataset_v2 features under three-way temporal split with L1 regularization                                             0.5011               0.4828            0.4878            1947         461
+      5                3  Dn normalization — test calendar-normalized D-features                                                                                    0.6412               0.5856            0.5996            2000         476
+      6                4  Identity-side frequency encodings — test DeviceInfo/id_30/id_31 rarity                                                                    0.6527               0.6058            0.6203            1995         479
+      7                4  Optuna-tuned hyperparameters on dataset_v4 (100 trials, 50% train subsample, retrained on full data)                                      0.5837               0.6411            0.6565            5000         479
+      8                4  Tree ceiling test — raise n_estimators from 5000 to 15000 to check if v7 was capacity-limited                                             0.5909               0.6504            0.6660           11097         479

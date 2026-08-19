@@ -9,7 +9,7 @@
     "config_path": "configs/lgbm_v1.json",
     "dataset_config_path": "configs/dataset_v1.json",
     "created_at": "2026-07-06T19:27:08Z",
-    "is_serving": true
+    "is_serving": false
   },
   {
     "version": 2,
@@ -82,5 +82,17 @@
     "dataset_config_path": "configs/dataset_v4.json",
     "created_at": "2026-08-17T01:57:50Z",
     "is_serving": false
+  },
+  {
+    "version": 8,
+    "dataset_version": 4,
+    "description": "Tree ceiling test \u2014 raise n_estimators from 5000 to 15000 to check if v7 was capacity-limited",
+    "model_path": "models/lgbm_v8_tree_ceiling_test.txt",
+    "manifest_path": "models/lgbm_v8_tree_ceiling_test_manifest.json",
+    "metrics_path": "models/lgbm_v8_tree_ceiling_test_metrics.json",
+    "config_path": "configs/lgbm_v8.json",
+    "dataset_config_path": "configs/dataset_v4.json",
+    "created_at": "2026-08-19T15:21:31Z",
+    "is_serving": true
   }
 ]
