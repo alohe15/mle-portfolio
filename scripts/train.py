@@ -357,19 +357,44 @@ def apply_requires_fit_transforms(
 # Feature preparation
 # ---------------------------------------------------------------------------
 
+def validate_feature_list(feature_list: list[str], feature_list_path: Path) -> None:
+    """Fail clearly on missing/empty/duplicated feature lists before training."""
+    if not feature_list_path.exists():
+        raise FileNotFoundError(f"Feature list JSON is missing: {feature_list_path}")
+    if not feature_list:
+        raise ValueError(f"Feature list is empty: {feature_list_path}")
+    if len(feature_list) != len(set(feature_list)):
+        dupes = sorted({f for f in feature_list if feature_list.count(f) > 1})
+        raise ValueError(f"Feature list contains duplicates: {dupes}")
+    forbidden = {"isFraud", "TransactionID", "TransactionDT"}
+    bad = [c for c in feature_list if c in forbidden]
+    if bad:
+        raise ValueError(f"Feature list contains non-feature columns: {bad}")
+
+
 def prepare_features(
     train_df: pd.DataFrame,
     val_df: pd.DataFrame,
     test_df: pd.DataFrame,
     feature_list: list[str],
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
+    if len(feature_list) != len(set(feature_list)):
+        dupes = sorted({f for f in feature_list if feature_list.count(f) > 1})
+        raise ValueError(f"Feature list contains duplicates: {dupes}")
+
     missing = [col for col in feature_list if col not in train_df.columns]
     if missing:
         raise ValueError(f"Feature list columns missing from dataset: {missing}")
 
+    # Select in feature_list order — this is the contract with the model manifest.
     x_train = train_df[feature_list].copy()
     x_val = val_df[feature_list].copy()
     x_test = test_df[feature_list].copy()
+    if list(x_train.columns) != feature_list:
+        raise ValueError(
+            "Feature column order does not match feature_list "
+            f"(got {list(x_train.columns)[:5]}... expected {feature_list[:5]}...)"
+        )
     cat_cols = x_train.select_dtypes(include=["object", "string"]).columns.tolist()
 
     for col in cat_cols:
@@ -509,7 +534,10 @@ def train_model(config_path: Path) -> None:
     # Feature list is an output of build_dataset.py — it's the authoritative
     # list of columns the model should train on (excludes target, IDs, time)
     feature_list_path = repo_path(dataset_manifest["feature_list_path"])
+    if not feature_list_path.exists():
+        raise FileNotFoundError(f"Feature list JSON is missing: {feature_list_path}")
     feature_list = load_json(feature_list_path)
+    validate_feature_list(feature_list, feature_list_path)
     target_column = dataset_manifest["target_column"]
 
     # -----------------------------------------------------------------------

@@ -1,6 +1,6 @@
 IEEE-CIS Fraud Detection — Model Comparison
 ================================================================
-Generated: 2026-08-19 21:44 UTC
+Generated: 2026-08-20 20:37 UTC
 Registry: models/registry.json
 Versions: 8
 
