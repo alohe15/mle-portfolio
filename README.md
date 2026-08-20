@@ -1,33 +1,38 @@
 # Fraud Detection — IEEE-CIS Vesta Transaction Dataset
 
-LightGBM binary classifier predicting e-commerce transaction fraud probability. Built as a production ML system with config-driven training, versioned datasets, temporal splits, and FastAPI serving.
+LightGBM binary classifier predicting e-commerce transaction fraud probability.
+Config-driven training, versioned datasets, temporal splits, FastAPI serving.
 
-## Current candidate model
+## Current serving model
 
-lgbm_v9 on dataset_v5 (Dn-only — raw D1–D15 dropped) — test AUC-PR 0.5952
+lgbm_v9 on dataset_v5 (Dn-only, 464 features) — test AUC-PR 0.5952
 
-## Quick start
-
-### Prerequisites
+## Environment setup
 
 - Python 3.11
-- Dependencies: `pip install -r requirements.txt`
-- Dataset: download from Kaggle (`kaggle competitions download -c ieee-fraud-detection`), extract CSVs to `data/raw/`
+- Install dependencies: `pip install -r requirements.txt`
 
-### Reproduce from scratch
+## Data placement
+
+Download from Kaggle and extract to `data/raw/`:
+```
+kaggle competitions download -c ieee-fraud-detection
+unzip ieee-fraud-detection.zip -d data/raw/
+```
+
+Accept competition terms at https://www.kaggle.com/competitions/ieee-fraud-detection first.
+
+## Reproduce the model
 
 ```bash
-# 1. Merge raw CSVs into base parquet
+# 1. Merge raw CSVs (~2 min)
 python scripts/merge_train_data.py
 
-# 2. Build feature-engineered datasets (~5–15 minutes each)
-# Build dataset_v4 (Dn normalization, raw D columns retained)
-python scripts/build_dataset.py --config configs/dataset_v4.json
-
-# Build dataset_v5 (drop raw D1-D15, Dn-only)
+# 2. Build dataset_v5 (Dn-only — drops raw D1–D15; ~10 min)
+# Historical lineage: dataset_v4 retains raw D + Dn; v5 is the locked build.
 python scripts/build_dataset.py --config configs/dataset_v5.json
 
-# 3. Train the locked candidate (~17 minutes, 9779 iterations)
+# 3. Train the serving model (~17 min, 9779 iterations)
 python scripts/train.py --config configs/lgbm_v9.json
 
 # 4. Compare all versions
@@ -49,8 +54,9 @@ After training completes, these files should exist:
 
 | Step | Time |
 |------|------|
-| Dataset build | ~5–15 min |
-| Model training | ~17 min (1040s recorded) |
+| Merge raw CSVs | ~2 min |
+| Dataset build (v5) | ~5–15 min |
+| Model training | ~17 min (1039.7s recorded; early-stops at 9779) |
 | Bootstrap significance | ~5–15 min |
 
 ## Dataset
@@ -59,20 +65,20 @@ After training completes, these files should exist:
 
 ## Key design decisions
 
-- **Dn normalization**: `normalize_d_columns` uses `floor(TransactionDT/86400 - D_col)` (inherited from dataset_v3). Ablation on branch `diag/d-dn-ablation` favored Dn-only.
-- **Raw D1–D15 dropped in dataset_v5**: Locked candidate trains on Dn-only. Raw D columns enable LightGBM to recover calendar day (greedy-attractor); Dn-only won all ablation windows.
+- **Dn normalization**: `normalize_d_columns` uses `floor(TransactionDT/86400 - D_col)` (inherited from dataset_v3). Ablation on branch `diag/d-dn-ablation` favored Dn-only (mean AUC-PR 0.6740).
+- **Raw D1–D15 dropped in dataset_v5**: Serving model trains on Dn-only. Raw D columns enable LightGBM to recover calendar day (greedy-attractor); Dn-only won all ablation windows.
 - **`requires_fit` leakage prevention**: Frequency encodings and UID aggregations fit on training split only (§2g).
-- **Tree ceiling resolution**: v7 (Optuna-tuned) hit the 5000-round ceiling; v8 raised to 15000 and converged at 11097. v9 reuses those hyperparameters on dataset_v5 and converged at 9779.
-
-## Experiment history
-
-See `evals/compare_models.py` output and `docs/model_lock_report.md` for the full version comparison, D/Dn ablation results, and temporal stability analysis.
+- **Tree ceiling resolution**: v7 (Optuna-tuned) hit the 5000-round ceiling; v8 raised to 15000 and converged at 11097. v9 reuses those hyperparameters on dataset_v5 and converges at 9779.
 
 ## Serving
 
 ```bash
-# Start the FastAPI endpoint
 uvicorn services.api.app:app --host 0.0.0.0 --port 8000
 ```
 
-Returns `{"fraud_probability": float, "model_version": int, "dataset_version": int}`.
+Returns `{"fraud_probability": float, "model_version": 9, "dataset_version": 5}`.
+
+## Further documentation
+
+- `docs/model_lock_report.md` — D/Dn comparison, temporal stability, version selection rationale
+- `ENGINEERING_STANDARDS.md` — Versioning rules, config schemas, evaluation requirements

@@ -28,6 +28,7 @@
     "reg_lambda": 0.20933776242575416,
     "scale_pos_weight": 32.175142781078854,
     "early_stopping_rounds": 200,
+    "seed": 42,
     "verbose": -1
   },
   "early_stopping": {

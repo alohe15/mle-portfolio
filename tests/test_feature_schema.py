@@ -147,8 +147,13 @@ class TestConfigConsistency:
         assert v9_config["dataset_version"] == dataset_config["dataset_version"]
 
     def test_v9_params_match_v8(self, v9_config, v8_config):
-        """v9 lgbm_params must be identical to v8 (dataset-only change)."""
-        assert v9_config["lgbm_params"] == v8_config["lgbm_params"]
+        """v9 lgbm_params match v8 aside from post-training seed for reproducibility."""
+        v9_params = dict(v9_config["lgbm_params"])
+        v8_params = dict(v8_config["lgbm_params"])
+        # seed was added post-training; current v9 binary was trained without it
+        assert v9_params.pop("seed", None) == 42
+        v8_params.pop("seed", None)
+        assert v9_params == v8_params
 
     def test_split_is_temporal_70_15_15(self, v9_config):
         """Split must be temporal 70/15/15."""
@@ -177,9 +182,11 @@ class TestRegistryIntegrity:
             assert field in v9_entry, f"Missing '{field}' in v9 registry entry"
             assert v9_entry[field], f"Empty '{field}' in v9 registry entry"
 
-    def test_v9_is_not_serving(self, v9_entry):
-        """v9 must not be registered as serving until Phase 4."""
-        assert v9_entry.get("is_serving") is False
+    def test_v9_is_serving(self, v9_entry, registry):
+        """v9 is the locked serving model after Phase 1."""
+        assert v9_entry.get("is_serving") is True
+        serving = [e["version"] for e in registry if e.get("is_serving")]
+        assert serving == [9]
 
 class TestConvergence:
     def test_natural_convergence(self, v9_metrics):
