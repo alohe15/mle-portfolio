@@ -1,0 +1,69 @@
+{
+  "dataset_version": 5,
+  "description": "Dn-only \u2014 drop raw D1-D15 columns. Ablation on diag/d-dn-ablation showed Dn-only outperforms D+Dn across all walk-forward windows (mean AUC-PR 0.6740 vs lower for D+Dn). Raw D columns enable LightGBM to recover calendar day (greedy-attractor effect).",
+  "parent_version": 4,
+  "raw_source": "data/raw/train_merged.parquet",
+  "output_path": "data/processed/dataset_v5_dn_only.parquet",
+  "transformations": [
+    {
+      "name": "identity_frequency_encoding",
+      "type": "engineered",
+      "description": "Frequency-encode DeviceInfo, id_30, and id_31 from training-split counts",
+      "inputs": [
+        "DeviceInfo",
+        "id_30",
+        "id_31"
+      ],
+      "output_columns": [
+        "DeviceInfo_freq",
+        "id_30_freq",
+        "id_31_freq"
+      ],
+      "function": "feature_engineering.FrequencyEncoder",
+      "params": {
+        "columns": [
+          "DeviceInfo",
+          "id_30",
+          "id_31"
+        ]
+      },
+      "requires_fit": true
+    }
+  ],
+  "dropped_columns": [
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6",
+    "D7",
+    "D8",
+    "D9",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14",
+    "D15"
+  ],
+  "drop_reasons": {
+    "D1": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D2": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D3": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D4": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D5": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D6": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D7": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D8": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D9": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D10": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D11": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D12": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D13": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D14": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows.",
+    "D15": "Greedy-attractor: raw D columns let LightGBM recover calendar day. Dn-only won all ablation windows."
+  },
+  "inherited_transformations_from": 3,
+  "final_column_count": 460
+}

@@ -1,0 +1,38 @@
+{
+  "version": 9,
+  "short_description": "optuna_tuning",
+  "description": "Dn-only drop \u2014 retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed)",
+  "parent_version": 8,
+  "dataset_version": 5,
+  "dataset_config_path": "configs/dataset_v5.json",
+  "is_serving": false,
+  "evaluate_test": false,
+  "split": {
+    "method": "temporal",
+    "train_fraction": 0.7,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
+    "sort_column": "TransactionDT"
+  },
+  "lgbm_params": {
+    "objective": "binary",
+    "metric": "average_precision",
+    "n_estimators": 15000,
+    "learning_rate": 0.011978428868493889,
+    "num_leaves": 224,
+    "feature_fraction": 0.8948476596035589,
+    "bagging_fraction": 0.8489447664564709,
+    "bagging_freq": 1,
+    "min_child_samples": 42,
+    "reg_alpha": 0.006491774642689657,
+    "reg_lambda": 0.20933776242575416,
+    "scale_pos_weight": 32.175142781078854,
+    "early_stopping_rounds": 200,
+    "verbose": -1
+  },
+  "early_stopping": {
+    "metric": "average_precision",
+    "patience": 100,
+    "min_delta": 0.0
+  }
+}

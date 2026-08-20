@@ -18,17 +18,17 @@ class TestTrainingSmoke:
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
         """Create a throwaway config before the test, clean up after."""
-        # Load v8 config as base
-        v8_config = json.loads(
-            (PROJECT_ROOT / "configs" / "lgbm_v8.json").read_text()
+        # Load v9 config as base
+        v9_config = json.loads(
+            (PROJECT_ROOT / "configs" / "lgbm_v9.json").read_text()
         )
 
         # Create smoke config with minimal trees for speed
-        smoke_config = v8_config.copy()
+        smoke_config = v9_config.copy()
         smoke_config["version"] = self.SMOKE_VERSION
         smoke_config["description"] = "Smoke test — throwaway, do not keep"
-        smoke_config["parent_version"] = 8
-        smoke_config["lgbm_params"] = v8_config["lgbm_params"].copy()
+        smoke_config["parent_version"] = 9
+        smoke_config["lgbm_params"] = v9_config["lgbm_params"].copy()
         smoke_config["lgbm_params"]["n_estimators"] = 10
         smoke_config["lgbm_params"]["early_stopping_rounds"] = 5
 
