@@ -1,0 +1,24 @@
+Bootstrap Significance Test
+================================================================
+Baseline version:   v8 (Tree ceiling test — raise n_estimators from 5000 to 15000 to check if v7 was capacity-limited)
+Candidate version:  v9 (Dn-only drop — retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed))
+Eval split:         val
+Eval rows:          88,581
+Bootstrap samples:  500
+Recall flag rate:   3.5169% (training-set fraud rate)
+
+AUC-PR
+----------------------------------------------------------------
+Mean (baseline):          0.7021
+Mean (candidate):         0.7026
+Mean difference:          +0.0004
+95% CI for difference:    [-0.0012, +0.0022]
+Result:                   inconclusive
+
+Recall @ budget
+----------------------------------------------------------------
+Mean (baseline):          0.6661
+Mean (candidate):         0.6638
+Mean difference:          -0.0023
+95% CI for difference:    [-0.0075, +0.0033]
+Result:                   inconclusive

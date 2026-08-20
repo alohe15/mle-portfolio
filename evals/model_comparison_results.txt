@@ -1,8 +1,10 @@
+Wrote comparison to /Users/arnavlohe/mle-portfolio/evals/model_comparison_results.txt
+
 IEEE-CIS Fraud Detection — Model Comparison
 ================================================================
-Generated: 2026-08-19 21:44 UTC
+Generated: 2026-08-20 22:31 UTC
 Registry: models/registry.json
-Versions: 8
+Versions: 9
 
 Metrics sources:
   v1: models/lgbm_v1_raw_baseline_metrics.json
@@ -13,6 +15,7 @@ Metrics sources:
   v6: models/lgbm_v6_identity_frequency_encoding_metrics.json
   v7: models/lgbm_v7_optuna_tuning_metrics.json
   v8: models/lgbm_v8_tree_ceiling_test_metrics.json
+  v9: models/lgbm_v9_optuna_tuning_metrics.json
 
 version  dataset_version  description                                                                                                                          test_auc_pr  precision_at_budget  recall_at_budget  best_iteration  n_features
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -24,3 +27,5 @@ version  dataset_version  description                                           
       6                4  Identity-side frequency encodings — test DeviceInfo/id_30/id_31 rarity                                                                    0.6527               0.6058            0.6203            1995         479
       7                4  Optuna-tuned hyperparameters on dataset_v4 (100 trials, 50% train subsample, retrained on full data)                                      0.5837               0.6411            0.6565            5000         479
       8                4  Tree ceiling test — raise n_estimators from 5000 to 15000 to check if v7 was capacity-limited                                             0.5909               0.6504            0.6660           11097         479
+      9                5  Dn-only drop — retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed)                                                              0.5952               0.5512            0.5569            9779         464
+

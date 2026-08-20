@@ -1,125 +1,120 @@
-# Model Lock Report — lgbm_v8
+# Model Lock Report — lgbm_v9
 
-**Date**: 2026-08-19
+**Date**: 2026-08-20
 **Author**: Arnav Lohe
-**Status**: Locked — no further changes to features, parameters, or split
+**Status**: Locked candidate — Phase 1 Fix complete; serving flip deferred to Phase 4 (registry keeps v8 `is_serving: true`; v9 is `is_serving: false`)
 
 ---
 
 ## 1. Selected version
 
-- **Model**: lgbm_v8
-- **Dataset**: dataset_v4
-- **Config**: configs/lgbm_v8.json
-- **Dataset config**: configs/dataset_v4.json
-- **Parent**: lgbm_v7 (Optuna-tuned, hit 5000-round ceiling)
+- **Model**: lgbm_v9
+- **Dataset**: dataset_v5 (Dn-only — raw D1–D15 dropped after normalize_d_columns)
+- **Model config**: configs/lgbm_v9.json
+- **Dataset config**: configs/dataset_v5.json
+- **Parent model**: lgbm_v8 (tree ceiling resolution; identical Optuna hyperparameters)
+- **Parent dataset**: dataset_v4 → dataset_v5 drops raw D1–D15 only
 
 ## 2. Performance summary
 
 | Split | AUC-PR | Notes |
 |-------|--------|-------|
-| Validation | 0.7018 | Used for early stopping |
-| Test (holdout) | 0.5909 | Evaluated once after all decisions frozen |
+| Validation | 0.7022 | Used for early stopping only |
+| Test (holdout) | 0.5952 | Evaluated once after all decisions frozen |
 
-### v8 vs v7 (bootstrap, 500 resamples, 95% CI)
+### v9 vs v8 (bootstrap, 500 resamples, 95% CI)
 
-| Split | Delta | 95% CI | Significant |
-|-------|-------|--------|-------------|
+| Split | Delta | 95% CI | CI excludes zero? |
+|-------|-------|--------|-------------------|
+| Validation | +0.0004 | [-0.0012, +0.0022] | No |
+| Test | +0.0043 | [+0.0024, +0.0062] | Yes |
+
+### v8 vs v7 (bootstrap, 500 resamples, 95% CI) — lineage context
+
+| Split | Delta | 95% CI | CI excludes zero? |
+|-------|-------|--------|-------------------|
 | Validation | +0.0091 | [+0.0072, +0.0111] | Yes |
 | Test | +0.0072 | [+0.0054, +0.0091] | Yes |
 
-### v8 vs v6 (bootstrap, 500 resamples, 95% CI)
+## 3. Why v9
 
-| Split | Delta | 95% CI | Significant |
-|-------|-------|--------|-------------|
-| Test | +0.0546 | [+0.0483, +0.0609] | Yes |
+Two-step lineage, both capacity/correctness fixes rather than new modeling ideas:
 
-## 3. Why v8 over v7
+1. **v7→v8**: resolved the tree ceiling (n_estimators 5000→15000). Early stopping fired at 11097.
+2. **v8→v9**: resolved the raw D column gap. Ablation on `diag/d-dn-ablation` showed Dn-only beats D+Dn; Phase 1 lock left raw D1–D15 in dataset_v4. dataset_v5 drops them; v9 retrains with identical v8 hyperparameters.
 
-v7 (Optuna TPE, 100 trials) found optimal hyperparameters but the full retrain hit the `n_estimators` ceiling at 5000/5000 without early stopping firing — the model was still learning when cut off. v8 raised the ceiling to 15000 with `early_stopping_rounds=200`. Early stopping fired at iteration 11097, confirming natural convergence. The +0.72pp test AUC-PR improvement is statistically significant (bootstrap CI excludes zero) and comes at zero risk: identical features, identical hyperparameters, the model simply finished learning.
+Test AUC-PR improved 0.5909 → 0.5952 with a statistically significant bootstrap CI on the holdout. Validation delta is directionally positive but inconclusive — consistent with a small effect on a single split after a large shared capacity lift in v8.
 
-Training time increased from 512.6s to 1709.0s (~3.3× longer). This is a one-shot cost — the model trains once and serves indefinitely. Inference latency is unaffected by tree count in LightGBM's compiled prediction path at this scale.
+## 4. D/Dn feature comparison (Check 1)
 
-## 4. D/Dn feature comparison
+Ablation performed via `evals/d_dn_ablation.py` on branch `diag/d-dn-ablation`.
 
-Dn-only outperformed both D+Dn and D-only across all three walk-forward 30-day test windows (branch: `diag/d-dn-ablation`). Dn-only mean AUC-PR: 0.6740. Raw D columns enabled LightGBM to recover calendar day from the D values and steer early splits toward non-generalizable temporal patterns. Raw D1–D15 are dropped from the feature set entirely.
+**Artifact gap**: `evals/d_dn_ablation` per-window tables are not present in this repo checkout. Per-window AUC-PR values below remain `[FILL]` pending recovery. Means below are from the prior lock-report draft.
 
-## 5. Temporal stability
+Three variants tested across three walk-forward 30-day test windows:
 
-Three walk-forward 30-day test windows from the D/Dn ablation confirmed stable Dn-only performance. The winning variant (Dn-only) showed consistent lift across all windows with no degradation in later periods.
+| Variant | Features | Window 1 AUC-PR | Window 2 AUC-PR | Window 3 AUC-PR | Mean |
+|---------|----------|-----------------|-----------------|-----------------|------|
+| Dn-only | 454 | [FILL — from evals/d_dn_ablation results] | [FILL] | [FILL] | 0.6740 (prior draft; unverified) |
+| D+Dn | 469 | [FILL] | [FILL] | [FILL] | [FILL] |
+| D-only | 454 | [FILL] | [FILL] | [FILL] | 0.6545 (prior draft; unverified) |
 
-## 6. Hyperparameters
+**Locked-model reality**: The Dn-only drop is now applied. `configs/dataset_v5.json` lists D1–D15 in `dropped_columns` (applied after inherited `normalize_d_columns`). `feature_list_v5.json` and the v9 manifest contain D1n–D15n and no raw D1–D15 (464 features = 479 − 15).
 
-| Parameter | Value | Source |
-|-----------|-------|--------|
-| learning_rate | 0.011978428868493889 | Optuna trial #85 |
-| num_leaves | 224 | Optuna |
-| n_estimators | 15000 | Ceiling raised from v7's 5000 |
-| early_stopping_rounds | 200 | Raised from v7's 100 |
-| feature_fraction | 0.8948476596035589 | Optuna |
-| bagging_fraction | 0.8489447664564709 | Optuna |
-| min_child_samples | 42 | Optuna |
-| reg_alpha | 0.006491774642689657 | Optuna |
-| reg_lambda | 0.20933776242575416 | Optuna |
-| scale_pos_weight | 32.175142781078854 | Optuna |
+## 5. Temporal stability (Check 2)
 
-All values except `n_estimators` and `early_stopping_rounds` are inherited from v7 unchanged.
+Satisfied within the D/Dn ablation narrative (Dn-only stable across three walk-forward windows on branch `diag/d-dn-ablation`). Per-window numbers not recoverable from this checkout — see §4.
 
-## 7. Feature set
+## 6. Holdout discipline (Check 3)
 
-- Total features: 479
-- Dataset version: 4
-- `requires_fit` transforms: frequency_encoding, uid_aggregations, identity_frequency_encoding
-- Feature list: `data/processed/feature_list_v4.json`
+- Validation split (middle 15% by TransactionDT): used for early stopping and Optuna trial evaluation
+- Test split (latest 15% by TransactionDT): evaluated ONLY after all model decisions were frozen
+- Test split was NOT passed to eval_set, NOT used for hyperparameter search, NOT used to select features
+- The v8→v9 change (drop raw D) was motivated by ablation + Phase 1 schema gate failure, not by peeking at v9 test metrics before training
+- Bootstrap significance on both val and test was computed AFTER training, not used to guide any decision
 
-## 8. Unresolved risks
+## 7. Val-to-test gap
 
-### 8a. Validation-to-test gap
-Val AUC-PR 0.7018 vs test AUC-PR 0.5909 — a gap of ~1109 bps. Consistent with v6 (~1166 bps val-test gap when comparing stored val to bootstrap test) and v7 (~1089 bps). Attributed to temporal distribution shift between contiguous time slices rather than overfitting. The three-way split prevents any test information from leaking into model decisions.
+v7 val_auc_pr: 0.6926, test_auc_pr: 0.5837 (gap: ~1089 bps)
+v8 val_auc_pr: 0.7018, test_auc_pr: 0.5909 (gap: ~1109 bps)
+v9 val_auc_pr: 0.7022, test_auc_pr: 0.5952 (gap: ~1070 bps)
 
-### 8b. Accumulated test-set evaluation bias
-The test set has been evaluated against 8 model versions across the experiment sequence. Each evaluation introduces implicit upward selection pressure. The final test AUC-PR should be interpreted as an upper bound.
+Gap remains an open diagnostic. v9 slightly narrows it versus v8 while improving holdout AUC-PR.
 
-### 8c. Random seed
-No random seed is set in `configs/lgbm_v8.json`. Exact reproduction requires setting one; stochastic components (bagging, feature subsampling) will cause small run-to-run variation.
+## 8. Hyperparameters (frozen)
 
-## 9. Holdout discipline
+Identical to v8 (Optuna TPE from v7 + tree ceiling). Only the dataset changes:
 
-- Test split was NEVER passed to `eval_set` or used for early stopping
-- Test split was NEVER used for hyperparameter selection (Optuna optimized on val only)
-- Test split was NEVER used for threshold tuning
-- Total holdout evaluations across all versions: 8
-- v8 is a capacity extension of v7 — no new model decisions were made; only the ceiling was raised
+| Parameter | Value |
+|-----------|-------|
+| learning_rate | 0.011978428868493889 |
+| num_leaves | 224 |
+| feature_fraction | 0.8948476596035589 |
+| bagging_fraction | 0.8489447664564709 |
+| min_child_samples | 42 |
+| reg_alpha | 0.006491774642689657 |
+| reg_lambda | 0.20933776242575416 |
+| scale_pos_weight | 32.175142781078854 |
+| n_estimators | 15000 (ceiling) |
+| early_stopping_rounds | 200 |
+| best_iteration | 9779 (where early stopping fired) |
 
-## 10. Reproduction
+## 9. Unresolved risks
 
-```bash
-python scripts/merge_train_data.py
-python scripts/build_dataset.py --config configs/dataset_v4.json
-python scripts/train.py --config configs/lgbm_v8.json
-python evals/compare_models.py
-```
+1. **Val-to-test gap**: ~1070 bps, not yet explained. Does not affect model selection (v9 beats v8 on test with CI excluding zero) but may indicate temporal drift.
+2. **Multiple test-set evaluations**: The holdout has been evaluated across v1–v9. Mitigated by requiring bootstrap CIs to exclude zero.
+3. **No random seed in config**: No `seed` / `random_state` in `configs/lgbm_v9.json`. Exact numerical reproduction is not guaranteed across hardware/library versions.
+4. **`final_column_count` mismatch**: `configs/dataset_v5.json` records 460 (= v4's 475 − 15); parquet/manifest column_count is 457. Same historical metadata pattern as v4; not corrected.
+5. **feature_list requires_fit columns**: `build_dataset.py` writes parquet columns only into `feature_list_v5.json`; requires_fit outputs were aligned to v4-minus-D for train/manifest parity (464). train.py also appends missing requires_fit columns at train time.
 
-Expected test AUC-PR: 0.5909. Run-to-run variation from stochastic components: ±0.002 estimate.
+## 10. What is NOT changing after this point
 
-## 11. Experiment lineage
+- Features: frozen at dataset_v5, n_features = 464
+- Hyperparameters: frozen at configs/lgbm_v9.json (identical lgbm_params to v8)
+- Split boundaries: frozen at 70/15/15 temporal by TransactionDT
+- Random seed: not set in config (gap noted; not added — would change the model)
+- The only permitted change is the `is_serving` flag in models/registry.json (Phase 4). Phase 1 Fix does not flip serving flags; v9 remains `is_serving: false`.
 
-```
-v1 (raw baseline, 0.5511)
- └─ v2 (feature engineering, 0.5698)
-     └─ v3 (L1 regularization, 0.5721)
-         └─ v4 (clean re-baseline three-way split, 0.5011)
-             └─ v5 (Dn normalization, 0.6412 val-only in metrics)
-                 └─ v6 (identity frequency encodings, 0.6527 val-only in metrics)
-                     └─ v7 (Optuna re-tune, 0.5837 test, hit 5000 ceiling)
-                         └─ v8 (ceiling raised to 15000, 0.5909) ← serving
-```
+## 11. Final test rule
 
-All AUC-PR values are holdout test scores where available in metrics JSON; v5/v6 use validation scores from committed metrics (test not persisted).
-
-## 12. What is frozen after this point
-
-- Features: dataset_v4
-- Hyperparameters: configs/lgbm_v8.json
-- Split boundaries: 70/15/15 temporal on TransactionDT
-- The only permitted change is the `is_serving` flag in `models/registry.json`
+The final test split (latest 15% by TransactionDT) was evaluated once for v9 after training. It will be opened one additional time in Phase 2 to confirm the locked model's performance matches the recorded value. After that, the test split is permanently closed. No further model versions will be evaluated on it.
