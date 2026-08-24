@@ -1,0 +1,24 @@
+Bootstrap Significance Test
+================================================================
+Baseline version:   v1 (Raw baseline — all raw merged columns, no engineered features)
+Candidate version:  v9 (Dn-only drop — retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed))
+Eval split:         test
+Eval rows:          88,581
+Bootstrap samples:  500
+Recall flag rate:   3.5169% (training-set fraud rate)
+
+AUC-PR
+----------------------------------------------------------------
+Mean (baseline):          0.5386
+Mean (candidate):         0.5955
+Mean difference:          +0.0569
+95% CI for difference:    [+0.0461, +0.0675]
+Result:                   statistically significant improvement
+
+Recall @ budget
+----------------------------------------------------------------
+Mean (baseline):          0.5248
+Mean (candidate):         0.5578
+Mean difference:          +0.0330
+95% CI for difference:    [+0.0186, +0.0456]
+Result:                   statistically significant improvement

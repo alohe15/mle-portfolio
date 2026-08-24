@@ -1,0 +1,109 @@
+{
+  "version": 9,
+  "split": "validation",
+  "n_rows": 88581,
+  "confidence_bands": [
+    {
+      "band": "0.0\u20130.1",
+      "transactions": 86393,
+      "predicted_fraud_ge_0_5": 0,
+      "actual_fraud": 1281,
+      "precision": 0.014827590198279953
+    },
+    {
+      "band": "0.1\u20130.3",
+      "transactions": 341,
+      "predicted_fraud_ge_0_5": 0,
+      "actual_fraud": 180,
+      "precision": 0.5278592375366569
+    },
+    {
+      "band": "0.3\u20130.5",
+      "transactions": 154,
+      "predicted_fraud_ge_0_5": 0,
+      "actual_fraud": 72,
+      "precision": 0.4675324675324675
+    },
+    {
+      "band": "0.5\u20130.7",
+      "transactions": 150,
+      "predicted_fraud_ge_0_5": 150,
+      "actual_fraud": 100,
+      "precision": 0.6666666666666666
+    },
+    {
+      "band": "0.7\u20130.9",
+      "transactions": 200,
+      "predicted_fraud_ge_0_5": 200,
+      "actual_fraud": 155,
+      "precision": 0.775
+    },
+    {
+      "band": "0.9\u20131.0",
+      "transactions": 1343,
+      "predicted_fraud_ge_0_5": 1343,
+      "actual_fraud": 1254,
+      "precision": 0.9337304542069993
+    }
+  ],
+  "by_product": [
+    {
+      "ProductCD": "C",
+      "transactions": 9125,
+      "fraud": 1150,
+      "fraud_rate": 0.12602739726027398,
+      "auc_pr": 0.8010302531362846
+    },
+    {
+      "ProductCD": "H",
+      "transactions": 2350,
+      "fraud": 140,
+      "fraud_rate": 0.059574468085106386,
+      "auc_pr": 0.7456158518748556
+    },
+    {
+      "ProductCD": "R",
+      "transactions": 3365,
+      "fraud": 160,
+      "fraud_rate": 0.0475482912332838,
+      "auc_pr": 0.8936901753366816
+    },
+    {
+      "ProductCD": "S",
+      "transactions": 1450,
+      "fraud": 107,
+      "fraud_rate": 0.07379310344827586,
+      "auc_pr": 0.8362161072724982
+    },
+    {
+      "ProductCD": "W",
+      "transactions": 72291,
+      "fraud": 1485,
+      "fraud_rate": 0.02054197617960742,
+      "auc_pr": 0.5985881247139773
+    }
+  ],
+  "temporal_thirds": [
+    {
+      "period": "Early third",
+      "transactions": 29527,
+      "fraud": 1025,
+      "fraud_rate": 0.03471399058488841,
+      "auc_pr": 0.8054436147519176
+    },
+    {
+      "period": "Middle third",
+      "transactions": 29527,
+      "fraud": 1036,
+      "fraud_rate": 0.03508653097165306,
+      "auc_pr": 0.6727905409530269
+    },
+    {
+      "period": "Late third",
+      "transactions": 29527,
+      "fraud": 981,
+      "fraud_rate": 0.033223829037829784,
+      "auc_pr": 0.6102860016035815
+    }
+  ]
+}

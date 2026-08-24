@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════
+  PHASE 2 — EVALUATE & EXPLAIN GATE (v9)
+═══════════════════════════════════════════════
+
+DELIVERABLES
+  evals/model_comparison_results.txt            ✓
+  docs/final_evaluation.md                      ✓
+  docs/model_card.md                            ✓
+  evals/shap_analysis.py                        ✓
+  evals/ablation_feature_groups.py              ✓
+  tests/test_model_comparison.py                ✓
+
+FIGURES
+  evals/figures/shap_summary_v9.png             ✓
+  evals/figures/shap_bar_v9.png                 ✓
+  evals/figures/shap_top20_v9.json              ✓
+  evals/figures/ablation_results_v9.json        ✓
+  evals/figures/ablation_results_v9.png         ✓
+
+DOCUMENTATION
+  docs/final_evaluation.md                      unfilled placeholders: 0
+0
+  docs/model_card.md                            unfilled placeholders: 0
+0
+
+TESTS
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_has_all_required_paths PASSED [ 61%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_is_serving PASSED [ 64%]
+tests/test_feature_schema.py::TestConvergence::test_natural_convergence PASSED [ 67%]
+tests/test_model_comparison.py::TestMetricsSchema::test_all_versions_have_metrics PASSED [ 70%]
+tests/test_model_comparison.py::TestMetricsSchema::test_required_metric_fields PASSED [ 74%]
+tests/test_model_comparison.py::TestMetricsSchema::test_metric_values_are_finite PASSED [ 77%]
+tests/test_model_comparison.py::TestMetricsSchema::test_auc_pr_in_valid_range PASSED [ 80%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_all_versions_have_split_config PASSED [ 83%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_split_fractions_consistent PASSED [ 87%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_v9_dataset_version_is_5 PASSED [ 90%]
+tests/test_model_comparison.py::TestComparisonScript::test_comparison_output_exists PASSED [ 93%]
+tests/test_training_smoke.py::TestTrainingSmoke::test_train_completes PASSED [ 96%]
+tests/test_training_smoke.py::TestTrainingSmoke::test_artifacts_created PASSED [100%]
+
+============================= 31 passed in 42.96s ==============================
+
+DONE-WHEN
+  ☐ Every metric names its dataset and time window
+  ☐ Conclusion covers stability, complexity, training cost
+  ☐ Limitations include delayed labels, temporal drift, D-derived shortcuts
+
+Commit: 3655d891eb107291ac49e79857f7f22229d6292f
+
+GATE: PASS

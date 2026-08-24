@@ -1,0 +1,205 @@
+╔══════════════════════════════════════════════════╗
+║  PHASE 2 RESULTS DUMP — lgbm_v9                 ║
+╚══════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1: V1-TO-V9 COMPARISON TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IEEE-CIS Fraud Detection — Model Comparison
+================================================================
+Generated: 2026-08-24 21:26 UTC
+Registry: models/registry.json
+Versions: 9
+
+Metrics sources:
+  v1: models/lgbm_v1_raw_baseline_metrics.json
+  v2: models/lgbm_v2_feature_eng_metrics.json
+  v3: models/lgbm_v3_l1_feature_selection_metrics.json
+  v4: models/lgbm_v4_clean_rebaseline_metrics.json
+  v5: models/lgbm_v5_dn_normalization_metrics.json
+  v6: models/lgbm_v6_identity_frequency_encoding_metrics.json
+  v7: models/lgbm_v7_optuna_tuning_metrics.json
+  v8: models/lgbm_v8_tree_ceiling_test_metrics.json
+  v9: models/lgbm_v9_optuna_tuning_metrics.json
+
+version  dataset_version  description                                                                                                                          test_auc_pr  best_iteration  n_features  delta_vs_v1
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      1                1  Raw baseline — all raw merged columns, no engineered features                                                                             0.5511             953         431      +0.0000
+      2                2  Feature engineering migration: email_match, TransactionAmt transforms, missingness indicators, frequency encoding, UID aggregations       0.5698            1321         461      +0.0186
+      3                2  L1 regularization (reg_alpha=1.0) for feature selection — drives low-signal feature weights to zero                                       0.5721            1993         461      +0.0210
+      4                2  Clean re-baseline — dataset_v2 features under three-way temporal split with L1 regularization                                             0.5011            1947         461      -0.0500
+      5                3  Dn normalization — test calendar-normalized D-features                                                                                    0.6412            2000         476      +0.0901
+      6                4  Identity-side frequency encodings — test DeviceInfo/id_30/id_31 rarity                                                                    0.6527            1995         479      +0.1015
+      7                4  Optuna-tuned hyperparameters on dataset_v4 (100 trials, 50% train subsample, retrained on full data)                                      0.5837            5000         479      +0.0326
+      8                4  Tree ceiling test — raise n_estimators from 5000 to 15000 to check if v7 was capacity-limited                                             0.5909           11097         479      +0.0398
+      9                5  Dn-only drop — retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed)                                                              0.5952            9779         464      +0.0441
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2: BOOTSTRAP SIGNIFICANCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bootstrap Significance Test
+================================================================
+Baseline version:   v1 (Raw baseline — all raw merged columns, no engineered features)
+Candidate version:  v9 (Dn-only drop — retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed))
+Eval split:         test
+Eval rows:          88,581
+Bootstrap samples:  500
+Recall flag rate:   3.5169% (training-set fraud rate)
+
+AUC-PR
+----------------------------------------------------------------
+Mean (baseline):          0.5386
+Mean (candidate):         0.5955
+Mean difference:          +0.0569
+95% CI for difference:    [+0.0461, +0.0675]
+Result:                   statistically significant improvement
+
+Recall @ budget
+----------------------------------------------------------------
+Mean (baseline):          0.5248
+Mean (candidate):         0.5578
+Mean difference:          +0.0330
+95% CI for difference:    [+0.0186, +0.0456]
+Result:                   statistically significant improvement
+
+v9 vs v8 (known): delta +0.0043, 95% CI [+0.0024, +0.0062], excludes zero: YES
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3: SHAP TOP 20 FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Rank   Feature                             Mean |SHAP|    
+────────────────────────────────────────────────────────
+1      C13                                 0.800242       
+2      C1                                  0.410774       
+3      D4n                                 0.396334       
+4      TransactionAmt                      0.373252       
+5      D1n                                 0.346359       
+6      C14                                 0.334046       
+7      P_emaildomain                       0.284691       
+8      V70                                 0.279003       
+9      card1_freq                          0.245254       
+10     C11                                 0.239372       
+11     card6                               0.239211       
+12     uid_amt_std                         0.230183       
+13     uid_amt_mean                        0.229697       
+14     D15n                                0.222397       
+15     dist1                               0.222053       
+16     D10n                                0.219873       
+17     C2                                  0.216482       
+18     card1                               0.216015       
+19     TransactionAmt_cents                0.210362       
+20     C5                                  0.210078       
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4: FEATURE-GROUP ABLATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Group                Removed    Remaining    Val AUC-PR   Delta     
+────────────────────────────────────────────────────────────────
+(full model)         0          464          0.7022       +0.0000   
+dn_columns           15         449          0.6361       -0.0661   
+v_features           359        105          0.6621       -0.0401   
+card_features        8          456          0.6356       -0.0666   
+email_features       4          460          0.6660       -0.0362   
+addr_features        5          459          0.6732       -0.0290   
+id_features          43         421          0.6656       -0.0367   
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5: ERROR ANALYSIS — CONFIDENCE BANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Band         Txns       Pred≥0.5      Actual Fraud   Precision 
+───────────────────────────────────────────────────────────
+0.0–0.1      86393      0             1281           0.0148
+0.1–0.3      341        0             180            0.5279
+0.3–0.5      154        0             72             0.4675
+0.5–0.7      150        150           100            0.6667
+0.7–0.9      200        200           155            0.7750
+0.9–1.0      1343       1343          1254           0.9337
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6: ERROR ANALYSIS — BY PRODUCT CODE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ProductCD    Txns       Fraud    Fraud Rate   AUC-PR    
+────────────────────────────────────────────────────
+C            9125       1150     0.1260       0.8010    
+H            2350       140      0.0596       0.7456    
+R            3365       160      0.0475       0.8937    
+S            1450       107      0.0738       0.8362    
+W            72291      1485     0.0205       0.5986    
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 7: ERROR ANALYSIS — TEMPORAL THIRDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Period          Txns       Fraud    Fraud Rate   AUC-PR    
+───────────────────────────────────────────────────────
+Early third     29527      1025     0.0347       0.8054    
+Middle third    29527      1036     0.0351       0.6728    
+Late third      29527      981      0.0332       0.6103    
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 8: KEY MODEL FACTS (for model card)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Model version:          9
+Dataset version:        5
+Algorithm:              LightGBM
+Features:               464
+Trees (best_iteration): 9779
+learning_rate:          0.011978428868493889
+num_leaves:             224
+feature_fraction:       0.8948476596035589
+scale_pos_weight:       32.175142781078854
+n_estimators (ceiling): 15000
+early_stopping_rounds:  200
+Val AUC-PR:             0.7022422481423667
+Test AUC-PR:            0.5952463633992758
+Val AUC-ROC:            0.929685867362069
+Test AUC-ROC:           0.9067160899761977
+Wall time:              1039.6830973749747s
+Split:                  0.7/0.15/0.15 temporal
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 9: TEST RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+============================= test session starts ==============================
+platform darwin -- Python 3.11.14, pytest-9.0.3, pluggy-1.6.0 -- /Users/arnavlohe/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/arnavlohe/mle-portfolio
+plugins: anyio-3.7.1
+collecting ... collected 31 items
+
+tests/test_feature_schema.py::TestFeatureNames::test_feature_list_matches_manifest PASSED [  3%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_duplicate_features_in_manifest PASSED [  6%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_duplicate_features_in_feature_list PASSED [  9%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_target_in_features PASSED [ 12%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_id_columns_in_features PASSED [ 16%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_raw_d_columns_in_features PASSED [ 19%]
+tests/test_feature_schema.py::TestFeatureCounts::test_manifest_count_matches_feature_order_length PASSED [ 22%]
+tests/test_feature_schema.py::TestFeatureCounts::test_metrics_count_matches_manifest PASSED [ 25%]
+tests/test_feature_schema.py::TestFeatureCounts::test_feature_list_count_matches_manifest PASSED [ 29%]
+tests/test_feature_schema.py::TestFeatureCounts::test_feature_count_decreased PASSED [ 32%]
+tests/test_feature_schema.py::TestFeatureOrder::test_manifest_order_matches_feature_list_order PASSED [ 35%]
+tests/test_feature_schema.py::TestFeatureOrder::test_v9_order_is_v8_minus_raw_d PASSED [ 38%]
+tests/test_feature_schema.py::TestFeatureDtypes::test_all_features_have_dtypes PASSED [ 41%]
+tests/test_feature_schema.py::TestConfigConsistency::test_dataset_version_matches PASSED [ 45%]
+tests/test_feature_schema.py::TestConfigConsistency::test_v9_params_match_v8 PASSED [ 48%]
+tests/test_feature_schema.py::TestConfigConsistency::test_split_is_temporal_70_15_15 PASSED [ 51%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_in_registry PASSED [ 54%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_at_most_one_serving PASSED [ 58%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_has_all_required_paths PASSED [ 61%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_is_serving PASSED [ 64%]
+tests/test_feature_schema.py::TestConvergence::test_natural_convergence PASSED [ 67%]
+tests/test_model_comparison.py::TestMetricsSchema::test_all_versions_have_metrics PASSED [ 70%]
+tests/test_model_comparison.py::TestMetricsSchema::test_required_metric_fields PASSED [ 74%]
+tests/test_model_comparison.py::TestMetricsSchema::test_metric_values_are_finite PASSED [ 77%]
+tests/test_model_comparison.py::TestMetricsSchema::test_auc_pr_in_valid_range PASSED [ 80%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_all_versions_have_split_config PASSED [ 83%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_split_fractions_consistent PASSED [ 87%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_v9_dataset_version_is_5 PASSED [ 90%]
+tests/test_model_comparison.py::TestComparisonScript::test_comparison_output_exists PASSED [ 93%]
+tests/test_training_smoke.py::TestTrainingSmoke::test_train_completes PASSED [ 96%]
+tests/test_training_smoke.py::TestTrainingSmoke::test_artifacts_created PASSED [100%]
+
+============================= 31 passed in 41.65s ==============================
+
+╔══════════════════════════════════════════════════╗
+║  END OF RESULTS DUMP                             ║
+╚══════════════════════════════════════════════════╝
