@@ -1,0 +1,28 @@
+{
+  "optimal_thresholds": [
+    0.036000000000000004,
+    0.051,
+    0.8200000000000001
+  ],
+  "optimal_cost": 280424.4474699559,
+  "hypothesis_thresholds": [
+    0.4,
+    0.8,
+    0.95
+  ],
+  "hypothesis_cost": 484698.0145144387,
+  "bootstrap_delta_mean": -40226.5987294568,
+  "bootstrap_ci_95": [
+    -2432126.126575057,
+    216010.88795374575
+  ],
+  "cost_assumptions": {
+    "fraud_cost_multiplier": 2.0,
+    "step_up_stop_rate": 0.7,
+    "step_up_friction_rate": 0.05,
+    "review_catch_rate": 0.95,
+    "review_cost_per_txn": 10.0,
+    "review_capacity_per_day": 200,
+    "decline_revenue_loss": 1.0
+  }
+}

@@ -1,0 +1,236 @@
+╔══════════════════════════════════════════════════╗
+║  PHASE 3 RESULTS DUMP — Decision Policy v9      ║
+╚══════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1: CALIBRATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Raw scores:        mean=0.0198  min=0.0000  max=1.0000
+Calibrated scores: mean=0.0344  min=0.0000  max=1.0000
+Actual fraud rate: 0.0343
+Calibration gap:   0.0000 (should be < 0.005)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2: COST MODEL ASSUMPTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  fraud_cost_multiplier          2.0
+  step_up_stop_rate              0.7
+  step_up_friction_rate          0.05
+  review_catch_rate              0.95
+  review_cost_per_txn            10.0
+  review_capacity_per_day        200
+  decline_revenue_loss           1.0
+
+  Status: proposed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3: OPTIMAL THRESHOLDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Optimized:  t1=0.0360  t2=0.0510  t3=0.8200
+Hypothesis: t1=0.4000  t2=0.8000  t3=0.9500
+Optimized cost:  $280,424.45
+Hypothesis cost: $484,698.01
+Bootstrap delta: mean=$-40,226.60
+Bootstrap 95%% CI: [$-2,432,126.13, $216,010.89]
+Excludes zero: NO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4: BAND TABLE — HYPOTHESIS (0.40/0.80/0.95)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+THRESHOLD POLICY — v9 (calibrated scores)
+Thresholds: 0.4000 / 0.8000 / 0.9500
+Split: validation | Dataset: v5
+
+Action     Boundaries               Txns      %   Fraud     F%       Fraud$    F$%   Prec Recall≥  FP/Fric         Cost
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+approve    [0.00, 0.4000)         86,277  97.4%   1,246  41.0% $   226,059  45.5% 0.014  1.000        0 $   412,311
+step_up    [0.4000, 0.8000)        1,019   1.2%     590  19.4% $    99,609  20.0% 0.579  0.590      429 $    57,259
+review     [0.8000, 0.9500)          569   0.6%     513  16.9% $    76,666  15.4% 0.902  0.396       56 $    12,925
+decline    [0.9500, 1.00]            716   0.8%     693  22.8% $    94,573  19.0% 0.968  0.228       23 $     2,203
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Fraud caught: 1,796/3,042 (59.0%)  Reviews: 569  Declined legit: 23  Total cost: $484,698
+
+Saved to evals/figures/threshold_policy_results_v9.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5: BAND TABLE — OPTIMIZED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+THRESHOLD POLICY — v9 (calibrated scores)
+Thresholds: 0.0360 / 0.0510 / 0.8200
+Split: validation | Dataset: v5
+
+Action     Boundaries               Txns      %   Fraud     F%       Fraud$    F$%   Prec Recall≥  FP/Fric         Cost
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+approve    [0.00, 0.0360)         80,200  90.5%     594  19.5% $   107,999  21.7% 0.007  1.000        0 $   176,938
+step_up    [0.0360, 0.0510)          934   1.1%      39   1.3% $     7,217   1.5% 0.042  0.805      895 $    12,163
+review     [0.0510, 0.8200)        6,212   7.0%   1,248  41.0% $   217,733  43.8% 0.201  0.792    4,964 $    82,782
+decline    [0.8200, 1.00]          1,235   1.4%   1,161  38.2% $   163,959  33.0% 0.940  0.382       74 $     8,542
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Fraud caught: 2,448/3,042 (80.5%)  Reviews: 6,212  Declined legit: 74  Total cost: $280,424
+
+Saved to evals/figures/threshold_policy_results_v9.json
+Thresholds: t1=0.0360 t2=0.0510 t3=0.8200
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6: BOUNDARY EXAMPLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Boundary: approve→step_up at 0.0360
+  Just below: score=0.0360 amount=$50.00 actual=LEGIT
+  Just above: score=0.0368 amount=$141.00 actual=LEGIT
+
+Boundary: step_up→review at 0.0510
+  Just below: score=0.0505 amount=$100.00 actual=LEGIT
+  Just above: score=0.0513 amount=$226.00 actual=LEGIT
+
+Boundary: review→decline at 0.8200
+  Just below: score=0.8182 amount=$12.33 actual=FRAUD
+  Just above: score=0.8333 amount=$8.48 actual=LEGIT
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 7: SENSITIVITY ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+fraud_cost_multiplier:
+  Value          t1     t2     t3         Cost  Fraud%  Rev/day
+  ────────────────────────────────────────────────────────
+  1.0         0.045  0.050  0.860 $   176,946   79.8%     199
+  1.5         0.046  0.051  0.845 $   229,131   79.8%     198
+  2.0         0.036  0.051  0.820 $   280,424   80.5%     198
+  3.0         0.026  0.046  0.760 $   375,346   82.6%     198
+  5.0         0.011  0.041  0.730 $   526,408   89.9%     200
+
+step_up_stop_rate:
+  Value          t1     t2     t3         Cost  Fraud%  Rev/day
+  ────────────────────────────────────────────────────────
+  0.5         0.046  0.051  0.820 $   282,104   79.8%     198
+  0.6         0.041  0.051  0.820 $   281,552   79.8%     198
+  0.7         0.036  0.051  0.820 $   280,424   80.5%     198
+  0.8         0.030  0.050  0.830 $   278,050   81.7%     198
+  0.9         0.026  0.051  0.820 $   275,076   82.6%     198
+
+review_cost_per_txn:
+  Value          t1     t2     t3         Cost  Fraud%  Rev/day
+  ────────────────────────────────────────────────────────
+  5.0         0.036  0.051  0.860 $   249,284   80.5%     199
+  10.0        0.036  0.051  0.820 $   280,424   80.5%     198
+  20.0        0.036  0.155  0.810 $   327,565   80.5%      63
+  50.0        0.036  0.610  0.655 $   354,654   80.5%       3
+
+review_capacity_per_day:
+  Value          t1     t2     t3         Cost  Fraud%  Rev/day
+  ────────────────────────────────────────────────────────
+  100         0.036  0.100  0.820 $   297,850   80.5%     100
+  200         0.036  0.051  0.820 $   280,424   80.5%     198
+  500         0.026  0.031  0.820 $   278,342   82.6%     258
+  10000       0.026  0.031  0.820 $   278,342   82.6%     258
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 8: DECISION POLICY CONFIG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{
+  "policy_version": 1,
+  "model_version": 9,
+  "dataset_version": 5,
+  "status": "proposed",
+  "calibrator_path": "models/lgbm_v9_calibrator.pkl",
+  "use_calibrated_scores": true,
+  "cost_assumptions": {
+    "fraud_cost_multiplier": 2.0,
+    "step_up_stop_rate": 0.7,
+    "step_up_friction_rate": 0.05,
+    "review_catch_rate": 0.95,
+    "review_cost_per_txn": 10.0,
+    "review_capacity_per_day": 200,
+    "decline_revenue_loss": 1.0
+  },
+  "actions": [
+    {
+      "action": "approve",
+      "lower": 0.0,
+      "upper": 0.036,
+      "description": "Auto-approve"
+    },
+    {
+      "action": "step_up",
+      "lower": 0.036,
+      "upper": 0.051,
+      "description": "Request extra authentication"
+    },
+    {
+      "action": "review",
+      "lower": 0.051,
+      "upper": 0.82,
+      "description": "Route to manual review queue"
+    },
+    {
+      "action": "decline",
+      "lower": 0.82,
+      "upper": 1.0,
+      "description": "Auto-decline"
+    }
+  ],
+  "thresholds_derived_from": "expected_value_optimization_on_validation_split",
+  "thresholds_validated_by": "bootstrap_500_resamples_95pct_CI",
+  "not_production_ready_until": [
+    "Business confirms fraud cost multiplier",
+    "Operations confirms review team capacity and cost per review",
+    "Product confirms acceptable customer friction rate for step-up",
+    "Risk team reviews auto-decline policy for regulatory compliance",
+    "Calibration verified on a held-out time window post-deployment"
+  ]
+}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 9: TEST RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+============================= test session starts ==============================
+platform darwin -- Python 3.11.14, pytest-9.0.3, pluggy-1.6.0 -- /Users/arnavlohe/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/arnavlohe/mle-portfolio
+plugins: anyio-3.7.1
+collecting ... collected 30 items
+
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_at_t1_is_step_up PASSED [  3%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_at_t2_is_review PASSED [  6%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_at_t3_is_decline PASSED [ 10%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_zero_is_approve PASSED [ 13%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_one_is_decline PASSED [ 16%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_just_below_t1_is_approve PASSED [ 20%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_all_four_actions_assigned PASSED [ 23%]
+tests/test_threshold_policy.py::TestEmptyBands::test_all_in_approve PASSED [ 26%]
+tests/test_threshold_policy.py::TestEmptyBands::test_empty_middle_bands PASSED [ 30%]
+tests/test_threshold_policy.py::TestExtremeSamples::test_all_fraud PASSED [ 33%]
+tests/test_threshold_policy.py::TestExtremeSamples::test_no_fraud PASSED [ 36%]
+tests/test_threshold_policy.py::TestCostModel::test_approve_cost PASSED  [ 40%]
+tests/test_threshold_policy.py::TestCostModel::test_step_up_cost PASSED  [ 43%]
+tests/test_threshold_policy.py::TestCostModel::test_review_cost PASSED   [ 46%]
+tests/test_threshold_policy.py::TestCostModel::test_decline_cost PASSED  [ 50%]
+tests/test_threshold_policy.py::TestCostModel::test_optimal_action_at_known_crossover PASSED [ 53%]
+tests/test_threshold_policy.py::TestCostModel::test_approve_cheapest_at_low_p PASSED [ 56%]
+tests/test_threshold_policy.py::TestCostModel::test_decline_cheapest_at_high_p PASSED [ 60%]
+tests/test_threshold_policy.py::TestCostModel::test_cost_approve_increases_with_p PASSED [ 63%]
+tests/test_threshold_policy.py::TestCostModel::test_cost_decline_decreases_with_p PASSED [ 66%]
+tests/test_threshold_policy.py::TestCalibration::test_calibrated_scores_in_range PASSED [ 70%]
+tests/test_threshold_policy.py::TestCalibration::test_calibrator_is_idempotent_ish PASSED [ 73%]
+tests/test_threshold_policy.py::TestConfigSchema::test_required_fields PASSED [ 76%]
+tests/test_threshold_policy.py::TestConfigSchema::test_status_is_valid PASSED [ 80%]
+tests/test_threshold_policy.py::TestConfigSchema::test_actions_cover_zero_to_one PASSED [ 83%]
+tests/test_threshold_policy.py::TestConfigSchema::test_actions_no_gaps PASSED [ 86%]
+tests/test_threshold_policy.py::TestConfigSchema::test_policy_matches_serving_model PASSED [ 90%]
+tests/test_threshold_policy.py::TestConfigSchema::test_four_actions PASSED [ 93%]
+tests/test_threshold_policy.py::TestAPIIntegration::test_response_has_action PASSED [ 96%]
+tests/test_threshold_policy.py::TestAPIIntegration::test_response_has_calibrated_score PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_threshold_policy.py::TestAPIIntegration::test_response_has_action
+  /Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 30 passed, 1 warning in 4.67s =========================
+
+╔══════════════════════════════════════════════════╗
+║  END OF RESULTS DUMP                             ║
+╚══════════════════════════════════════════════════╝

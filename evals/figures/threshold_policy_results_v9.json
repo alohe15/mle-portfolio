@@ -1,0 +1,78 @@
+{
+  "model_version": 9,
+  "dataset_version": 5,
+  "split": "validation",
+  "score_type": "calibrated",
+  "thresholds": [
+    0.036000000000000004,
+    0.051,
+    0.8200000000000001
+  ],
+  "cost_assumptions": {
+    "fraud_cost_multiplier": 2.0,
+    "step_up_stop_rate": 0.7,
+    "step_up_friction_rate": 0.05,
+    "review_catch_rate": 0.95,
+    "review_cost_per_txn": 10.0,
+    "review_capacity_per_day": 200,
+    "decline_revenue_loss": 1.0
+  },
+  "bands": [
+    {
+      "action": "approve",
+      "txn_count": 80200,
+      "txn_pct": 90.53860308644066,
+      "fraud_count": 594,
+      "fraud_pct": 19.526627218934912,
+      "fraud_dollars": 107998.727,
+      "fraud_dollars_pct": 21.734167400156508,
+      "precision": 0.007406483790523691,
+      "recall_cumulative": 1.0,
+      "false_positives": 0,
+      "legit_friction": 0,
+      "expected_cost": 176937.58222946647
+    },
+    {
+      "action": "step_up",
+      "txn_count": 934,
+      "txn_pct": 1.054402185570269,
+      "fraud_count": 39,
+      "fraud_pct": 1.282051282051282,
+      "fraud_dollars": 7216.679,
+      "fraud_dollars_pct": 1.452318132038668,
+      "precision": 0.0417558886509636,
+      "recall_cumulative": 0.8047337278106509,
+      "false_positives": 0,
+      "legit_friction": 895,
+      "expected_cost": 12162.892935894964
+    },
+    {
+      "action": "review",
+      "txn_count": 6212,
+      "txn_pct": 7.012790553278919,
+      "fraud_count": 1248,
+      "fraud_pct": 41.02564102564102,
+      "fraud_dollars": 217733.055,
+      "fraud_dollars_pct": 43.81761523834891,
+      "precision": 0.20090148100450742,
+      "recall_cumulative": 0.7919132149901381,
+      "false_positives": 4964,
+      "legit_friction": 0,
+      "expected_cost": 82781.73222882787
+    },
+    {
+      "action": "decline",
+      "txn_count": 1235,
+      "txn_pct": 1.3942041747101523,
+      "fraud_count": 1161,
+      "fraud_pct": 38.16568047337278,
+      "fraud_dollars": 163959.12699999998,
+      "fraud_dollars_pct": 32.995899229455915,
+      "precision": 0.940080971659919,
+      "recall_cumulative": 0.3816568047337278,
+      "false_positives": 74,
+      "legit_friction": 0,
+      "expected_cost": 8542.240075766584
+    }
+  ]
+}

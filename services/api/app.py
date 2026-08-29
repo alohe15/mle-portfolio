@@ -69,7 +69,7 @@ def apply_transformation(
                 f"Missing fitted transform {name!r} required by dataset config"
             )
         encoder = fitted_transforms[name]
-        return encoder.transform(df)
+        return encoder.transform(df, transform.get("params", {}))
 
     func = resolve_transform(transform["function"])
     return func(df, transform.get("params", {}))
@@ -96,6 +96,41 @@ def load_fitted_transforms(manifest: dict) -> dict[str, object]:
     if not isinstance(loaded, dict):
         raise TypeError(f"Expected dict in fitted transforms file: {path}")
     return loaded
+
+
+def load_decision_policy(registry_entry: dict) -> dict | None:
+    policy_path = registry_entry.get("decision_policy_path")
+    if not policy_path:
+        return None
+    path = repo_path(policy_path)
+    if not path.exists():
+        return None
+    return load_json(path)
+
+
+def load_calibrator(decision_policy: dict | None) -> object | None:
+    if decision_policy is None:
+        return None
+    if not decision_policy.get("use_calibrated_scores"):
+        return None
+    calibrator_path = decision_policy.get("calibrator_path")
+    if not calibrator_path:
+        return None
+    path = repo_path(calibrator_path)
+    if not path.exists():
+        return None
+    return pickle.loads(path.read_bytes())
+
+
+def assign_action(calibrated_score: float, decision_policy: dict) -> str | None:
+    for action_def in decision_policy["actions"]:
+        lower = action_def["lower"]
+        upper = action_def["upper"]
+        if lower <= calibrated_score < upper:
+            return action_def["action"]
+        if calibrated_score >= upper and upper == 1.0:
+            return action_def["action"]
+    return None
 
 
 class ServingContext:
@@ -136,6 +171,18 @@ class ServingContext:
             raise RuntimeError(
                 "Categorical feature count does not match model.pandas_categorical length"
             )
+
+        self.decision_policy = load_decision_policy(registry_entry)
+        if self.decision_policy is not None:
+            if self.decision_policy["model_version"] != self.model_version:
+                raise RuntimeError(
+                    "Policy model_version "
+                    f"{self.decision_policy['model_version']} != serving version "
+                    f"{self.model_version}"
+                )
+            if self.decision_policy["dataset_version"] != self.dataset_version:
+                raise RuntimeError("Policy dataset_version mismatch")
+        self.calibrator = load_calibrator(self.decision_policy)
 
 
 def load_serving_context() -> ServingContext:
@@ -191,6 +238,9 @@ class PredictionResponse(BaseModel):
     latency_ms: float
     model_version: int
     dataset_version: int
+    raw_score: float | None = None
+    action: str | None = None
+    policy_version: int | None = None
 
 
 @app.post("/predict")
@@ -200,12 +250,27 @@ def predict(request: PredictionRequest):
     df = raw_features_to_frame(request.features)
     df = apply_transformation_pipeline(df, SERVING.dataset_config, SERVING.fitted_transforms)
     model_input = build_model_input(df)
-    prob = float(SERVING.model.predict(model_input)[0])
+    raw_score = float(SERVING.model.predict(model_input)[0])
     elapsed_ms = (time.perf_counter() - start) * 1000
 
+    calibrated_score = raw_score
+    if SERVING.calibrator is not None:
+        calibrated_score = float(SERVING.calibrator.transform([raw_score])[0])
+
+    action = None
+    policy_version = None
+    if SERVING.decision_policy is not None:
+        policy_version = SERVING.decision_policy["policy_version"]
+        action = assign_action(calibrated_score, SERVING.decision_policy)
+
+    score_for_prediction = calibrated_score if SERVING.calibrator is not None else raw_score
+
     return PredictionResponse(
-        fraud_probability=round(prob, 6),
-        prediction=int(prob >= DECISION_THRESHOLD),
+        fraud_probability=round(calibrated_score, 6),
+        raw_score=round(raw_score, 6) if SERVING.calibrator is not None else None,
+        prediction=int(score_for_prediction >= DECISION_THRESHOLD),
+        action=action,
+        policy_version=policy_version,
         latency_ms=round(elapsed_ms, 2),
         model_version=SERVING.model_version,
         dataset_version=SERVING.dataset_version,

@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════
+  PHASE 3 — DECISION POLICY GATE
+═══════════════════════════════════════════════════
+
+DELIVERABLES
+  evals/cost_model.py                           ✓
+  evals/calibrate.py                            ✓
+  evals/optimize_thresholds.py                  ✓
+  evals/threshold_policy.py                     ✓
+  evals/sensitivity_analysis.py                 ✓
+  configs/decision_policy_v1.json               ✓
+  docs/decision_policy.md                       ✓
+  tests/test_threshold_policy.py                ✓
+
+FIGURES
+  evals/figures/calibration_before_v9.png            ✓
+  evals/figures/calibration_after_v9.png             ✓
+  evals/figures/calibrated_scores_v9.npz             ✓
+  evals/figures/optimal_thresholds_v9.json           ✓
+  evals/figures/sensitivity_analysis_v9.json         ✓
+  evals/figures/sensitivity_thresholds_v9.png        ✓
+  evals/figures/threshold_policy_results_v9.json     ✓
+
+ARTIFACTS
+  models/lgbm_v9_calibrator.pkl                 ✓
+
+DOCUMENTATION
+  docs/decision_policy.md                       unfilled: 0
+N/A
+
+POLICY CONFIG
+  Status:          proposed
+  Model version:   9
+  Actions:         4
+  Coverage:        [0.0, 1.0]
+  Gaps:            none
+
+HOLDOUT DISCIPLINE
+  evals/calibrate.py                            test references: 0
+0
+  evals/optimize_thresholds.py                  test references: 0
+0
+  evals/threshold_policy.py                     test references: 0
+0
+  evals/sensitivity_analysis.py                 test references: 0
+0
+
+TESTS
+  /Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 30 passed, 1 warning in 2.92s =========================
+
+DONE-WHEN
+  ☑ Every score band maps to an action (no gaps in [0,1])
+  ☑ Analysis reports customer impact and operational volume
+  ☑ Thresholds chosen on validation only (no test-split access)
+  ☑ Cost assumptions explicit and parameterizable
+  ☑ Calibration applied before thresholds
+  ☑ API loads policy from config (no hardcoded thresholds)
+  ☑ Sensitivity shows which assumptions have most leverage
+  ☑ Policy status is 'proposed'
+
+Commit: 6e7be7c787b5fb9fea54f426e915279e439b1967
+GATE: PASS

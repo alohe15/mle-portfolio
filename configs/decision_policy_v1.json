@@ -1,0 +1,52 @@
+{
+  "policy_version": 1,
+  "model_version": 9,
+  "dataset_version": 5,
+  "status": "proposed",
+  "calibrator_path": "models/lgbm_v9_calibrator.pkl",
+  "use_calibrated_scores": true,
+  "cost_assumptions": {
+    "fraud_cost_multiplier": 2.0,
+    "step_up_stop_rate": 0.7,
+    "step_up_friction_rate": 0.05,
+    "review_catch_rate": 0.95,
+    "review_cost_per_txn": 10.0,
+    "review_capacity_per_day": 200,
+    "decline_revenue_loss": 1.0
+  },
+  "actions": [
+    {
+      "action": "approve",
+      "lower": 0.0,
+      "upper": 0.036,
+      "description": "Auto-approve"
+    },
+    {
+      "action": "step_up",
+      "lower": 0.036,
+      "upper": 0.051,
+      "description": "Request extra authentication"
+    },
+    {
+      "action": "review",
+      "lower": 0.051,
+      "upper": 0.82,
+      "description": "Route to manual review queue"
+    },
+    {
+      "action": "decline",
+      "lower": 0.82,
+      "upper": 1.0,
+      "description": "Auto-decline"
+    }
+  ],
+  "thresholds_derived_from": "expected_value_optimization_on_validation_split",
+  "thresholds_validated_by": "bootstrap_500_resamples_95pct_CI",
+  "not_production_ready_until": [
+    "Business confirms fraud cost multiplier",
+    "Operations confirms review team capacity and cost per review",
+    "Product confirms acceptable customer friction rate for step-up",
+    "Risk team reviews auto-decline policy for regulatory compliance",
+    "Calibration verified on a held-out time window post-deployment"
+  ]
+}

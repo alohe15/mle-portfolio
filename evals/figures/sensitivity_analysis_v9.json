@@ -1,0 +1,200 @@
+[
+  {
+    "parameter": "fraud_cost_multiplier",
+    "value": 1.0,
+    "t1": 0.045,
+    "t2": 0.049999999999999996,
+    "t3": 0.8599999999999999,
+    "total_cost": 176945.71276914034,
+    "fraud_caught_pct": 79.75016436554898,
+    "fraud_dollars_caught_pct": 77.39386261897857,
+    "reviews_per_day": 199.07577352656037
+  },
+  {
+    "parameter": "fraud_cost_multiplier",
+    "value": 1.5,
+    "t1": 0.046,
+    "t2": 0.051,
+    "t3": 0.8449999999999999,
+    "total_cost": 229131.34139245073,
+    "fraud_caught_pct": 79.75016436554898,
+    "fraud_dollars_caught_pct": 77.39386261897857,
+    "reviews_per_day": 198.3435261587192
+  },
+  {
+    "parameter": "fraud_cost_multiplier",
+    "value": 2.0,
+    "t1": 0.036000000000000004,
+    "t2": 0.051,
+    "t3": 0.8199999999999998,
+    "total_cost": 280424.4474699559,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 197.77046300127827
+  },
+  {
+    "parameter": "fraud_cost_multiplier",
+    "value": 3.0,
+    "t1": 0.026000000000000002,
+    "t2": 0.046000000000000006,
+    "t3": 0.7599999999999998,
+    "total_cost": 375345.6720412266,
+    "fraud_caught_pct": 82.57725180802103,
+    "fraud_dollars_caught_pct": 82.14591623422743,
+    "reviews_per_day": 197.9296472116785
+  },
+  {
+    "parameter": "fraud_cost_multiplier",
+    "value": 5.0,
+    "t1": 0.011,
+    "t2": 0.04100000000000001,
+    "t3": 0.7299999999999999,
+    "total_cost": 526408.3932938897,
+    "fraud_caught_pct": 89.87508218277449,
+    "fraud_dollars_caught_pct": 91.46378622014522,
+    "reviews_per_day": 199.58516299984117
+  },
+  {
+    "parameter": "step_up_stop_rate",
+    "value": 0.5,
+    "t1": 0.046,
+    "t2": 0.051,
+    "t3": 0.8199999999999998,
+    "total_cost": 282104.0605987024,
+    "fraud_caught_pct": 79.75016436554898,
+    "fraud_dollars_caught_pct": 77.39386261897857,
+    "reviews_per_day": 197.77046300127827
+  },
+  {
+    "parameter": "step_up_stop_rate",
+    "value": 0.6,
+    "t1": 0.041,
+    "t2": 0.051,
+    "t3": 0.8199999999999998,
+    "total_cost": 281552.4897297713,
+    "fraud_caught_pct": 79.81591058514135,
+    "fraud_dollars_caught_pct": 77.45370010328763,
+    "reviews_per_day": 197.77046300127827
+  },
+  {
+    "parameter": "step_up_stop_rate",
+    "value": 0.7,
+    "t1": 0.036000000000000004,
+    "t2": 0.051,
+    "t3": 0.8199999999999998,
+    "total_cost": 280424.4474699559,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 197.77046300127827
+  },
+  {
+    "parameter": "step_up_stop_rate",
+    "value": 0.8,
+    "t1": 0.03,
+    "t2": 0.049999999999999996,
+    "t3": 0.8299999999999998,
+    "total_cost": 278050.05682663794,
+    "fraud_caught_pct": 81.65680473372781,
+    "fraud_dollars_caught_pct": 81.05017064058197,
+    "reviews_per_day": 197.83413668543835
+  },
+  {
+    "parameter": "step_up_stop_rate",
+    "value": 0.9,
+    "t1": 0.026000000000000002,
+    "t2": 0.051000000000000004,
+    "t3": 0.8199999999999998,
+    "total_cost": 275075.65959627053,
+    "fraud_caught_pct": 82.57725180802103,
+    "fraud_dollars_caught_pct": 82.14591623422743,
+    "reviews_per_day": 197.77046300127827
+  },
+  {
+    "parameter": "review_cost_per_txn",
+    "value": 5.0,
+    "t1": 0.036000000000000004,
+    "t2": 0.051,
+    "t3": 0.8599999999999999,
+    "total_cost": 249283.81881843077,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 199.01209984240026
+  },
+  {
+    "parameter": "review_cost_per_txn",
+    "value": 10.0,
+    "t1": 0.036000000000000004,
+    "t2": 0.051,
+    "t3": 0.8199999999999998,
+    "total_cost": 280424.4474699559,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 197.77046300127827
+  },
+  {
+    "parameter": "review_cost_per_txn",
+    "value": 20.0,
+    "t1": 0.036000000000000004,
+    "t2": 0.15500000000000003,
+    "t3": 0.8099999999999998,
+    "total_cost": 327565.3021629419,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 62.686742055620876
+  },
+  {
+    "parameter": "review_cost_per_txn",
+    "value": 50.0,
+    "t1": 0.036000000000000004,
+    "t2": 0.6099999999999999,
+    "t3": 0.6549999999999999,
+    "total_cost": 354654.36124651437,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 2.83347894512456
+  },
+  {
+    "parameter": "review_capacity_per_day",
+    "value": 100,
+    "t1": 0.036000000000000004,
+    "t2": 0.10000000000000002,
+    "t3": 0.8199999999999998,
+    "total_cost": 297850.1916433747,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 99.68115255264041
+  },
+  {
+    "parameter": "review_capacity_per_day",
+    "value": 200,
+    "t1": 0.036000000000000004,
+    "t2": 0.051,
+    "t3": 0.8199999999999998,
+    "total_cost": 280424.4474699559,
+    "fraud_caught_pct": 80.4733727810651,
+    "fraud_dollars_caught_pct": 78.26583259984349,
+    "reviews_per_day": 197.77046300127827
+  },
+  {
+    "parameter": "review_capacity_per_day",
+    "value": 500,
+    "t1": 0.026000000000000002,
+    "t2": 0.031000000000000003,
+    "t3": 0.8199999999999998,
+    "total_cost": 278342.43995137524,
+    "fraud_caught_pct": 82.57725180802103,
+    "fraud_dollars_caught_pct": 82.14591623422743,
+    "reviews_per_day": 258.10127874297535
+  },
+  {
+    "parameter": "review_capacity_per_day",
+    "value": 10000,
+    "t1": 0.026000000000000002,
+    "t2": 0.031000000000000003,
+    "t3": 0.8199999999999998,
+    "total_cost": 278342.43995137524,
+    "fraud_caught_pct": 82.57725180802103,
+    "fraud_dollars_caught_pct": 82.14591623422743,
+    "reviews_per_day": 258.10127874297535
+  }
+]
