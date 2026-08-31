@@ -9,7 +9,8 @@
     "config_path": "configs/lgbm_v1.json",
     "dataset_config_path": "configs/dataset_v1.json",
     "created_at": "2026-07-06T19:27:08Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 2,
@@ -21,7 +22,8 @@
     "config_path": "configs/lgbm_v2.json",
     "dataset_config_path": "configs/dataset_v2.json",
     "created_at": "2026-07-06T23:07:11Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 3,
@@ -33,7 +35,8 @@
     "config_path": "configs/lgbm_v3.json",
     "dataset_config_path": "configs/dataset_v2.json",
     "created_at": "2026-07-18T19:04:31Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 4,
@@ -45,7 +48,8 @@
     "config_path": "configs/lgbm_v4.json",
     "dataset_config_path": "configs/dataset_v2.json",
     "created_at": "2026-08-15T22:42:49Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 5,
@@ -57,7 +61,8 @@
     "config_path": "configs/lgbm_v5.json",
     "dataset_config_path": "configs/dataset_v3.json",
     "created_at": "2026-08-15T23:39:22Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 6,
@@ -69,7 +74,8 @@
     "config_path": "configs/lgbm_v6.json",
     "dataset_config_path": "configs/dataset_v4.json",
     "created_at": "2026-08-16T00:30:09Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 7,
@@ -81,7 +87,8 @@
     "config_path": "configs/lgbm_v7.json",
     "dataset_config_path": "configs/dataset_v4.json",
     "created_at": "2026-08-17T01:57:50Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 8,
@@ -93,7 +100,8 @@
     "config_path": "configs/lgbm_v8.json",
     "dataset_config_path": "configs/dataset_v4.json",
     "created_at": "2026-08-19T15:21:31Z",
-    "is_serving": false
+    "is_serving": false,
+    "lifecycle_stage": "Experimental"
   },
   {
     "version": 9,
@@ -107,6 +115,34 @@
     "created_at": "2026-08-20T22:23:16Z",
     "is_serving": true,
     "calibrator_path": "models/lgbm_v9_calibrator.pkl",
-    "decision_policy_path": "configs/decision_policy_v1.json"
+    "decision_policy_path": "configs/decision_policy_v1.json",
+    "lifecycle_stage": "Candidate",
+    "git_commit": "ed189fe488e5c79bbf67a76c2bd8268582ab7dbf",
+    "git_commit_short": "ed189fe",
+    "registered_at": "2026-08-31T17:13:58.435174+00:00",
+    "evaluation_evidence": {
+      "model_lock_report": "docs/model_lock_report.md",
+      "final_evaluation": "docs/final_evaluation.md",
+      "model_card": "docs/model_card.md",
+      "decision_policy": "docs/decision_policy.md",
+      "shap_analysis": "evals/figures/shap_top20_v9.json",
+      "ablation_results": "evals/figures/ablation_results_v9.json",
+      "calibration_before": "evals/figures/calibration_before_v9.png",
+      "calibration_after": "evals/figures/calibration_after_v9.png",
+      "threshold_policy_results": "evals/figures/threshold_policy_results_v9.json",
+      "sensitivity_analysis": "evals/figures/sensitivity_analysis_v9.json",
+      "comparison_table": "evals/model_comparison_results.txt"
+    },
+    "test_metrics": {
+      "test_auc_pr": 0.5952463633992758,
+      "val_auc_pr": 0.7022422481423667,
+      "best_iteration": 9779,
+      "n_features": 464
+    },
+    "promotion": {
+      "promoted_by": null,
+      "promoted_at": null,
+      "promotion_checklist": "docs/model_promotion_checklist.md"
+    }
   }
 ]
