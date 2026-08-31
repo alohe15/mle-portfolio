@@ -1,0 +1,257 @@
+╔══════════════════════════════════════════════════╗
+║  PHASE 4 RESULTS DUMP — Registration v9         ║
+╚══════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1: CANDIDATE REGISTRY ENTRY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{
+  "version": 9,
+  "dataset_version": 5,
+  "description": "Dn-only drop \u2014 retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed)",
+  "model_path": "models/lgbm_v9_optuna_tuning.txt",
+  "manifest_path": "models/lgbm_v9_optuna_tuning_manifest.json",
+  "metrics_path": "models/lgbm_v9_optuna_tuning_metrics.json",
+  "config_path": "configs/lgbm_v9.json",
+  "dataset_config_path": "configs/dataset_v5.json",
+  "created_at": "2026-08-20T22:23:16Z",
+  "is_serving": true,
+  "calibrator_path": "models/lgbm_v9_calibrator.pkl",
+  "decision_policy_path": "configs/decision_policy_v1.json",
+  "lifecycle_stage": "Candidate",
+  "git_commit": "ed189fe488e5c79bbf67a76c2bd8268582ab7dbf",
+  "git_commit_short": "ed189fe",
+  "registered_at": "2026-08-31T17:13:58.435174+00:00",
+  "evaluation_evidence": {
+    "model_lock_report": "docs/model_lock_report.md",
+    "final_evaluation": "docs/final_evaluation.md",
+    "model_card": "docs/model_card.md",
+    "decision_policy": "docs/decision_policy.md",
+    "shap_analysis": "evals/figures/shap_top20_v9.json",
+    "ablation_results": "evals/figures/ablation_results_v9.json",
+    "calibration_before": "evals/figures/calibration_before_v9.png",
+    "calibration_after": "evals/figures/calibration_after_v9.png",
+    "threshold_policy_results": "evals/figures/threshold_policy_results_v9.json",
+    "sensitivity_analysis": "evals/figures/sensitivity_analysis_v9.json",
+    "comparison_table": "evals/model_comparison_results.txt"
+  },
+  "test_metrics": {
+    "test_auc_pr": 0.5952463633992758,
+    "val_auc_pr": 0.7022422481423667,
+    "best_iteration": 9779,
+    "n_features": 464
+  },
+  "promotion": {
+    "promoted_by": null,
+    "promoted_at": null,
+    "promotion_checklist": "docs/model_promotion_checklist.md"
+  }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2: TRACEABILITY SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Git commit                ed189fe488e5...
+  Lifecycle stage           Candidate
+  Model version             9
+  Dataset version           5
+  Config                    configs/lgbm_v9.json
+  Dataset config            configs/dataset_v5.json
+  Decision policy           configs/decision_policy_v1.json
+  Metrics                   models/lgbm_v9_optuna_tuning_metrics.json
+  Manifest                  models/lgbm_v9_optuna_tuning_manifest.json
+  Calibrator                models/lgbm_v9_calibrator.pkl
+  is_serving                True
+  Test AUC-PR               0.5952463633992758
+  n_features                464
+
+  Evidence files: 11
+    ✓ model_lock_report: docs/model_lock_report.md
+    ✓ final_evaluation: docs/final_evaluation.md
+    ✓ model_card: docs/model_card.md
+    ✓ decision_policy: docs/decision_policy.md
+    ✓ shap_analysis: evals/figures/shap_top20_v9.json
+    ✓ ablation_results: evals/figures/ablation_results_v9.json
+    ✓ calibration_before: evals/figures/calibration_before_v9.png
+    ✓ calibration_after: evals/figures/calibration_after_v9.png
+    ✓ threshold_policy_results: evals/figures/threshold_policy_results_v9.json
+    ✓ sensitivity_analysis: evals/figures/sensitivity_analysis_v9.json
+    ✓ comparison_table: evals/model_comparison_results.txt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3: LIFECYCLE TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Ver   Dataset    Stage           Serving    Commit      
+  ────────────────────────────────────────────────────
+  v1    v1         Experimental               n/a
+  v2    v2         Experimental               n/a
+  v3    v2         Experimental               n/a
+  v4    v2         Experimental               n/a
+  v5    v3         Experimental               n/a
+  v6    v4         Experimental               n/a
+  v7    v4         Experimental               n/a
+  v8    v4         Experimental               n/a
+  v9    v5         Candidate       ← YES      ed189fe
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4: REGISTRATION SCRIPT OUTPUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Registering v9 as Candidate...
+
+Existing entry found for v9. Will update lifecycle_stage.
+VALIDATION RESULTS
+==================================================
+
+  No errors ✓
+
+WARNINGS (1) — non-blocking:
+  Uncommitted changes detected — commit hash may not fully represent the state
+
+Proposed entry:
+{
+  "version": 9,
+  "dataset_version": 5,
+  "description": "Dn-only drop \u2014 retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed)",
+  "model_path": "models/lgbm_v9_optuna_tuning.txt",
+  "manifest_path": "models/lgbm_v9_optuna_tuning_manifest.json",
+  "metrics_path": "models/lgbm_v9_optuna_tuning_metrics.json",
+  "config_path": "configs/lgbm_v9.json",
+  "dataset_config_path": "configs/dataset_v5.json",
+  "created_at": "2026-08-20T22:23:16Z",
+  "is_serving": true,
+  "calibrator_path": "models/lgbm_v9_calibrator.pkl",
+  "decision_policy_path": "configs/decision_policy_v1.json",
+  "lifecycle_stage": "Candidate",
+  "git_commit": "390fa5cc7924f328781fab788b10615077cf7424",
+  "git_commit_short": "390fa5c",
+  "registered_at": "2026-08-31T17:14:04.504146+00:00",
+  "evaluation_evidence": {
+    "model_lock_report": "docs/model_lock_report.md",
+    "final_evaluation": "docs/final_evaluation.md",
+    "model_card": "docs/model_card.md",
+    "decision_policy": "docs/decision_policy.md",
+    "shap_analysis": "evals/figures/shap_top20_v9.json",
+    "ablation_results": "evals/figures/ablation_results_v9.json",
+    "calibration_before": "evals/figures/calibration_before_v9.png",
+    "calibration_after": "evals/figures/calibration_after_v9.png",
+    "threshold_policy_results": "evals/figures/threshold_policy_results_v9.json",
+    "sensitivity_analysis": "evals/figures/sensitivity_analysis_v9.json",
+    "comparison_table": "evals/model_comparison_results.txt"
+  },
+  "test_metrics": {
+    "test_auc_pr": 0.5952463633992758,
+    "val_auc_pr": 0.7022422481423667,
+    "best_iteration": 9779,
+    "n_features": 464
+  },
+  "promotion": {
+    "promoted_by": null,
+    "promoted_at": null,
+    "promotion_checklist": "docs/model_promotion_checklist.md"
+  }
+}
+
+  Dry run — no changes written.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5: TEST RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+============================= test session starts ==============================
+platform darwin -- Python 3.11.14, pytest-9.0.3, pluggy-1.6.0 -- /Users/arnavlohe/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/arnavlohe/mle-portfolio
+plugins: anyio-3.7.1
+collecting ... collected 80 items
+
+tests/test_feature_schema.py::TestFeatureNames::test_feature_list_matches_manifest PASSED [  1%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_duplicate_features_in_manifest PASSED [  2%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_duplicate_features_in_feature_list PASSED [  3%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_target_in_features PASSED [  5%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_id_columns_in_features PASSED [  6%]
+tests/test_feature_schema.py::TestFeatureNames::test_no_raw_d_columns_in_features PASSED [  7%]
+tests/test_feature_schema.py::TestFeatureCounts::test_manifest_count_matches_feature_order_length PASSED [  8%]
+tests/test_feature_schema.py::TestFeatureCounts::test_metrics_count_matches_manifest PASSED [ 10%]
+tests/test_feature_schema.py::TestFeatureCounts::test_feature_list_count_matches_manifest PASSED [ 11%]
+tests/test_feature_schema.py::TestFeatureCounts::test_feature_count_decreased PASSED [ 12%]
+tests/test_feature_schema.py::TestFeatureOrder::test_manifest_order_matches_feature_list_order PASSED [ 13%]
+tests/test_feature_schema.py::TestFeatureOrder::test_v9_order_is_v8_minus_raw_d PASSED [ 15%]
+tests/test_feature_schema.py::TestFeatureDtypes::test_all_features_have_dtypes PASSED [ 16%]
+tests/test_feature_schema.py::TestConfigConsistency::test_dataset_version_matches PASSED [ 17%]
+tests/test_feature_schema.py::TestConfigConsistency::test_v9_params_match_v8 PASSED [ 18%]
+tests/test_feature_schema.py::TestConfigConsistency::test_split_is_temporal_70_15_15 PASSED [ 20%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_in_registry PASSED [ 21%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_at_most_one_serving PASSED [ 22%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_has_all_required_paths PASSED [ 23%]
+tests/test_feature_schema.py::TestRegistryIntegrity::test_v9_is_serving PASSED [ 25%]
+tests/test_feature_schema.py::TestConvergence::test_natural_convergence PASSED [ 26%]
+tests/test_model_comparison.py::TestMetricsSchema::test_all_versions_have_metrics PASSED [ 27%]
+tests/test_model_comparison.py::TestMetricsSchema::test_required_metric_fields PASSED [ 28%]
+tests/test_model_comparison.py::TestMetricsSchema::test_metric_values_are_finite PASSED [ 30%]
+tests/test_model_comparison.py::TestMetricsSchema::test_auc_pr_in_valid_range PASSED [ 31%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_all_versions_have_split_config PASSED [ 32%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_split_fractions_consistent PASSED [ 33%]
+tests/test_model_comparison.py::TestComparisonIntegrity::test_v9_dataset_version_is_5 PASSED [ 35%]
+tests/test_model_comparison.py::TestComparisonScript::test_comparison_output_exists PASSED [ 36%]
+tests/test_registry.py::TestRegistryStructure::test_registry_is_list PASSED [ 37%]
+tests/test_registry.py::TestRegistryStructure::test_registry_not_empty PASSED [ 38%]
+tests/test_registry.py::TestRegistryStructure::test_unique_versions PASSED [ 40%]
+tests/test_registry.py::TestRegistryStructure::test_versions_are_positive_integers PASSED [ 41%]
+tests/test_registry.py::TestRequiredFields::test_all_entries_have_required_fields PASSED [ 42%]
+tests/test_registry.py::TestRequiredFields::test_required_fields_not_empty PASSED [ 43%]
+tests/test_registry.py::TestPathValidity::test_config_paths_exist PASSED [ 45%]
+tests/test_registry.py::TestPathValidity::test_metrics_paths_exist PASSED [ 46%]
+tests/test_registry.py::TestPathValidity::test_manifest_paths_exist PASSED [ 47%]
+tests/test_registry.py::TestPathValidity::test_dataset_config_paths_exist PASSED [ 48%]
+tests/test_registry.py::TestServingConstraints::test_at_most_one_serving PASSED [ 50%]
+tests/test_registry.py::TestServingConstraints::test_serving_model_has_metrics PASSED [ 51%]
+tests/test_registry.py::TestCandidateEntry::test_candidate_has_traceability PASSED [ 52%]
+tests/test_registry.py::TestCandidateEntry::test_candidate_git_commit_is_full_sha PASSED [ 53%]
+tests/test_registry.py::TestCandidateEntry::test_candidate_evidence_paths_exist PASSED [ 55%]
+tests/test_registry.py::TestCandidateEntry::test_candidate_test_metrics_are_finite PASSED [ 56%]
+tests/test_registry.py::TestCandidateEntry::test_candidate_promotion_checklist_exists PASSED [ 57%]
+tests/test_registry.py::TestVersionConsistency::test_config_version_matches PASSED [ 58%]
+tests/test_registry.py::TestVersionConsistency::test_dataset_version_matches PASSED [ 60%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_at_t1_is_step_up PASSED [ 61%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_at_t2_is_review PASSED [ 62%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_at_t3_is_decline PASSED [ 63%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_zero_is_approve PASSED [ 65%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_one_is_decline PASSED [ 66%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_score_just_below_t1_is_approve PASSED [ 67%]
+tests/test_threshold_policy.py::TestBoundaryScores::test_all_four_actions_assigned PASSED [ 68%]
+tests/test_threshold_policy.py::TestEmptyBands::test_all_in_approve PASSED [ 70%]
+tests/test_threshold_policy.py::TestEmptyBands::test_empty_middle_bands PASSED [ 71%]
+tests/test_threshold_policy.py::TestExtremeSamples::test_all_fraud PASSED [ 72%]
+tests/test_threshold_policy.py::TestExtremeSamples::test_no_fraud PASSED [ 73%]
+tests/test_threshold_policy.py::TestCostModel::test_approve_cost PASSED  [ 75%]
+tests/test_threshold_policy.py::TestCostModel::test_step_up_cost PASSED  [ 76%]
+tests/test_threshold_policy.py::TestCostModel::test_review_cost PASSED   [ 77%]
+tests/test_threshold_policy.py::TestCostModel::test_decline_cost PASSED  [ 78%]
+tests/test_threshold_policy.py::TestCostModel::test_optimal_action_at_known_crossover PASSED [ 80%]
+tests/test_threshold_policy.py::TestCostModel::test_approve_cheapest_at_low_p PASSED [ 81%]
+tests/test_threshold_policy.py::TestCostModel::test_decline_cheapest_at_high_p PASSED [ 82%]
+tests/test_threshold_policy.py::TestCostModel::test_cost_approve_increases_with_p PASSED [ 83%]
+tests/test_threshold_policy.py::TestCostModel::test_cost_decline_decreases_with_p PASSED [ 85%]
+tests/test_threshold_policy.py::TestCalibration::test_calibrated_scores_in_range PASSED [ 86%]
+tests/test_threshold_policy.py::TestCalibration::test_calibrator_is_idempotent_ish PASSED [ 87%]
+tests/test_threshold_policy.py::TestConfigSchema::test_required_fields PASSED [ 88%]
+tests/test_threshold_policy.py::TestConfigSchema::test_status_is_valid PASSED [ 90%]
+tests/test_threshold_policy.py::TestConfigSchema::test_actions_cover_zero_to_one PASSED [ 91%]
+tests/test_threshold_policy.py::TestConfigSchema::test_actions_no_gaps PASSED [ 92%]
+tests/test_threshold_policy.py::TestConfigSchema::test_policy_matches_serving_model PASSED [ 93%]
+tests/test_threshold_policy.py::TestConfigSchema::test_four_actions PASSED [ 95%]
+tests/test_threshold_policy.py::TestAPIIntegration::test_response_has_action PASSED [ 96%]
+tests/test_threshold_policy.py::TestAPIIntegration::test_response_has_calibrated_score PASSED [ 97%]
+tests/test_training_smoke.py::TestTrainingSmoke::test_train_completes PASSED [ 98%]
+tests/test_training_smoke.py::TestTrainingSmoke::test_artifacts_created PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_threshold_policy.py::TestAPIIntegration::test_response_has_action
+  /Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 80 passed, 1 warning in 42.92s ========================
+
+╔══════════════════════════════════════════════════╗
+║  END OF RESULTS DUMP                             ║
+╚══════════════════════════════════════════════════╝
