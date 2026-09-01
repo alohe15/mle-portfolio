@@ -1,79 +1,166 @@
-"""Generate a test payload from training data and POST it to the fraud API.
+"""API endpoint tests — success, validation, edge cases, privacy.
 
-Usage:
-    uvicorn services.api.app:app --reload --app-dir .
-    python tests/test_api_endpoint.py
-
-Optional env vars:
-    API_URL  default http://127.0.0.1:8000/predict
+Run: python -m pytest tests/test_api_endpoint.py -v
 """
 
 from __future__ import annotations
 
 import json
-import os
 import sys
+import uuid
 from pathlib import Path
-from urllib import error, request
 
-import pandas as pd
+import pytest
+from fastapi.testclient import TestClient
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = REPO_ROOT / "data" / "raw" / "train_merged.parquet"
-PAYLOAD_PATH = REPO_ROOT / "tests" / "fixtures" / "test_payload.json"
-DEFAULT_API_URL = "http://127.0.0.1:8000/predict"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-
-def build_test_payload() -> dict:
-    df = pd.read_parquet(DATA_PATH)
-    sample = df.iloc[0].drop("isFraud").to_dict()
-    sample = {k: (None if pd.isna(v) else v) for k, v in sample.items()}
-    return {"features": sample}
+from services.api.app import app
 
 
-def save_test_payload(payload: dict, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w") as f:
-        json.dump(payload, f)
-    print(f"Saved {path}")
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(app) as test_client:
+        yield test_client
 
 
-def call_predict_endpoint(payload: dict, url: str) -> dict:
-    body = json.dumps(payload).encode("utf-8")
-    req = request.Request(
-        url,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+class TestSuccessfulPrediction:
+    def test_minimal_request(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": 75.0})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "fraud_probability" in data
+        assert "raw_score" in data
+        assert "recommended_action" in data
+        assert "model_version" in data
+        assert "request_id" in data
+        assert data["model_version"] == 9
+        assert data["recommended_action"] in ("approve", "step_up", "review", "decline")
 
-
-def main() -> None:
-    api_url = os.getenv("API_URL", DEFAULT_API_URL)
-
-    payload = build_test_payload()
-    save_test_payload(payload, PAYLOAD_PATH)
-
-    try:
-        result = call_predict_endpoint(payload, api_url)
-    except error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        print(f"API error ({exc.code}) from {api_url}: {body}", file=sys.stderr)
-        sys.exit(1)
-    except error.URLError as exc:
-        print(f"Could not reach API at {api_url}: {exc}", file=sys.stderr)
-        print(
-            "Start the server first:\n"
-            "  uvicorn services.api.app:app --reload --app-dir .",
-            file=sys.stderr,
+    def test_full_request(self, client):
+        resp = client.post(
+            "/predict",
+            json={
+                "TransactionAmt": 150.0,
+                "TransactionDT": 86400,
+                "card1": 1000,
+                "card4": "visa",
+                "ProductCD": "W",
+                "P_emaildomain": "gmail.com",
+                "R_emaildomain": "gmail.com",
+                "D1": 14.0,
+                "C1": 1.0,
+            },
         )
-        sys.exit(1)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 0.0 <= data["fraud_probability"] <= 1.0
+        assert 0.0 <= data["raw_score"] <= 1.0
 
-    print(f"POST {api_url}")
-    print(json.dumps(result, indent=2))
+    def test_response_has_request_id(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": 50.0})
+        data = resp.json()
+        uuid.UUID(data["request_id"])
+
+    def test_response_has_policy_version(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": 50.0})
+        data = resp.json()
+        assert "policy_version" in data
 
 
-if __name__ == "__main__":
-    main()
+class TestValidationErrors:
+    def test_missing_transaction_amt(self, client):
+        resp = client.post("/predict", json={"card1": 1000})
+        assert resp.status_code == 422
+
+    def test_invalid_type_string_for_amount(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": "not_a_number"})
+        assert resp.status_code == 422
+
+    def test_empty_body(self, client):
+        resp = client.post("/predict", json={})
+        assert resp.status_code == 422
+
+    def test_null_transaction_amt(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": None})
+        assert resp.status_code == 422
+
+
+class TestEdgeCases:
+    def test_extreme_high_amount(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": 999999999.0})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert 0.0 <= data["fraud_probability"] <= 1.0
+
+    def test_zero_amount(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": 0.01})
+        assert resp.status_code == 200
+
+    def test_unseen_card_category(self, client):
+        resp = client.post(
+            "/predict",
+            json={
+                "TransactionAmt": 50.0,
+                "card4": "brand_new_card_type_never_seen",
+            },
+        )
+        assert resp.status_code == 200
+
+    def test_all_optional_fields_null(self, client):
+        resp = client.post(
+            "/predict",
+            json={
+                "TransactionAmt": 100.0,
+                "card1": None,
+                "card4": None,
+                "P_emaildomain": None,
+            },
+        )
+        assert resp.status_code == 200
+
+    def test_extra_unknown_fields_ignored(self, client):
+        resp = client.post(
+            "/predict",
+            json={
+                "TransactionAmt": 100.0,
+                "completely_unknown_field": "value",
+            },
+        )
+        assert resp.status_code == 200
+
+
+class TestPrivacy:
+    def test_response_does_not_echo_input(self, client):
+        resp = client.post(
+            "/predict",
+            json={
+                "TransactionAmt": 123.45,
+                "P_emaildomain": "secret@test.com",
+                "card1": 99999,
+            },
+        )
+        data = resp.json()
+        response_str = json.dumps(data)
+        assert "123.45" not in response_str
+        assert "secret@test.com" not in response_str
+        assert "99999" not in response_str
+
+    def test_error_response_does_not_leak_input(self, client):
+        resp = client.post("/predict", json={"TransactionAmt": "bad"})
+        assert resp.status_code == 422
+        data = resp.json()
+        response_str = json.dumps(data)
+        assert "bad" not in response_str.lower()
+        assert "request_id" in data
+
+
+class TestHealthEndpoint:
+    def test_health_returns_200(self, client):
+        resp = client.get("/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "healthy"
+        assert data["model_version"] == 9
+        assert data["n_features"] == 464

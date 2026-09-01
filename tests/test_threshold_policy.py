@@ -234,10 +234,11 @@ class TestAPIIntegration:
         try:
             from fastapi.testclient import TestClient
 
-            sys.path.insert(0, str(PROJECT_ROOT / "services" / "api"))
-            from app import app
+            sys.path.insert(0, str(PROJECT_ROOT))
+            from services.api.app import app
 
-            return TestClient(app)
+            with TestClient(app) as client:
+                yield client
         except Exception as exc:
             pytest.skip(f"Cannot load API: {exc}")
 
@@ -250,25 +251,28 @@ class TestAPIIntegration:
             pytest.skip("Raw training data not available for API integration test")
         df = pd.read_parquet(data_path)
         sample = df.iloc[0].drop("isFraud", errors="ignore").to_dict()
-        return {k: (None if pd.isna(v) else v) for k, v in sample.items()}
+        payload = {}
+        for k, v in sample.items():
+            if k == "TransactionID":
+                continue
+            if pd.isna(v):
+                continue
+            payload[k] = v
+        if "TransactionAmt" not in payload:
+            payload["TransactionAmt"] = float(sample.get("TransactionAmt", 1.0))
+        return payload
 
     def test_response_has_action(self, api_client, sample_features):
-        response = api_client.post(
-            "/predict",
-            json={"features": sample_features},
-        )
+        response = api_client.post("/predict", json=sample_features)
         assert response.status_code == 200
         data = response.json()
-        assert data["action"] in ("approve", "step_up", "review", "decline")
+        assert data["recommended_action"] in ("approve", "step_up", "review", "decline")
         assert "policy_version" in data
         assert "raw_score" in data
         assert "fraud_probability" in data
 
     def test_response_has_calibrated_score(self, api_client, sample_features):
-        response = api_client.post(
-            "/predict",
-            json={"features": sample_features},
-        )
+        response = api_client.post("/predict", json=sample_features)
         assert response.status_code == 200
         data = response.json()
         assert 0 <= data["fraud_probability"] <= 1

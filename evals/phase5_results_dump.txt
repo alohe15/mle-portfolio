@@ -1,0 +1,172 @@
+╔══════════════════════════════════════════════════╗
+║  PHASE 5 RESULTS DUMP — Inference Service v9    ║
+╚══════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1: FEATURE CLASSIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  RAW                  416 features
+  PER_ROW              38 features
+  FITTED_LOOKUP        10 features
+  HISTORICAL           0 features
+  TOTAL: 464
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2: SAMPLE REQUEST/RESPONSE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{"time":"2026-09-01 16:59:45,277","level":"INFO","message":"Loading serving model v9"}
+{"time":"2026-09-01 16:59:45,602","level":"INFO","message":"Loaded fitted transforms from models/lgbm_v9_optuna_tuning_fitted_transforms.pkl"}
+{"time":"2026-09-01 16:59:45,604","level":"INFO","message":"Loaded calibrator"}
+{"time":"2026-09-01 16:59:45,604","level":"INFO","message":"Loaded decision policy v1"}
+{"time":"2026-09-01 16:59:45,605","level":"INFO","message":"Loaded feature classification"}
+{"time":"2026-09-01 16:59:45,605","level":"INFO","message":"{"event": "model_loaded", "model_version": 9, "dataset_version": 5, "n_features": 464, "calibrator_loaded": true, "policy_loaded": true, "policy_version": 1}"}
+{"time":"2026-09-01 16:59:45,673","level":"INFO","message":"{"event": "prediction", "request_id": "d289cf9c-7efb-47fd-95f3-ecdd514e06d1", "model_version": 9, "policy_version": 1, "recommended_action": "approve", "fraud_probability": 0.030605, "latency_ms": 67.0, "warning_count": 1}"}
+{"time":"2026-09-01 16:59:45,674","level":"INFO","message":"HTTP Request: POST http://testserver/predict "HTTP/1.1 200 OK""}
+{"time":"2026-09-01 16:59:45,737","level":"INFO","message":"{"event": "prediction", "request_id": "d9e4cd81-88d2-4d58-b8ce-f882e341866e", "model_version": 9, "policy_version": 1, "recommended_action": "review", "fraud_probability": 0.098751, "latency_ms": 62.9, "warning_count": 1}"}
+{"time":"2026-09-01 16:59:45,737","level":"INFO","message":"HTTP Request: POST http://testserver/predict "HTTP/1.1 200 OK""}
+REQUEST (minimal):
+{
+  "TransactionAmt": 75.0
+}
+
+RESPONSE (200):
+{
+  "fraud_probability": 0.030605,
+  "raw_score": 0.000392,
+  "recommended_action": "approve",
+  "model_version": 9,
+  "dataset_version": 5,
+  "policy_version": 1,
+  "request_id": "d289cf9c-7efb-47fd-95f3-ecdd514e06d1",
+  "warnings": [
+    "401 features filled with NaN (not in request or transforms)"
+  ]
+}
+
+
+REQUEST (with fields):
+{
+  "TransactionAmt": 150.0,
+  "TransactionDT": 86400,
+  "card1": 1000,
+  "card4": "visa",
+  "ProductCD": "W",
+  "P_emaildomain": "gmail.com",
+  "R_emaildomain": "gmail.com",
+  "D1": 14.0,
+  "C1": 1.0
+}
+
+RESPONSE (200):
+{
+  "fraud_probability": 0.098751,
+  "raw_score": 0.00387,
+  "recommended_action": "review",
+  "model_version": 9,
+  "dataset_version": 5,
+  "policy_version": 1,
+  "request_id": "d9e4cd81-88d2-4d58-b8ce-f882e341866e",
+  "warnings": [
+    "396 features filled with NaN (not in request or transforms)"
+  ]
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3: LATENCY BENCHMARK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+tests/test_api_latency.py::TestLatency::test_p95_under_target 
+  Latency benchmark (100 requests):
+    Mean:  73.4ms
+    p50:   61.5ms
+    p95:   125.8ms  (target: <200ms)
+    p99:   161.0ms
+    Min:   58.2ms
+    Max:   191.9ms
+PASSED
+tests/test_api_latency.py::TestLatency::test_minimal_vs_full_request_latency 
+  Minimal request p50: 66.7ms
+  Full request p50:    78.7ms
+  Overhead:            12.0ms
+PASSED
+
+=============================== warnings summary ===============================
+../miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_api_latency.py: 25 warnings
+  /Users/arnavlohe/mle-portfolio/services/api/predictor.py:104: Pandas4Warning: Constructing a Categorical with a dtype and values containing non-null entries not in that dtype's categories is deprecated and will raise in a future version.
+    model_input[feature] = pd.Categorical(
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4: TRAINING-SERVING PARITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+tests/test_training_serving_parity.py::TestTrainingServingParity::test_parity_training_path PASSED
+tests/test_training_serving_parity.py::TestTrainingServingParity::test_parity_serving_path PASSED
+tests/test_training_serving_parity.py::TestTrainingServingParity::test_scores_match 
+  Training-serving parity (5 rows, tolerance=1e-06):
+    Row     0: training=0.00001695  serving=0.00001700  delta=5.20e-08 OK
+    Row   100: training=0.00000059  serving=0.00000100  delta=4.10e-07 OK
+    Row   500: training=0.00004652  serving=0.00004700  delta=4.84e-07 OK
+    Row  1000: training=0.00003849  serving=0.00003800  delta=4.86e-07 OK
+    Row  5000: training=0.00007809  serving=0.00007800  delta=9.37e-08 OK
+PASSED
+
+=============================== warnings summary ===============================
+../miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 3 passed, 1 warning in 8.91s =========================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5: PRIVACY CHECK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+============================= test session starts ==============================
+platform darwin -- Python 3.11.14, pytest-9.0.3, pluggy-1.6.0 -- /Users/arnavlohe/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/arnavlohe/mle-portfolio
+plugins: anyio-3.7.1
+collecting ... collected 2 items
+
+tests/test_api_endpoint.py::TestPrivacy::test_response_does_not_echo_input PASSED [ 50%]
+tests/test_api_endpoint.py::TestPrivacy::test_error_response_does_not_leak_input PASSED [100%]
+
+=============================== warnings summary ===============================
+../miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_api_endpoint.py::TestPrivacy::test_response_does_not_echo_input
+tests/test_api_endpoint.py::TestPrivacy::test_response_does_not_echo_input
+  /Users/arnavlohe/mle-portfolio/services/api/predictor.py:104: Pandas4Warning: Constructing a Categorical with a dtype and values containing non-null entries not in that dtype's categories is deprecated and will raise in a future version.
+    model_input[feature] = pd.Categorical(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 2 passed, 3 warnings in 1.56s =========================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6: ALL TEST RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+........................................................................ [ 71%]
+.............................                                            [100%]
+=============================== warnings summary ===============================
+../miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/arnavlohe/miniconda3/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_api_endpoint.py: 11 warnings
+tests/test_api_latency.py: 25 warnings
+  /Users/arnavlohe/mle-portfolio/services/api/predictor.py:104: Pandas4Warning: Constructing a Categorical with a dtype and values containing non-null entries not in that dtype's categories is deprecated and will raise in a future version.
+    model_input[feature] = pd.Categorical(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+101 passed, 37 warnings in 77.14s (0:01:17)
+
+╔══════════════════════════════════════════════════╗
+║  END OF RESULTS DUMP                             ║
+╚══════════════════════════════════════════════════╝
