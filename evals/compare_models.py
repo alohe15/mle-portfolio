@@ -21,10 +21,9 @@ TABLE_COLUMNS = [
     ("dataset_version", "dataset_version"),
     ("description", "description"),
     ("test_auc_pr", "test_auc_pr"),
-    ("precision_at_budget", "precision_at_budget"),
-    ("recall_at_budget", "recall_at_budget"),
     ("best_iteration", "best_iteration"),
     ("n_features", "n_features"),
+    ("delta_vs_v1", "delta_vs_v1"),
 ]
 
 
@@ -74,19 +73,26 @@ def build_comparison_rows(registry: list[dict]) -> list[dict]:
                 "dataset_version": entry["dataset_version"],
                 "description": entry["description"],
                 "test_auc_pr": extract_test_auc_pr(metrics_doc),
-                "precision_at_budget": metrics_doc["metrics"]["precision_at_budget"],
-                "recall_at_budget": metrics_doc["metrics"]["recall_at_budget"],
                 "best_iteration": metrics_doc["metrics"]["best_iteration"],
                 "n_features": metrics_doc["training"]["n_features"],
                 "metrics_path": entry["metrics_path"],
             }
         )
+
+    if not rows:
+        return rows
+
+    v1_auc = next((row["test_auc_pr"] for row in rows if row["version"] == 1), None)
+    if v1_auc is None:
+        raise ValueError("Registry must include version 1 to compute delta_vs_v1")
+
+    for row in rows:
+        row["delta_vs_v1"] = row["test_auc_pr"] - v1_auc
     return rows
 
 
 def format_table(rows: list[dict]) -> str:
     headers = [label for label, _ in TABLE_COLUMNS]
-    keys = [key for _, key in TABLE_COLUMNS]
 
     str_rows = []
     for row in rows:
@@ -96,10 +102,9 @@ def format_table(rows: list[dict]) -> str:
                 "dataset_version": str(row["dataset_version"]),
                 "description": row["description"],
                 "test_auc_pr": f"{row['test_auc_pr']:.4f}",
-                "precision_at_budget": f"{row['precision_at_budget']:.4f}",
-                "recall_at_budget": f"{row['recall_at_budget']:.4f}",
                 "best_iteration": str(row["best_iteration"]),
                 "n_features": str(row["n_features"]),
+                "delta_vs_v1": f"{row['delta_vs_v1']:+.4f}",
             }
         )
 
@@ -116,10 +121,9 @@ def format_table(rows: list[dict]) -> str:
             f"{row['dataset_version']:>{widths['dataset_version']}}  "
             f"{row['description']:<{description_width}}  "
             f"{row['test_auc_pr']:>{widths['test_auc_pr']}}  "
-            f"{row['precision_at_budget']:>{widths['precision_at_budget']}}  "
-            f"{row['recall_at_budget']:>{widths['recall_at_budget']}}  "
             f"{row['best_iteration']:>{widths['best_iteration']}}  "
-            f"{row['n_features']:>{widths['n_features']}}"
+            f"{row['n_features']:>{widths['n_features']}}  "
+            f"{row['delta_vs_v1']:>{widths['delta_vs_v1']}}"
         )
 
     header_line = (
@@ -127,10 +131,9 @@ def format_table(rows: list[dict]) -> str:
         f"{'dataset_version':>{widths['dataset_version']}}  "
         f"{'description':<{description_width}}  "
         f"{'test_auc_pr':>{widths['test_auc_pr']}}  "
-        f"{'precision_at_budget':>{widths['precision_at_budget']}}  "
-        f"{'recall_at_budget':>{widths['recall_at_budget']}}  "
         f"{'best_iteration':>{widths['best_iteration']}}  "
-        f"{'n_features':>{widths['n_features']}}"
+        f"{'n_features':>{widths['n_features']}}  "
+        f"{'delta_vs_v1':>{widths['delta_vs_v1']}}"
     )
     separator = "-" * len(header_line)
     body = [header_line, separator]
