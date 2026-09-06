@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "description": "Per-transaction expected-cost minimization policy for lgbm_v9",
+  "policy_type": "per_transaction_argmin",
+  "status": "proposed",
+  "cost_params": {
+    "fraud_cost_multiplier": 2.0,
+    "step_up_stop_rate": 0.70,
+    "step_up_friction_rate": 0.05,
+    "review_catch_rate": 0.95,
+    "review_cost_per_txn": 10.0,
+    "review_capacity_per_day": 200,
+    "decline_revenue_loss": 1.0
+  }
+}
