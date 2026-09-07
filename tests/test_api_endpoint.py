@@ -1,79 +1,156 @@
-"""Generate a test payload from training data and POST it to the fraud API.
-
-Usage:
-    uvicorn services.api.app:app --reload --app-dir .
-    python tests/test_api_endpoint.py
-
-Optional env vars:
-    API_URL  default http://127.0.0.1:8000/predict
-"""
+"""FastAPI TestClient integration tests for the serving API."""
 
 from __future__ import annotations
 
-import json
-import os
-import sys
-from pathlib import Path
-from urllib import error, request
+import uuid
+from typing import Any
 
-import pandas as pd
+import pytest
+from fastapi.testclient import TestClient
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = REPO_ROOT / "data" / "raw" / "train_merged.parquet"
-PAYLOAD_PATH = REPO_ROOT / "tests" / "fixtures" / "test_payload.json"
-DEFAULT_API_URL = "http://127.0.0.1:8000/predict"
+from services.api.app import app
 
 
-def build_test_payload() -> dict:
-    df = pd.read_parquet(DATA_PATH)
-    sample = df.iloc[0].drop("isFraud").to_dict()
-    sample = {k: (None if pd.isna(v) else v) for k, v in sample.items()}
-    return {"features": sample}
+@pytest.fixture(scope="module")
+def client() -> TestClient:
+    with TestClient(app) as test_client:
+        health = test_client.get("/health")
+        assert health.status_code == 200
+        assert health.json()["model_loaded"] is True
+        yield test_client
 
 
-def save_test_payload(payload: dict, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w") as f:
-        json.dump(payload, f)
-    print(f"Saved {path}")
+def _base_payload(**overrides: Any) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "TransactionAmt": 100.0,
+        "ProductCD": "W",
+        "card1": 10000,
+        "card2": 111.0,
+        "card3": 150.0,
+        "card4": "visa",
+        "card5": 226.0,
+        "card6": "debit",
+        "addr1": 264.0,
+        "addr2": 87.0,
+        "P_emaildomain": "gmail.com",
+        "R_emaildomain": "gmail.com",
+        "dist1": 5.0,
+        "dist2": None,
+        "TransactionDT": 86500.0,
+        "DeviceType": "desktop",
+        "DeviceInfo": "Windows",
+        "id_30": "Windows 10",
+        "id_31": "chrome",
+    }
+    payload.update(overrides)
+    return payload
 
 
-def call_predict_endpoint(payload: dict, url: str) -> dict:
-    body = json.dumps(payload).encode("utf-8")
-    req = request.Request(
-        url,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+def test_successful_prediction(client: TestClient):
+    resp = client.post("/predict", json=_base_payload())
+    assert resp.status_code == 200
+    body = resp.json()
+    assert set(body.keys()) == {
+        "fraud_probability",
+        "recommended_action",
+        "action_costs",
+        "model_version",
+        "dataset_version",
+        "request_id",
+    }
+    assert 0.0 <= body["fraud_probability"] <= 1.0
+    assert body["recommended_action"] in {"approve", "step_up", "review", "decline"}
+    assert body["model_version"] == "v9"
+    assert body["dataset_version"] == 5
+    uuid.UUID(body["request_id"])
 
 
-def main() -> None:
-    api_url = os.getenv("API_URL", DEFAULT_API_URL)
-
-    payload = build_test_payload()
-    save_test_payload(payload, PAYLOAD_PATH)
-
-    try:
-        result = call_predict_endpoint(payload, api_url)
-    except error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        print(f"API error ({exc.code}) from {api_url}: {body}", file=sys.stderr)
-        sys.exit(1)
-    except error.URLError as exc:
-        print(f"Could not reach API at {api_url}: {exc}", file=sys.stderr)
-        print(
-            "Start the server first:\n"
-            "  uvicorn services.api.app:app --reload --app-dir .",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    print(f"POST {api_url}")
-    print(json.dumps(result, indent=2))
+def test_missing_transaction_amt_returns_422(client: TestClient):
+    payload = _base_payload()
+    del payload["TransactionAmt"]
+    resp = client.post("/predict", json=payload)
+    assert resp.status_code == 422
 
 
-if __name__ == "__main__":
-    main()
+def test_wrong_type_transaction_amt_returns_422(client: TestClient):
+    resp = client.post("/predict", json=_base_payload(TransactionAmt="abc"))
+    assert resp.status_code == 422
+
+
+def test_extreme_near_zero_amount(client: TestClient):
+    resp = client.post("/predict", json=_base_payload(TransactionAmt=0.001))
+    assert resp.status_code == 200
+
+
+def test_extreme_large_amount(client: TestClient):
+    resp = client.post("/predict", json=_base_payload(TransactionAmt=50000.0))
+    assert resp.status_code == 200
+
+
+def test_all_null_historical_features(client: TestClient):
+    hist: dict[str, Any] = {f"D{i}": None for i in range(1, 16)}
+    hist.update({f"C{i}": None for i in range(1, 15)})
+    hist.update({f"V{i}": None for i in range(1, 50)})  # representative V block
+    resp = client.post("/predict", json=_base_payload(**hist))
+    assert resp.status_code == 200
+
+
+def test_unseen_categorical_productcd(client: TestClient):
+    resp = client.post("/predict", json=_base_payload(ProductCD="Z"))
+    assert resp.status_code == 200
+
+
+def test_health_endpoint(client: TestClient):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "healthy"
+    assert body["model_version"] == "v9"
+    assert body["dataset_version"] == 5
+    assert body["model_loaded"] is True
+
+
+def test_negative_amount_returns_422(client: TestClient):
+    resp = client.post("/predict", json=_base_payload(TransactionAmt=-1.0))
+    assert resp.status_code == 422
+
+
+def test_response_has_no_raw_input_fields(client: TestClient):
+    body = client.post("/predict", json=_base_payload()).json()
+    for bad in (
+        "TransactionAmt",
+        "card1",
+        "P_emaildomain",
+        "addr1",
+        "features",
+        "ProductCD",
+        "R_emaildomain",
+        "dist1",
+    ):
+        assert bad not in body
+    for key in body:
+        assert not key.startswith("card")
+        assert "email" not in key.lower()
+        assert not key.startswith("addr")
+
+
+def test_request_id_unique(client: TestClient):
+    a = client.post("/predict", json=_base_payload()).json()["request_id"]
+    b = client.post("/predict", json=_base_payload()).json()["request_id"]
+    assert a != b
+
+
+def test_action_costs_four_keys(client: TestClient):
+    body = client.post("/predict", json=_base_payload()).json()
+    assert set(body["action_costs"].keys()) == {
+        "approve",
+        "step_up",
+        "review",
+        "decline",
+    }
+
+
+def test_dataset_version_present(client: TestClient):
+    body = client.post("/predict", json=_base_payload()).json()
+    assert "dataset_version" in body
+    assert body["dataset_version"] == 5
