@@ -1,0 +1,20 @@
+services:
+  fraud-api:
+    build: .
+    image: fraud-api:latest
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # No volume mounts for serving — all artifacts are baked into the image.
+    #
+    # Parity tests need validation parquet data; only enable when running
+    # pytest inside the container, e.g.:
+    #   docker run --rm -v "$(pwd)/data:/app/data:ro" -v "$(pwd)/tests:/app/tests:ro" \
+    #     fraud-api pytest tests/test_training_serving_parity.py -v
+    # volumes:
+    #   - ./data:/app/data:ro
