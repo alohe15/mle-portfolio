@@ -1,0 +1,21 @@
+{
+  "status": "proposed",
+  "description": "Monitoring alert thresholds — all values are proposals pending business review",
+  "tier1_immediate": {
+    "schema_missing_columns": {"threshold": 0, "severity": "critical"},
+    "schema_extra_columns": {"threshold": 0, "severity": "warning"},
+    "schema_dtype_mismatch": {"threshold": 0, "severity": "critical"},
+    "missingness_rate_change": {"threshold": 0.05, "severity": "warning", "note": "absolute change in null rate per feature"},
+    "psi_threshold": {"threshold": 0.2, "severity": "warning", "note": "Population Stability Index per feature; >0.2 = significant shift"},
+    "score_distribution_psi": {"threshold": 0.1, "severity": "warning"},
+    "action_band_volume_change": {"threshold": 0.30, "severity": "warning", "note": "relative change in action proportion vs reference"},
+    "amount_distribution_psi": {"threshold": 0.2, "severity": "warning"}
+  },
+  "tier2_delayed": {
+    "pr_auc_drop": {"threshold": 0.05, "severity": "critical", "note": "absolute drop from reference PR-AUC"},
+    "precision_drop": {"threshold": 0.10, "severity": "warning"},
+    "recall_drop": {"threshold": 0.10, "severity": "warning"},
+    "fraud_value_captured_drop": {"threshold": 0.15, "severity": "critical", "note": "relative drop in fraud dollars caught"},
+    "false_positive_rate_increase": {"threshold": 0.02, "severity": "warning", "note": "absolute increase in FP rate"}
+  }
+}
