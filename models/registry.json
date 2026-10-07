@@ -106,5 +106,40 @@
     "dataset_config_path": "configs/dataset_v5.json",
     "created_at": "2026-08-20T22:23:16Z",
     "is_serving": true
+  },
+  {
+    "version": 9,
+    "dataset_version": 5,
+    "description": "Dn-only drop \u2014 retrain v8 hyperparameters on dataset_v5 (raw D1-D15 removed)",
+    "model_path": "models/lgbm_v9_optuna_tuning.txt",
+    "manifest_path": "models/lgbm_v9_optuna_tuning_manifest.json",
+    "metrics_path": "models/lgbm_v9_optuna_tuning_metrics.json",
+    "config_path": "configs/lgbm_v9.json",
+    "dataset_config_path": "configs/dataset_v5.json",
+    "created_at": "2026-08-20T22:23:16Z",
+    "is_serving": false,
+    "status": "Candidate",
+    "registered_at": "2026-09-07T22:01:18Z",
+    "commit": "fdd99d122f1eb9392489222f0a0d30a247a6eba7",
+    "dataset_manifest_path": "data/processed/dataset_v5_dn_only_manifest.json",
+    "tuning_manifest_path": "models/lgbm_v9_optuna_tuning_manifest.json",
+    "fitted_transforms_path": "models/lgbm_v9_optuna_tuning_fitted_transforms.pkl",
+    "calibrator_path": "models/lgbm_v9_calibrator.pkl",
+    "decision_policy_config": "configs/decision_policy_v1.json",
+    "evaluation_evidence": {
+      "compare_policies_script": "evals/compare_policies.py",
+      "sensitivity_analysis_script": "evals/sensitivity_analysis.py",
+      "decision_policy_doc": "docs/decision_policy.md",
+      "test_auc_pr": 0.5952,
+      "validation_argmin_cost": 223278,
+      "validation_threshold_cost": 283082,
+      "cost_reduction_pct": 21.1,
+      "bootstrap_ci": [
+        -62609,
+        -57372
+      ]
+    },
+    "promotion_requires": "mentor_approval",
+    "promotion_owner": "Deepa"
   }
 ]
