@@ -3,7 +3,8 @@
 data/
 notebooks/
 docs/
-tests/
+# tests/ is not ignored. Dockerfile.test COPY's it into the test image.
+# The serving Dockerfile never COPY's tests/, so the production image stays lean.
 __pycache__/
 **/__pycache__/
 *.pyc

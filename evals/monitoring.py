@@ -156,8 +156,13 @@ def _triggered_status(triggered: bool, severity: str) -> str:
 
 
 def overall_status(checks: list[dict]) -> str:
-    """healthy / warning / critical from a list of check records."""
-    statuses = {c.get("status") for c in checks if c.get("status") not in {"skipped", None}}
+    """healthy / warning / critical from a list of check records.
+
+    ``not_ready`` (immature labels or a training-split Tier 2 reference) and
+    ``skipped`` do not move the overall status.
+    """
+    ignored = {"skipped", "not_ready", None}
+    statuses = {c.get("status") for c in checks if c.get("status") not in ignored}
     if "critical" in statuses:
         return "critical"
     if "warning" in statuses:
@@ -202,14 +207,25 @@ def check_schema(
     config: dict,
     *,
     ignore_extra: set[str] | None = None,
+    ignore_missing: set[str] | None = None,
 ) -> list[dict]:
-    """Compare comparison columns/dtypes against the reference schema contract."""
+    """Compare comparison columns/dtypes against the reference schema contract.
+
+    ``ignore_missing`` columns are not required to already be on the frame
+    (requires_fit outputs created by frozen transforms). They stay in the
+    expected set, so if they are present they are not reported as extras.
+    """
     expected_cols = list(reference_schema["columns"])
     expected_set = set(expected_cols)
     observed_cols = list(comparison_df.columns)
     ignore = set(ignore_extra or ())
+    skip_missing = set(ignore_missing or ())
 
-    missing = [c for c in expected_cols if c not in comparison_df.columns]
+    missing = [
+        c
+        for c in expected_cols
+        if c not in comparison_df.columns and c not in skip_missing
+    ]
     extra = [
         c
         for c in observed_cols
@@ -877,6 +893,255 @@ def check_tier2(
 # Report assembly
 # ---------------------------------------------------------------------------
 
+LABEL_MATURITY_DEFAULT_DAYS = 30
+TIER2_REFERENCE_DEFAULT = "out_of_sample"
+TIER2_CHECK_NAMES = (
+    "pr_auc_drop",
+    "precision_drop",
+    "recall_drop",
+    "fraud_value_captured_drop",
+    "false_positive_rate_increase",
+    "fraud_rate_shift",
+)
+
+
+def _stamp_stage(checks: list[dict], stage: str) -> list[dict]:
+    for check in checks:
+        check["validated_on"] = stage
+    return checks
+
+
+def label_maturity_days(config: dict) -> int:
+    """Minimum label age (days) before Tier 2 results are valid."""
+    raw = config.get("label_maturity", LABEL_MATURITY_DEFAULT_DAYS)
+    if isinstance(raw, dict):
+        if "min_age_days" in raw:
+            return int(raw["min_age_days"])
+        if "days" in raw:
+            return int(raw["days"])
+        return LABEL_MATURITY_DEFAULT_DAYS
+    return int(raw)
+
+
+def tier2_not_ready_reason(
+    config: dict,
+    reference: dict,
+    label_age_days: int | None,
+) -> str | None:
+    """Why Tier 2 must not be computed, or None when it may run.
+
+    Label age is checked first. A training-split reference is rejected only
+    when ``tier2_reference`` is ``out_of_sample`` and the labels are mature.
+    """
+    maturity = label_maturity_days(config)
+    if label_age_days is None or int(label_age_days) < maturity:
+        age_text = "unknown" if label_age_days is None else f"{int(label_age_days)} days"
+        return (
+            f"Delayed-label performance monitoring requires labels aged ≥{maturity} days. "
+            f"Current label age: {age_text}. Tier 2 results are not valid."
+        )
+    mode = str(config.get("tier2_reference", TIER2_REFERENCE_DEFAULT))
+    split = str((reference.get("metadata") or {}).get("split") or "")
+    if mode == "out_of_sample" and split == "train":
+        return (
+            "Tier 2 reference is from training split (PR-AUC ≈ 1.0 due to memorization). "
+            "Set tier2_reference to a validation-based profile for meaningful performance monitoring."
+        )
+    return None
+
+
+def make_tier2_not_ready(config: dict, message: str) -> list[dict]:
+    """Tier 2 check records with status not_ready. Does not compute metrics."""
+    checks: list[dict] = []
+    for name in TIER2_CHECK_NAMES:
+        default = {"threshold": None, "severity": "warning"}
+        if name == "fraud_rate_shift":
+            default = {
+                "threshold": 0.01,
+                "severity": "warning",
+                "note": "absolute change in base fraud rate",
+            }
+        cfg = _cfg(config, "tier2_delayed", name, default=default)
+        checks.append(
+            make_check(
+                name,
+                tier="tier2_delayed",
+                status="not_ready",
+                observed_value=None,
+                reference_value=None,
+                threshold=cfg.get("threshold"),
+                severity=cfg.get("severity", "warning"),
+                note=message,
+            )
+        )
+    return checks
+
+
+def requires_fit_output_columns(artifacts: dict[str, Any]) -> set[str]:
+    """Columns created by frozen requires_fit transforms, not present on the raw file."""
+    names: set[str] = set()
+    for step in artifacts.get("transformation_pipeline") or []:
+        if not step.get("requires_fit"):
+            continue
+        for col in (step.get("config") or {}).get("output_columns") or []:
+            names.add(str(col))
+    return names
+
+
+def fold_missing_produced_columns(
+    checks: list[dict],
+    frame: pd.DataFrame,
+    produced: set[str],
+    expected_columns: list[str],
+) -> list[dict]:
+    """Record requires_fit outputs that are still absent after transforms.
+
+    Called before NaN-fill so a transform that failed to emit a column is
+    reported as missing instead of being filled with NaN.
+    """
+    expected = set(expected_columns)
+    still = sorted(c for c in produced if c in expected and c not in frame.columns)
+    if not still:
+        return checks
+    for check in checks:
+        if check.get("name") != "schema_missing_columns":
+            continue
+        detail = list(check.get("detail") or [])
+        for col in still:
+            if col not in detail:
+                detail.append(col)
+        check["detail"] = detail
+        check["observed_value"] = len(detail)
+        threshold = check.get("threshold")
+        threshold_n = 0 if threshold is None else threshold
+        if len(detail) > threshold_n:
+            check["status"] = check.get("severity") or "critical"
+        check["note"] = (
+            "Fitted-transform outputs still absent after frozen transforms, "
+            "before NaN-fill: " + ", ".join(still)
+        )
+        check["validated_on"] = "raw_input"
+    return checks
+
+
+def missingness_rates_before_nan_fill(
+    raw_df: pd.DataFrame,
+    transformed_df: pd.DataFrame,
+    columns: list[str],
+    produced: set[str],
+) -> dict[str, float]:
+    """Null rates before NaN-fill.
+
+    Input columns are measured on the file as loaded. requires_fit outputs
+    are measured on the post-transform frame (they do not exist before that)
+    and are not treated as 100% null just because the raw file lacks them.
+    """
+    produced = set(produced)
+    rates: dict[str, float] = {}
+    for col in columns:
+        src = transformed_df if col in produced else raw_df
+        if len(src) == 0 or col not in src.columns:
+            rates[col] = 1.0
+        else:
+            rates[col] = float(src[col].isna().mean())
+    return rates
+
+
+def replace_missingness_check(
+    checks: list[dict],
+    rates: dict[str, float],
+    reference_rates: dict[str, float],
+    config: dict,
+) -> list[dict]:
+    new_checks = _stamp_stage(
+        check_missingness(rates, reference_rates, config),
+        "raw_input",
+    )
+    out: list[dict] = []
+    inserted = False
+    for check in checks:
+        if check.get("name") == "missingness_rate_change":
+            if not inserted:
+                out.extend(new_checks)
+                inserted = True
+            continue
+        out.append(check)
+    if not inserted:
+        out.extend(new_checks)
+    return out
+
+
+def run_raw_input_checks(
+    *,
+    reference: dict,
+    raw_df: pd.DataFrame,
+    config: dict,
+    ignore_extra: set[str] | None = None,
+    ignore_missing: set[str] | None = None,
+) -> list[dict]:
+    """Schema, missingness, and categorical checks on the file as it arrived.
+
+    These run before NaN-fill, dtype coercion, column dropping, and categorical
+    encoding. ``ignore_missing`` drops requires_fit outputs that the raw file
+    is not expected to contain; their null rates are omitted until transforms
+    create them (see ``missingness_rates_before_nan_fill``).
+    """
+    ignore_missing = set(ignore_missing or ())
+    schema_checks = check_schema(
+        raw_df,
+        reference["schema"],
+        config,
+        ignore_extra=ignore_extra,
+        ignore_missing=ignore_missing,
+    )
+    feature_cols = list(reference["schema"]["columns"])
+    miss_cols = list(dict.fromkeys(feature_cols + ["TransactionAmt"]))
+    ref_rates = {
+        col: float(rate)
+        for col, rate in (reference.get("missingness") or {}).items()
+        if not (col in ignore_missing and col not in raw_df.columns)
+    }
+    rate_cols = [c for c in miss_cols if c in ref_rates]
+    miss_checks = check_missingness(null_rates(raw_df, rate_cols), ref_rates, config)
+    cat_checks = check_categorical_drift(
+        raw_df, reference.get("categoricals") or {}, config
+    )
+    return _stamp_stage(schema_checks + miss_checks + cat_checks, "raw_input")
+
+
+def run_scored_tier1_checks(
+    *,
+    reference: dict,
+    comparison_df: pd.DataFrame,
+    scores: np.ndarray,
+    actions: np.ndarray,
+    amounts: np.ndarray,
+    config: dict,
+    psi_features: list[str] | None = None,
+) -> list[dict]:
+    """PSI, score distribution, amount distribution, and action bands.
+
+    These need the scored frame (after transforms and model-input build).
+    """
+    numeric_names = psi_features or list(reference.get("psi_numeric_features") or [])
+    if not numeric_names:
+        numeric_names = list(reference.get("numerics") or {})[:20]
+    psi_checks = check_numeric_psi(
+        comparison_df, reference.get("numerics") or {}, numeric_names, config
+    )
+    score_check = check_score_psi(scores, reference.get("scores") or {}, config)
+    amount_check = check_amount_psi(amounts, reference.get("amounts") or {}, config)
+    action_checks = check_action_band_volumes(
+        action_proportions(actions),
+        reference.get("actions") or {},
+        config,
+    )
+    return _stamp_stage(
+        psi_checks + [score_check, amount_check] + action_checks,
+        "post_preprocessing",
+    )
+
+
 def run_tier1_checks(
     *,
     reference: dict,
@@ -887,45 +1152,31 @@ def run_tier1_checks(
     config: dict,
     ignore_extra: set[str] | None = None,
     psi_features: list[str] | None = None,
+    ignore_missing: set[str] | None = None,
 ) -> list[dict]:
-    schema_checks = check_schema(
-        comparison_df,
-        reference["schema"],
-        config,
+    """Tier 1 checks. Schema/missingness/categorical use ``comparison_df`` as given.
+
+    Callers that have a raw file and a scored frame should call
+    ``run_raw_input_checks`` on the raw file and ``run_scored_tier1_checks``
+    on the scored frame instead of passing the post-processed frame here.
+    """
+    raw_checks = run_raw_input_checks(
+        reference=reference,
+        raw_df=comparison_df,
+        config=config,
         ignore_extra=ignore_extra,
+        ignore_missing=ignore_missing,
     )
-    feature_cols = list(reference["schema"]["columns"])
-    # Missingness for model features + TransactionAmt (already in feature_order).
-    miss_cols = list(dict.fromkeys(feature_cols + ["TransactionAmt"]))
-    miss_checks = check_missingness(
-        null_rates(comparison_df, miss_cols),
-        reference["missingness"],
-        config,
+    scored_checks = run_scored_tier1_checks(
+        reference=reference,
+        comparison_df=comparison_df,
+        scores=scores,
+        actions=actions,
+        amounts=amounts,
+        config=config,
+        psi_features=psi_features,
     )
-    numeric_names = psi_features or list(reference.get("psi_numeric_features") or [])
-    if not numeric_names:
-        numeric_names = list(reference.get("numerics") or {})[:20]
-    psi_checks = check_numeric_psi(
-        comparison_df, reference.get("numerics") or {}, numeric_names, config
-    )
-    cat_checks = check_categorical_drift(
-        comparison_df, reference.get("categoricals") or {}, config
-    )
-    score_check = check_score_psi(scores, reference.get("scores") or {}, config)
-    amount_check = check_amount_psi(amounts, reference.get("amounts") or {}, config)
-    action_checks = check_action_band_volumes(
-        action_proportions(actions),
-        reference.get("actions") or {},
-        config,
-    )
-    return (
-        schema_checks
-        + miss_checks
-        + psi_checks
-        + cat_checks
-        + [score_check, amount_check]
-        + action_checks
-    )
+    return raw_checks + scored_checks
 
 
 def build_report(
@@ -948,7 +1199,8 @@ def build_report(
             "status_rule": (
                 "healthy = no warnings or criticals; "
                 "warning = at least one warning and no criticals; "
-                "critical = at least one critical"
+                "critical = at least one critical. "
+                "not_ready does not change overall status"
             ),
         },
     }
@@ -977,7 +1229,7 @@ def format_human_summary(report: dict) -> str:
         ref = check.get("reference_value")
         thr = check.get("threshold")
         return (
-            f"  [{status:<8}] {name:<32} "
+            f"  [{status:<9}] {name:<32} "
             f"observed={obs}  reference={ref}  threshold={thr}"
         )
 
@@ -990,7 +1242,12 @@ def format_human_summary(report: dict) -> str:
         lines.append("  (none)")
     lines.append("")
     lines.append("TIER 2 (delayed / labels)")
-    if tier2:
+    if tier2 and all(c.get("status") == "not_ready" for c in tier2):
+        note = str(tier2[0].get("note") or "")
+        if note:
+            lines.append(f"  {note}")
+        lines.extend(_fmt(c) for c in tier2)
+    elif tier2:
         lines.extend(_fmt(c) for c in tier2)
     else:
         lines.append("  (skipped — no labels)")

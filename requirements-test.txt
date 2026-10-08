@@ -1,0 +1,4 @@
+# Installed only in the test image (Dockerfile.test).
+# The serving image installs requirements.txt and does not include these.
+pytest==9.0.3
+httpx==0.28.1

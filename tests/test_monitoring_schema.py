@@ -19,6 +19,7 @@ from monitoring import (  # noqa: E402
     action_proportions,
     build_report,
     check_action_band_volumes,
+    check_categorical_drift,
     check_missingness,
     check_psi_shift,
     check_schema,
@@ -26,9 +27,12 @@ from monitoring import (  # noqa: E402
     dump_json,
     format_human_summary,
     load_monitoring_config,
+    make_tier2_not_ready,
     overall_status,
     psi_from_values,
+    run_raw_input_checks,
     run_tier1_checks,
+    tier2_not_ready_reason,
 )
 
 CONFIG = load_monitoring_config()
@@ -363,3 +367,193 @@ def test_tier2_pr_auc_drop_is_critical():
     assert pr["reference_value"] == pytest.approx(0.60)
     assert pr["threshold"] == 0.05
     assert overall_status(checks) == "critical"
+
+
+def _report(reference: dict, checks: list, n_rows: int) -> dict:
+    return build_report(
+        reference=reference,
+        checks=checks,
+        comparison_n_rows=n_rows,
+        labels_present=False,
+    )
+
+
+def test_dropped_column_caught_on_raw_input_before_nan_fill():
+    """A missing required column is critical on the raw frame.
+
+    NaN-filling that column makes a post-preprocessing schema check pass.
+    The report keeps the raw-input finding.
+    """
+    full = pd.DataFrame(
+        {"TransactionAmt": [10.0, 20.0], "card1": [1.0, 2.0]}
+    )
+    reference = _mini_reference(
+        full, np.array([0.1, 0.2]), np.array(["approve", "approve"], dtype=object)
+    )
+    raw = full.drop(columns=["card1"])
+    raw_checks = run_raw_input_checks(reference=reference, raw_df=raw, config=CONFIG)
+    missing = next(c for c in raw_checks if c["name"] == "schema_missing_columns")
+    assert missing["status"] == "critical"
+    assert missing["validated_on"] == "raw_input"
+    assert "card1" in missing["detail"]
+
+    filled = raw.copy()
+    filled["card1"] = np.nan
+    post_checks = run_raw_input_checks(reference=reference, raw_df=filled, config=CONFIG)
+    post_missing = next(c for c in post_checks if c["name"] == "schema_missing_columns")
+    assert post_missing["status"] == "pass"
+
+    report = _report(reference, raw_checks, len(raw))
+    report_missing = next(c for c in report["checks"] if c["name"] == "schema_missing_columns")
+    assert report["overall_status"] == "critical"
+    assert report_missing["validated_on"] == "raw_input"
+    assert "card1" in report_missing["detail"]
+    assert report_missing["status"] != post_missing["status"]
+
+
+def test_string_in_numeric_column_caught_before_coerce():
+    """A string in a numeric column is a dtype mismatch on the raw frame.
+
+    pd.to_numeric(errors='coerce') would turn "abc" into NaN and the
+    post-preprocessing dtype check would pass.
+    """
+    full = pd.DataFrame({"amt": [1.0, 2.0]})
+    reference = _mini_reference(
+        full, np.array([0.1, 0.2]), np.array(["approve", "approve"], dtype=object)
+    )
+    raw = pd.DataFrame({"amt": ["abc", "2.0"]})
+    raw_checks = run_raw_input_checks(reference=reference, raw_df=raw, config=CONFIG)
+    mismatch = next(c for c in raw_checks if c["name"] == "schema_dtype_mismatch")
+    assert mismatch["status"] == "critical"
+    assert mismatch["validated_on"] == "raw_input"
+    assert mismatch["detail"][0]["column"] == "amt"
+    assert mismatch["detail"][0]["observed_kind"] == "string"
+
+    coerced = raw.copy()
+    coerced["amt"] = pd.to_numeric(coerced["amt"], errors="coerce")
+    post_checks = run_raw_input_checks(reference=reference, raw_df=coerced, config=CONFIG)
+    post_mismatch = next(c for c in post_checks if c["name"] == "schema_dtype_mismatch")
+    assert post_mismatch["status"] == "pass"
+
+    report = _report(reference, raw_checks, len(raw))
+    assert report["overall_status"] == "critical"
+    report_mismatch = next(c for c in report["checks"] if c["name"] == "schema_dtype_mismatch")
+    assert report_mismatch["validated_on"] == "raw_input"
+    assert report_mismatch["status"] == "critical"
+
+
+def test_extra_column_caught_before_column_drop():
+    """An unexpected column warns on the raw frame and would vanish if dropped first."""
+    base = pd.DataFrame({"TransactionAmt": [10.0, 12.0]})
+    reference = _mini_reference(
+        base, np.array([0.1, 0.2]), np.array(["approve", "approve"], dtype=object)
+    )
+    raw = base.copy()
+    raw["bonus"] = ["unexpected", "column"]
+    raw_checks = run_raw_input_checks(reference=reference, raw_df=raw, config=CONFIG)
+    extra = next(c for c in raw_checks if c["name"] == "schema_extra_columns")
+    assert extra["status"] == "warning"
+    assert extra["validated_on"] == "raw_input"
+    assert "bonus" in extra["detail"]
+
+    dropped = raw.drop(columns=["bonus"])
+    post_checks = run_raw_input_checks(reference=reference, raw_df=dropped, config=CONFIG)
+    post_extra = next(c for c in post_checks if c["name"] == "schema_extra_columns")
+    assert post_extra["status"] == "pass"
+
+    report = _report(reference, raw_checks, len(raw))
+    assert report["overall_status"] == "warning"
+    report_extra = next(c for c in report["checks"] if c["name"] == "schema_extra_columns")
+    assert report_extra["validated_on"] == "raw_input"
+    assert "bonus" in report_extra["detail"]
+
+
+def test_unknown_categorical_caught_before_encoding():
+    """Unknown category values are reported on the raw frame.
+
+    Encoding them to __MISSING__ would hide them from a post-preprocessing check.
+    """
+    base = pd.DataFrame({"ProductCD": ["W", "W"]})
+    reference = _mini_reference(
+        base, np.array([0.1, 0.2]), np.array(["approve", "approve"], dtype=object)
+    )
+    raw = pd.DataFrame({"ProductCD": ["W", "ZZZ"]})
+    raw_checks = run_raw_input_checks(reference=reference, raw_df=raw, config=CONFIG)
+    cats = next(c for c in raw_checks if c["name"] == "categorical_new_levels")
+    assert cats["status"] == "warning"
+    assert cats["validated_on"] == "raw_input"
+    assert "ZZZ" in cats["detail"]["ProductCD"]
+
+    encoded = raw.copy()
+    encoded["ProductCD"] = encoded["ProductCD"].replace({"ZZZ": "__MISSING__"})
+    post = check_categorical_drift(encoded, reference["categoricals"], CONFIG)
+    assert post[0]["status"] == "pass"
+
+    report = _report(reference, raw_checks, len(raw))
+    assert report["overall_status"] == "warning"
+    report_cats = next(c for c in report["checks"] if c["name"] == "categorical_new_levels")
+    assert report_cats["validated_on"] == "raw_input"
+    assert "ZZZ" in report_cats["detail"]["ProductCD"]
+
+
+def test_valid_raw_input_passes_and_preprocessing_proceeds():
+    raw = pd.DataFrame(
+        {
+            "TransactionAmt": [10.0, 12.0],
+            "ProductCD": ["W", "C"],
+        }
+    )
+    reference = _mini_reference(
+        raw, np.array([0.1, 0.2]), np.array(["approve", "approve"], dtype=object)
+    )
+    raw_checks = run_raw_input_checks(reference=reference, raw_df=raw, config=CONFIG)
+    assert raw_checks
+    assert all(c["status"] == "pass" for c in raw_checks)
+    assert all(c["validated_on"] == "raw_input" for c in raw_checks)
+
+    preprocessed = raw.copy()
+    preprocessed["TransactionAmt"] = pd.to_numeric(
+        preprocessed["TransactionAmt"], errors="coerce"
+    )
+    preprocessed = preprocessed[list(reference["schema"]["columns"])]
+    assert preprocessed["TransactionAmt"].notna().all()
+    assert list(preprocessed.columns) == list(reference["schema"]["columns"])
+
+    report = _report(reference, raw_checks, len(raw))
+    assert report["overall_status"] == "healthy"
+
+
+def test_tier2_not_ready_without_label_age():
+    reference = {"metadata": {"split": "train"}, "labels": {"pr_auc": 0.999}}
+    reason = tier2_not_ready_reason(CONFIG, reference, None)
+    assert reason is not None
+    assert "≥30 days" in reason
+    assert "unknown" in reason
+    assert "not valid" in reason
+    checks = make_tier2_not_ready(CONFIG, reason)
+    assert len(checks) >= 5
+    assert all(c["status"] == "not_ready" for c in checks)
+    assert all(c["tier"] == "tier2_delayed" for c in checks)
+    assert overall_status(checks) == "healthy"
+    summary = format_human_summary(
+        build_report(
+            reference=reference,
+            checks=checks,
+            comparison_n_rows=10,
+            labels_present=True,
+        )
+    )
+    assert "not_ready" in summary.lower() or "NOT_READY" in summary
+    assert "not valid" in summary
+
+
+def test_tier2_not_ready_when_reference_split_is_train():
+    reference = {"metadata": {"split": "train"}, "labels": {"pr_auc": 0.999958}}
+    reason = tier2_not_ready_reason(CONFIG, reference, 90)
+    assert reason is not None
+    assert "training split" in reason
+    assert "memorization" in reason
+    immature = tier2_not_ready_reason(CONFIG, reference, 7)
+    assert immature is not None
+    assert "7 days" in immature
+    assert "training split" not in immature

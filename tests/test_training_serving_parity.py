@@ -63,6 +63,9 @@ def parity_rows(artifacts):
     _train_df, val_df, _test_df = temporal_split(
         processed, model_config["split"], config_path=entry["config_path"]
     )
+    # The split copies the frame. Drop the copies this test does not score
+    # before reading the raw table, or the container (8GB) is OOM-killed.
+    del processed, _train_df, _test_df
 
     # Training-time feature path: parquet already has non-fit transforms;
     # apply frozen requires_fit state only, then the same model-input builder.
@@ -130,5 +133,6 @@ def test_training_serving_parity(artifacts, parity_rows, capsys):
         assert action_match
 
     captured = capsys.readouterr()
-    # Ensure the table was printed for human review in -s mode.
-    assert "Training vs serving parity" in captured.out or True
+    # capsys consumes the table; write it back so `pytest -s` shows the rows.
+    sys.stdout.write(captured.out)
+    assert "Training vs serving parity" in captured.out

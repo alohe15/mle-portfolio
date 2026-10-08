@@ -1,6 +1,8 @@
 {
   "status": "proposed",
   "description": "Monitoring alert thresholds — all values are proposals pending business review",
+  "label_maturity": 30,
+  "tier2_reference": "out_of_sample",
   "tier1_immediate": {
     "schema_missing_columns": {"threshold": 0, "severity": "critical"},
     "schema_extra_columns": {"threshold": 0, "severity": "warning"},

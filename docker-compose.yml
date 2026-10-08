@@ -11,10 +11,25 @@ services:
       retries: 3
       start_period: 30s
     # No volume mounts for serving — all artifacts are baked into the image.
-    #
-    # Parity tests need validation parquet data; only enable when running
-    # pytest inside the container, e.g.:
-    #   docker run --rm -v "$(pwd)/data:/app/data:ro" -v "$(pwd)/tests:/app/tests:ro" \
-    #     fraud-api pytest tests/test_training_serving_parity.py -v
-    # volumes:
-    #   - ./data:/app/data:ro
+
+  # In-container parity + endpoint tests. Extends the serving image
+  # (additional build context "serving") and mounts data/ read-only.
+  # The dataset parquet is not baked into either image.
+  #   docker compose run --rm test
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      additional_contexts:
+        serving: service:fraud-api
+    image: fraud-api:test
+    volumes:
+      - ./data:/app/data:ro
+    working_dir: /app
+    command:
+      - python
+      - -m
+      - pytest
+      - tests/test_training_serving_parity.py
+      - tests/test_api_endpoint.py
+      - -v
