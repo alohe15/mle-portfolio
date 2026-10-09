@@ -21,7 +21,7 @@ import lightgbm as lgb
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 REGISTRY_PATH = REPO_ROOT / "models" / "registry.json"
-CHECKSUMS_PATH = REPO_ROOT / "artifacts.sha256"
+CHECKSUMS_PATH = REPO_ROOT / "artifacts.serving.sha256"
 
 logger = logging.getLogger("services.api.model_loader")
 
@@ -168,33 +168,30 @@ def _sha256_file(path: Path) -> str:
 
 
 def verify_artifact_checksums(registry_entry: dict, checksums_path: Path | str) -> None:
-    """Compare every artifact path on `registry_entry` to artifacts.sha256.
+    """Compare serving artifact paths to the serving checksum manifest.
 
-    Skips with a warning when the checksum file is absent so unit tests and
-    images that do not carry artifacts.sha256 still start. A missing file or
-    a digest mismatch raises ArtifactChecksumError before any model is loaded.
+    A missing checksum file, missing listed file, or digest mismatch raises
+    ArtifactChecksumError before any model is loaded.
     """
     path = Path(checksums_path)
     if not path.is_file():
-        logger.warning(
-            "artifacts.sha256 not found at %s; skipping startup checksum verification",
-            path,
-        )
-        return
+        message = f"Serving checksum manifest missing: {path}"
+        logger.error(message)
+        raise ArtifactChecksumError(message)
 
     expected = _parse_sha256_manifest(path)
-    for rel in artifact_paths_from_registry_entry(registry_entry):
+    if not expected:
+        message = f"Serving checksum manifest is empty: {path}"
+        logger.error(message)
+        raise ArtifactChecksumError(message)
+
+    for rel, exp in expected.items():
         disk = repo_path(rel)
         if not disk.is_file():
             message = f"Artifact missing: {rel}"
             logger.error(message)
             raise ArtifactChecksumError(message)
         actual = _sha256_file(disk)
-        exp = expected.get(rel)
-        if exp is None:
-            message = f"No checksum recorded for {rel} in {path}"
-            logger.error(message)
-            raise ArtifactChecksumError(message)
         if actual.lower() != exp.lower():
             message = (
                 f"Checksum mismatch for {rel}: expected {exp}, actual {actual}"
@@ -203,7 +200,7 @@ def verify_artifact_checksums(registry_entry: dict, checksums_path: Path | str) 
             raise ArtifactChecksumError(message)
     logger.info(
         "Artifact checksums verified (%d files) against %s",
-        len(artifact_paths_from_registry_entry(registry_entry)),
+        len(expected),
         path,
     )
 

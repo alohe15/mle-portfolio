@@ -1,7 +1,8 @@
 # Release evidence — lgbm_v9 container
 
 Recorded 2026-10-08 after the in-container test run on this machine.
-Branch `pr/phase7-monitoring`. `Dockerfile` was not modified.
+Branch `pr/phase7-validation-parity`. The Dockerfiles and Compose test
+service were added as part of the Phase 6 and 7 corrections.
 
 ## Image
 
@@ -78,14 +79,17 @@ PASSED
 ============================== 1 passed in 11.48s ==============================
 ```
 
-## Startup log
+## Startup checksum verification
 
-`docker compose up -d fraud-api`, then `GET /health` (200). The lean image does not contain `artifacts.sha256` (`Dockerfile` does not copy it), so checksum verification logs a warning and continues. The model still loads from the baked artifacts.
+The correction after this evidence run makes the lean image copy
+`artifacts.serving.sha256`. On the next container evidence run, verify that
+startup checks every serving artifact listed there before loading the booster
+or any pickle.
 
 ```
 INFO:     Started server process [1]
 INFO:     Waiting for application startup.
-WARNING services.api.model_loader artifacts.sha256 not found at /app/artifacts.sha256; skipping startup checksum verification
+INFO services.api.model_loader Artifact checksums verified (11 files) against /app/artifacts.serving.sha256
 INFO services.api Serving artifacts loaded model_version=v9 dataset_version=5 n_features=464 n_transforms=7
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -97,7 +101,10 @@ Health body:
 {"status":"healthy","model_version":"v9","dataset_version":5,"model_loaded":true}
 ```
 
-On a checkout where `artifacts.sha256` is present (host `uvicorn`, or a mount of that file at `/app/artifacts.sha256`), startup hashes every serving and Candidate artifact path before opening the booster. `shasum -a 256 -c artifacts.sha256` passed for all nine paths. A one-byte flip of a **copy** of `models/lgbm_v9_calibrator.pkl` raised:
+On a checkout where the serving checksum manifest is present, startup hashes
+every file in `artifacts.serving.sha256` before opening the booster.
+`shasum -a 256 -c artifacts.serving.sha256` passed for all serving paths. A
+one-byte flip of a **copy** of `models/lgbm_v9_calibrator.pkl` raised:
 
 ```
 ArtifactChecksumError: Checksum mismatch for reports/monitoring/_checksum_probe.pkl: expected 1fabce507f509862cd02c1de92bf0141bd5a2f29718031df54ea909cce7213d1, actual ca48d535eafd5fd7d080be0e3f28d90842140694685ed88f6f61366c3a2c8e56

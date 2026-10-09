@@ -25,9 +25,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Committed source (config-driven serving path)
+COPY artifacts.serving.sha256 artifacts.serving.sha256
 COPY scripts/ scripts/
 COPY services/ services/
 COPY evals/ evals/
+COPY configs/lgbm_v9.json configs/lgbm_v9.json
 COPY configs/dataset_v1.json configs/dataset_v1.json
 COPY configs/dataset_v2.json configs/dataset_v2.json
 COPY configs/dataset_v3.json configs/dataset_v3.json

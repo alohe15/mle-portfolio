@@ -6,22 +6,20 @@ handoff for every file `models/registry.json` points at for the serving
 entry and the v9 Candidate entry, plus the data files the in-container
 parity test mounts.
 
-Checksums live in `artifacts.sha256` at the repo root (committed). Verify
-from the repo root before building:
+The full handoff checksums live in `artifacts.sha256` at the repo root
+(committed). Verify from the repo root before building:
 
 ```bash
 shasum -a 256 -c artifacts.sha256
 ```
 
-Startup (`services/api/model_loader.py`) reads that file and checks every
-artifact path on the serving entry plus Candidate-only paths (fitted
-transforms, calibrator, decision policy, dataset manifest) **before** it
-opens the booster or any pickle. A missing file or a digest mismatch raises
-`ArtifactChecksumError` and names the path, the expected digest, and the
-actual digest. The API lifespan logs that error and does not load the model,
-so `/predict` is not served from the wrong files. If `artifacts.sha256` is
-absent, verification logs a warning and continues — the lean serving image
-does not copy the checksum file.
+The serving image uses a smaller startup manifest,
+`artifacts.serving.sha256`, containing only files baked into the serving
+container. Startup (`services/api/model_loader.py`) requires that file and
+checks every listed path **before** it opens the booster or any pickle. A
+missing checksum manifest, missing artifact, or digest mismatch raises
+`ArtifactChecksumError`. The API lifespan logs that error and does not load
+the model, so `/predict` is not served from the wrong files.
 
 ## Gitignored files required to build the image
 
@@ -69,17 +67,18 @@ are not registry artifact paths and are not copied by `Dockerfile`).
 
 ## Fresh clone
 
-1. Clone the repo. You get configs, the manifest, metrics, `models/registry.json`, and `artifacts.sha256`. You do not get the three gitignored binaries or the parquets.
+1. Clone the repo. You get configs, the manifest, metrics, `models/registry.json`, `artifacts.sha256`, and `artifacts.serving.sha256`. You do not get the three gitignored binaries or the parquets.
 2. Either run the scripts below, or copy the three binaries from the model owner. Place them at the paths in the table. Do not rename them.
    ```bash
    python scripts/build_dataset.py --config configs/dataset_v5.json
    python scripts/train.py --config configs/lgbm_v9.json
    python evals/calibrate.py
    ```
-   Training rewrites the booster, the fitted-transforms pickle, the manifest, and the metrics. After a retrain the digests change; update `artifacts.sha256` and this document from the new files. Do not reuse a version number.
+   Training rewrites the booster, the fitted-transforms pickle, the manifest, and the metrics. After a retrain the digests change; update `artifacts.sha256`, `artifacts.serving.sha256`, and this document from the new files. Do not reuse a version number.
 3. Confirm every digest before building:
    ```bash
    shasum -a 256 -c artifacts.sha256
+   shasum -a 256 -c artifacts.serving.sha256
    ```
 4. Build the serving image (lean: no pytest, no `tests/`, no `data/`):
    ```bash
