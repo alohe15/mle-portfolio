@@ -7,8 +7,10 @@ Requires-fit transforms receive frozen state from the fitted-transforms pickle.
 
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
+import logging
 import pickle
 import sys
 from pathlib import Path
@@ -19,6 +21,17 @@ import lightgbm as lgb
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 REGISTRY_PATH = REPO_ROOT / "models" / "registry.json"
+CHECKSUMS_PATH = REPO_ROOT / "artifacts.serving.sha256"
+
+logger = logging.getLogger("services.api.model_loader")
+
+# Registry fields that point at files. decision_policy_config does not use
+# the _path suffix but it is still a startup artifact.
+_PATH_FIELDS = frozenset({"decision_policy_config"})
+
+
+class ArtifactChecksumError(RuntimeError):
+    """A startup artifact is missing or does not match artifacts.sha256."""
 
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
@@ -114,6 +127,94 @@ def build_transformation_pipeline(
     return pipeline
 
 
+def artifact_paths_from_registry_entry(registry_entry: dict) -> list[str]:
+    """Repo-relative file paths declared on one registry entry, de-duplicated."""
+    paths: list[str] = []
+    seen: set[str] = set()
+    for key, value in registry_entry.items():
+        if not isinstance(value, str):
+            continue
+        if key.endswith("_path") or key in _PATH_FIELDS:
+            if value not in seen:
+                seen.add(value)
+                paths.append(value)
+    return paths
+
+
+def _parse_sha256_manifest(checksums_path: Path) -> dict[str, str]:
+    """Parse `shasum -a 256` lines: `<digest><two spaces><path>`."""
+    expected: dict[str, str] = {}
+    for lineno, raw in enumerate(checksums_path.read_text().splitlines(), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) < 2:
+            raise ArtifactChecksumError(
+                f"Malformed checksum line {lineno} in {checksums_path}: {raw!r}"
+            )
+        digest = parts[0].lower()
+        name = parts[-1].lstrip("*")
+        expected[name] = digest
+    return expected
+
+
+def _sha256_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def verify_artifact_checksums(registry_entry: dict, checksums_path: Path | str) -> None:
+    """Compare serving artifact paths to the serving checksum manifest.
+
+    A missing checksum file, missing listed file, or digest mismatch raises
+    ArtifactChecksumError before any model is loaded.
+    """
+    path = Path(checksums_path)
+    if not path.is_file():
+        message = f"Serving checksum manifest missing: {path}"
+        logger.error(message)
+        raise ArtifactChecksumError(message)
+
+    expected = _parse_sha256_manifest(path)
+    if not expected:
+        message = f"Serving checksum manifest is empty: {path}"
+        logger.error(message)
+        raise ArtifactChecksumError(message)
+
+    for rel, exp in expected.items():
+        disk = repo_path(rel)
+        if not disk.is_file():
+            message = f"Artifact missing: {rel}"
+            logger.error(message)
+            raise ArtifactChecksumError(message)
+        actual = _sha256_file(disk)
+        if actual.lower() != exp.lower():
+            message = (
+                f"Checksum mismatch for {rel}: expected {exp}, actual {actual}"
+            )
+            logger.error(message)
+            raise ArtifactChecksumError(message)
+    logger.info(
+        "Artifact checksums verified (%d files) against %s",
+        len(expected),
+        path,
+    )
+
+
+def _registry_entry_for_checksums(serving: dict, candidate: dict | None) -> dict:
+    """Serving entry plus Candidate-only paths (calibrator, fitted transforms)."""
+    merged = dict(serving)
+    if candidate:
+        for key, value in candidate.items():
+            if key not in merged:
+                merged[key] = value
+    return merged
+
+
 def load_serving_artifacts(registry_path: Path | str | None = None) -> dict[str, Any]:
     """Load model, config-driven transforms, calibrator, feature order, cost params."""
     path = Path(registry_path) if registry_path is not None else REGISTRY_PATH
@@ -124,6 +225,13 @@ def load_serving_artifacts(registry_path: Path | str | None = None) -> dict[str,
     serving = get_serving_entry(registry)
     version = int(serving["version"])
     candidate = get_candidate_entry(registry, version)
+
+    # Checksums before any booster, pickle, or config is opened. A mismatch
+    # raises and the API must not serve.
+    verify_artifact_checksums(
+        _registry_entry_for_checksums(serving, candidate),
+        CHECKSUMS_PATH,
+    )
 
     manifest = load_json(repo_path(serving["manifest_path"]))
     dataset_config = load_json(repo_path(serving["dataset_config_path"]))

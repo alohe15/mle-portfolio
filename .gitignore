@@ -240,3 +240,6 @@ models/**/*.pkl
 !models/*_metrics.json
 !models/*_manifest.json
 .DS_Store
+
+# Generated drift reports (scripts + reference profile are committed)
+reports/monitoring/
