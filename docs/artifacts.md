@@ -21,6 +21,30 @@ missing checksum manifest, missing artifact, or digest mismatch raises
 `ArtifactChecksumError`. The API lifespan logs that error and does not load
 the model, so `/predict` is not served from the wrong files.
 
+## Files required outside git
+
+These files are gitignored and must be obtained separately (from the training
+pipeline or a teammate who has them).
+
+| File | Path | Source | Size (approx) |
+|------|------|--------|----------------|
+| Trained LightGBM model | `models/lgbm_v9_optuna_tuning.txt` | Training pipeline (`scripts/train.py`) | ~238 MB |
+| Fitted preprocessing transforms | `models/lgbm_v9_optuna_tuning_fitted_transforms.pkl` | Training pipeline | ~1.2 MB |
+| Isotonic calibrator | `models/lgbm_v9_calibrator.pkl` | `evals/calibrate.py` | ~2.4 KB |
+| Processed dataset | `data/processed/dataset_v5_dn_only.parquet` | Feature engineering pipeline | ~84 MB |
+| Raw merged training data | `data/raw/train_merged.parquet` | Data preparation | ~81 MB |
+
+Verify serving artifact checksums from the repo root:
+
+```bash
+shasum -a 256 -c artifacts.serving.sha256
+```
+
+The serving image (`Dockerfile`) bakes in the model artifacts under `models/`
+and `configs/` (and the serving code that loads them). The data files under
+`data/` are NOT in the Docker image — they are only needed for offline
+evaluation and monitoring scripts.
+
 ## Gitignored files required to build the image
 
 These three files are listed in `.gitignore` (`models/**/*.txt`,

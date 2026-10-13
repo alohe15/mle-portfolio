@@ -111,3 +111,28 @@ ArtifactChecksumError: Checksum mismatch for reports/monitoring/_checksum_probe.
 ```
 
 The real calibrator was not modified. The probe file was deleted after the check.
+
+## Phase 8 — Docker Release Testing
+
+### Docker version
+<!-- PASTE: docker version && docker compose version -->
+
+### Artifact checksum verification
+<!-- PASTE: shasum -a 256 -c artifacts.serving.sha256 -->
+
+### Docker build
+<!-- PASTE: last few lines of docker compose build fraud-api -->
+
+### Liveness and readiness endpoints
+<!-- PASTE: curl http://localhost:8000/livez -->
+<!-- PASTE: curl http://localhost:8000/readyz -->
+
+### Smoke test
+<!-- PASTE: bash scripts/smoke_test_api.sh -->
+
+### Tests inside Docker
+<!-- PASTE: docker compose run --rm test (final summary lines) -->
+
+### Failure experiment
+Describe what happened when a model artifact was temporarily renamed or a checksum was wrong.
+<!-- DESCRIBE: what you did, what error appeared, and that restoring the files fixed it -->

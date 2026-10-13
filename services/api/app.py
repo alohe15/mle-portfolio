@@ -19,7 +19,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from starlette.responses import JSONResponse
 
 from services.api.model_loader import load_serving_artifacts
 from services.api.predictor import predict as run_predict
@@ -77,6 +77,32 @@ def health() -> dict[str, Any]:
         }
     return {
         "status": "healthy",
+        "model_version": ARTIFACTS["model_version_label"],
+        "dataset_version": ARTIFACTS["dataset_version"],
+        "model_loaded": True,
+    }
+
+
+@app.get("/livez")
+def livez() -> dict[str, str]:
+    """Liveness: the process is up and can accept connections. No artifact check."""
+    return {"status": "alive"}
+
+
+@app.get("/readyz", response_model=None)
+def readyz() -> dict[str, Any] | JSONResponse:
+    """Readiness: model, calibrator, fitted transforms, and cost params loaded.
+
+    A failed startup leaves ARTIFACTS unset, which means one of those artifacts
+    did not load. Kubernetes should drop the pod from traffic, not restart it.
+    """
+    if ARTIFACTS is None:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "model_loaded": False},
+        )
+    return {
+        "status": "ready",
         "model_version": ARTIFACTS["model_version_label"],
         "dataset_version": ARTIFACTS["dataset_version"],
         "model_loaded": True,

@@ -25,7 +25,17 @@ with Candidate fallbacks for calibrator / decision policy / fitted transforms):
 | Cost params | `decision_policy_config` |
 
 If any file is missing or feature counts mismatch, startup logs the error and
-`POST /predict` returns **503**.
+`POST /predict` and `GET /readyz` return **503**. `GET /livez` still returns
+200: the process is up, but it is not ready for traffic.
+
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Backward-compatible health check. Returns model version, dataset version, and whether artifacts loaded. |
+| `POST` | `/predict` | Score one raw transaction and return the calibrated probability plus the decision-policy action. |
+| `GET` | `/livez` | Liveness probe. Returns 200 if the process is running. |
+| `GET` | `/readyz` | Readiness probe. Returns 200 if the model and artifacts are loaded, 503 otherwise. |
 
 ## Example request
 
@@ -146,7 +156,17 @@ Re-run the benchmark after serving changes to catch regressions.
 
 ## Health
 
+`/health` stays for existing callers. `/livez` and `/readyz` are the
+Kubernetes probes: liveness restarts a dead process, readiness keeps a
+process that has not loaded artifacts out of the Service.
+
 ```bash
+curl -s http://127.0.0.1:8000/livez
+# {"status":"alive"}
+
+curl -s http://127.0.0.1:8000/readyz
+# {"status":"ready","model_version":"v9","dataset_version":5,"model_loaded":true}
+
 curl -s http://127.0.0.1:8000/health
 # {"status":"healthy","model_version":"v9","dataset_version":5,"model_loaded":true}
 ```
