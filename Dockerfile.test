@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements-test.txt \
 # Parity reconstructs the temporal split from the serving model's config.
 # That file is not part of the lean serving image.
 COPY configs/lgbm_v9.json /app/configs/lgbm_v9.json
+COPY artifacts.sha256 /app/artifacts.sha256
 COPY tests/ /app/tests/
 
 CMD ["python", "-m", "pytest", "tests/test_training_serving_parity.py", "tests/test_api_endpoint.py", "-v"]
