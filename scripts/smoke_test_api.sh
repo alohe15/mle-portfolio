@@ -31,6 +31,25 @@ if json_has "${HEALTH_BODY}" "model_version"; then ok "health has model_version"
 if json_has "${HEALTH_BODY}" "dataset_version"; then ok "health has dataset_version"; else bad "health missing dataset_version"; fi
 
 echo
+echo "=== Smoke Test: Liveness (${BASE_URL}/livez) ==="
+LIVE_CODE=$(curl -s -o /tmp/smoke_livez.json -w "%{http_code}" "${BASE_URL}/livez" || true)
+LIVE_BODY=$(cat /tmp/smoke_livez.json 2>/dev/null || echo "")
+echo "  HTTP ${LIVE_CODE}"
+echo "  body: ${LIVE_BODY}"
+if [[ "${LIVE_CODE}" == "200" ]]; then ok "livez HTTP 200"; else bad "livez expected 200 got ${LIVE_CODE}"; fi
+if [[ "${LIVE_BODY}" == *'"alive"'* ]]; then ok "livez body contains alive"; else bad "livez body missing alive"; fi
+
+echo
+echo "=== Smoke Test: Readiness (${BASE_URL}/readyz) ==="
+READY_CODE=$(curl -s -o /tmp/smoke_readyz.json -w "%{http_code}" "${BASE_URL}/readyz" || true)
+READY_BODY=$(cat /tmp/smoke_readyz.json 2>/dev/null || echo "")
+echo "  HTTP ${READY_CODE}"
+echo "  body: ${READY_BODY}"
+if [[ "${READY_CODE}" == "200" ]]; then ok "readyz HTTP 200"; else bad "readyz expected 200 got ${READY_CODE}"; fi
+if [[ "${READY_BODY}" == *'"ready"'* ]]; then ok "readyz body contains ready"; else bad "readyz body missing ready"; fi
+if json_has "${READY_BODY}" "model_version"; then ok "readyz has model_version"; else bad "readyz missing model_version"; fi
+
+echo
 echo "=== Smoke Test: Predict (${BASE_URL}/predict) ==="
 PRED_CODE=$(curl -s -o /tmp/smoke_predict.json -w "%{http_code}" \
   -H 'Content-Type: application/json' \

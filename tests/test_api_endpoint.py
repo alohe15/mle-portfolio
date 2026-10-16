@@ -110,6 +110,23 @@ def test_health_endpoint(client: TestClient):
     assert body["model_loaded"] is True
 
 
+def test_livez_returns_200(client: TestClient):
+    resp = client.get("/livez")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "alive"
+
+
+def test_readyz_returns_200_when_loaded(client: TestClient):
+    resp = client.get("/readyz")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ready"
+    assert body["model_version"] == "v9"
+    assert body["dataset_version"] == 5
+    assert body["model_loaded"] is True
+
+
 def test_negative_amount_returns_422(client: TestClient):
     resp = client.post("/predict", json=_base_payload(TransactionAmt=-1.0))
     assert resp.status_code == 422

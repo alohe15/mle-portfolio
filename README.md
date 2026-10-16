@@ -78,6 +78,36 @@ uvicorn services.api.app:app --host 0.0.0.0 --port 8000
 
 Returns `{"fraud_probability": float, "model_version": 9, "dataset_version": 5}`.
 
+## Docker
+
+```bash
+# Build the API image
+docker compose build fraud-api
+
+# Run the API
+docker compose up fraud-api
+
+# In another terminal — check endpoints
+curl http://localhost:8000/livez
+curl http://localhost:8000/readyz
+curl http://localhost:8000/health
+
+# Run tests inside Docker
+docker compose build test
+docker compose run --rm test
+
+# Focused release tests only
+docker compose run --rm test python -m pytest \
+  tests/test_monitoring_schema.py \
+  tests/test_fixture_models.py \
+  tests/test_serving_checksum_manifest.py \
+  tests/test_training_serving_parity.py \
+  -q
+
+# Cleanup
+docker compose down
+```
+
 ## Further documentation
 
 - `docs/model_lock_report.md` — D/Dn comparison, temporal stability, version selection rationale
