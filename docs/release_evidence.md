@@ -196,6 +196,8 @@ $ bash scripts/smoke_test_api.sh
  
 ### Tests inside Docker
  
+Tested at commit `921c0e4`. Image IDs: `fraud-api:latest 28e34e45cbd8`, `fraud-api:test 5e59e2b32a34`.
+
 ```
 $ docker compose run --rm test python -m pytest \
     tests/test_monitoring_schema.py \
@@ -203,9 +205,9 @@ $ docker compose run --rm test python -m pytest \
     tests/test_serving_checksum_manifest.py \
     tests/test_training_serving_parity.py \
     -q
- 
+
 ...........................                             [100%]
-27 passed in 12.93s
+27 passed in 15.96s
 ```
  
 ### Failure experiment
