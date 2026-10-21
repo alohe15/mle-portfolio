@@ -138,4 +138,4 @@ kubectl -n fraud-local logs -l app=fraud-api
 
 ### curl hangs when testing the Service
 
-Use the Service port. The Service exposes port 8000 (`spec.ports[0].port: 8000`), which maps to the container's port 8000 (`targetPort: 8000`). Call `http://fraud-api:8000/readyz`, not port 80.
+The Service port is 8000 (`spec.ports[0].port: 8000`) and the container port is 8000 (`targetPort: 8000`). There is no port translation. Call `http://fraud-api:8000/readyz` and `http://fraud-api:8000/livez`, not port 80.

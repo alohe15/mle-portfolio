@@ -26,10 +26,10 @@ spec:
                 name: fraud-api-config
           resources:
             requests:
-              memory: 256Mi
+              memory: 768Mi
               cpu: 250m
             limits:
-              memory: 512Mi
+              memory: 1Gi
               cpu: 500m
           livenessProbe:
             httpGet:
