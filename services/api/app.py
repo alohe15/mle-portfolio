@@ -11,8 +11,6 @@ Run:
 from __future__ import annotations
 
 import logging
-import time
-import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -22,6 +20,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse
 
 from services.api.model_loader import load_serving_artifacts
+from services.api.observability import AccessLogMiddleware, disable_uvicorn_access_log
 from services.api.predictor import predict as run_predict
 from services.api.schemas import TransactionRequest, TransactionResponse
 
@@ -30,11 +29,14 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message
 
 ARTIFACTS: dict[str, Any] | None = None
 LOAD_ERROR: str | None = None
+ARTIFACT_LOAD_FAILED = "artifact_load_failed"
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     global ARTIFACTS, LOAD_ERROR
+    # Uvicorn installs its access logger after this module is imported.
+    disable_uvicorn_access_log()
     try:
         ARTIFACTS = load_serving_artifacts()
         LOAD_ERROR = None
@@ -54,14 +56,28 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="mle-portfolio fraud API", lifespan=lifespan)
+app.add_middleware(AccessLogMiddleware)
+
+
+def _public_validation_errors(exc: RequestValidationError) -> list[dict[str, Any]]:
+    """type, loc, and msg only. input and ctx can echo the request body."""
+    public = [
+        {"type": err.get("type"), "loc": err.get("loc"), "msg": err.get("msg")}
+        for err in exc.errors()
+    ]
+    return jsonable_encoder(public)
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
-    _request: Request, exc: RequestValidationError
+    request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     return JSONResponse(
-        status_code=422, content={"detail": jsonable_encoder(exc.errors())}
+        status_code=422,
+        content={
+            "detail": _public_validation_errors(exc),
+            "request_id": request.state.request_id,
+        },
     )
 
 
@@ -73,7 +89,7 @@ def health() -> dict[str, Any]:
             "model_version": None,
             "dataset_version": None,
             "model_loaded": False,
-            "error": LOAD_ERROR,
+            "error": ARTIFACT_LOAD_FAILED,
         }
     return {
         "status": "healthy",
@@ -110,37 +126,31 @@ def readyz() -> dict[str, Any] | JSONResponse:
 
 
 @app.post("/predict", response_model=TransactionResponse)
-def predict_endpoint(body: TransactionRequest) -> TransactionResponse:
-    request_id = str(uuid.uuid4())
+def predict_endpoint(body: TransactionRequest, request: Request) -> TransactionResponse:
+    request_id = request.state.request_id
     if ARTIFACTS is None:
         raise HTTPException(
             status_code=503,
             detail={"message": "Model not loaded", "request_id": request_id},
         )
 
-    start = time.perf_counter()
     try:
         result = run_predict(
             body.feature_dict(),
             ARTIFACTS,
             request_id=request_id,
         )
-    except Exception:
-        logger.exception("Prediction failed request_id=%s", request_id)
+    except Exception as exc:
+        # Class name only. The message and traceback can contain raw inputs.
+        logger.error(
+            "Prediction failed request_id=%s exception_class=%s",
+            request_id,
+            type(exc).__name__,
+        )
         raise HTTPException(
             status_code=500,
             detail={"message": "Prediction failed", "request_id": request_id},
         ) from None
 
-    latency_ms = (time.perf_counter() - start) * 1000.0
-    # Privacy-safe log: ids, versions, action, latency only — never raw features.
-    logger.info(
-        "predict ok request_id=%s model_version=%s dataset_version=%s "
-        "recommended_action=%s latency_ms=%.2f",
-        result["request_id"],
-        result["model_version"],
-        result["dataset_version"],
-        result["recommended_action"],
-        latency_ms,
-    )
+    request.state.recommended_action = result["recommended_action"]
     return TransactionResponse(**result)
