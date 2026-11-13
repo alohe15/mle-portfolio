@@ -33,4 +33,5 @@ services:
       - tests/test_training_serving_parity.py
       - tests/test_api_endpoint.py
       - tests/test_observability.py
+      - tests/test_metrics.py
       - -v

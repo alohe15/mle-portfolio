@@ -17,8 +17,10 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from starlette.responses import JSONResponse
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from starlette.responses import JSONResponse, Response
 
+from services.api.metrics import record_prediction, set_model_loaded
 from services.api.model_loader import load_serving_artifacts
 from services.api.observability import AccessLogMiddleware, disable_uvicorn_access_log
 from services.api.predictor import predict as run_predict
@@ -48,10 +50,16 @@ async def lifespan(_app: FastAPI):
             len(ARTIFACTS["feature_order"]),
             len(ARTIFACTS["transformation_pipeline"]),
         )
+        set_model_loaded(
+            True,
+            model_version=str(ARTIFACTS["model_version_label"]),
+            dataset_version=str(ARTIFACTS["dataset_version"]),
+        )
     except Exception as exc:  # noqa: BLE001 — surface load failure as 503
         ARTIFACTS = None
         LOAD_ERROR = str(exc)
         logger.exception("Failed to load serving artifacts")
+        set_model_loaded(False)
     yield
 
 
@@ -153,4 +161,10 @@ def predict_endpoint(body: TransactionRequest, request: Request) -> TransactionR
         ) from None
 
     request.state.recommended_action = result["recommended_action"]
+    record_prediction(result["recommended_action"])
     return TransactionResponse(**result)
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)

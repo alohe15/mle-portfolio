@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from services.api.metrics import observe_request
+
 ACCESS_LOGGER_NAME = "services.api.access"
 _CONFIGURED = False
 
@@ -188,19 +190,28 @@ def _log_completion(
     unhandled: bool,
 ) -> None:
     route = _route_template(scope)
+    method = scope.get("method")
+    status_class = f"{status_code // 100}xx"
     recommended: str | None = None
     state = scope.get("state")
     if route == "/predict" and 200 <= status_code < 300 and isinstance(state, dict):
         action = state.get("recommended_action")
         if isinstance(action, str):
             recommended = action
+    # Same route, status class, and duration as the log line. Histogram is seconds.
+    observe_request(
+        route=route,
+        method=method if isinstance(method, str) else "",
+        status_class=status_class,
+        duration_seconds=duration_ms / 1000.0,
+    )
     payload = {
         "event": "request_completed",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "request_id": request_id,
         "route": route,
-        "method": scope.get("method"),
-        "status_class": f"{status_code // 100}xx",
+        "method": method,
+        "status_class": status_class,
         "status_code": status_code,
         "duration_ms": round(duration_ms, 3),
         "model_version": _model_version(),
