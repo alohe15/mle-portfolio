@@ -18,14 +18,56 @@ rows=payload.get("data",{}).get("result") or []
 print(sum(float(row["value"][1]) for row in rows) if rows else 0)'
 }
 
+pod_metric() {
+  local deploy="$1"
+  local expr="$2"
+  kubectl -n fraud-local exec "deploy/${deploy}" -- curl -sS localhost:8000/metrics \
+    | python3 -c '
+import re
+import sys
+
+expr = sys.argv[1].strip()
+if expr.startswith("sum(") and expr.endswith(")"):
+    expr = expr[4:-1]
+matched = re.match(r"([a-zA-Z_:][a-zA-Z0-9_:]*)(\{.*\})?$", expr)
+name = matched.group(1)
+wanted = {}
+if matched.group(2):
+    for part in matched.group(2)[1:-1].split(","):
+        if not part.strip():
+            continue
+        key, value = part.split("=", 1)
+        key = key.strip()
+        if key == "app":
+            continue
+        wanted[key] = value.strip().strip("\"")
+total = 0.0
+found = False
+line_re = re.compile(r"^([a-zA-Z_:][a-zA-Z0-9_:]*)(\{([^}]*)\})?\s+([0-9eE.+-]+)$")
+for line in sys.stdin:
+    sample = line_re.match(line.strip())
+    if sample is None or sample.group(1) != name:
+        continue
+    have = {}
+    if sample.group(3):
+        for part in sample.group(3).split(","):
+            key, value = part.split("=", 1)
+            have[key.strip()] = value.strip().strip("\"")
+    if all(have.get(key) == value for key, value in wanted.items()):
+        total += float(sample.group(4))
+        found = True
+print(total if found else 0)
+' "$expr"
+}
+
 run_check() {
   local name="$1" expected="$2" deploy="$3" mode="$4"
   local req_expr="$5" pred_expr="$6" want_status="$7" want_category="$8"
   local want_req="$9" want_pred="${10}" want_marker="${11}"
   local raw="${WORKDIR}/response.http"
-  local before_req before_pred after_req after_pred
-  before_req="$(prom "$req_expr")"
-  before_pred="$(prom "$pred_expr")"
+  local before_req before_pred after_req after_pred prom_req prom_pred
+  before_req="$(pod_metric "$deploy" "$req_expr")"
+  before_pred="$(pod_metric "$deploy" "$pred_expr")"
   if [[ "$mode" == "golden" ]]; then
     kubectl -n fraud-local exec -i "deploy/${deploy}" -- \
       curl -si -X POST -H 'Content-Type: application/json' --data-binary @- \
@@ -40,13 +82,15 @@ run_check() {
       http://localhost:8000/predict < "$GOLDEN" > "$raw"
   fi
   sleep 35
-  after_req="$(prom "$req_expr")"
-  after_pred="$(prom "$pred_expr")"
+  after_req="$(pod_metric "$deploy" "$req_expr")"
+  after_pred="$(pod_metric "$deploy" "$pred_expr")"
+  prom_req="$(prom "$req_expr")"
+  prom_pred="$(prom "$pred_expr")"
   local log_file="${WORKDIR}/pod.log"
   kubectl -n fraud-local logs "deploy/${deploy}" --tail=400 > "$log_file" || true
   python3 - "$name" "$expected" "$raw" "$log_file" "$want_status" "$want_category" \
     "$before_req" "$after_req" "$want_req" "$before_pred" "$after_pred" \
-    "$want_pred" "$want_marker" <<'PY'
+    "$want_pred" "$want_marker" "$prom_req" "$prom_pred" <<'PY'
 import json
 import sys
 
@@ -64,6 +108,8 @@ import sys
     after_pred,
     want_pred,
     want_marker,
+    prom_req,
+    prom_pred,
 ) = sys.argv[1:]
 text = open(raw_path, errors="replace").read()
 status = ""
@@ -106,6 +152,7 @@ elif name == "malformed":
 else:
     state = "absent" if marker_clean else "present"
     deltas = f"5xx{show(req_delta)} predictions{show(pred_delta)} marker_{state}"
+deltas = f"{deltas} prometheus_after={prom_req}/{prom_pred}"
 ok = (
     status == want_status
     and category == want_category
