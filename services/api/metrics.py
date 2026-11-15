@@ -50,6 +50,12 @@ MODEL_LOADED = Gauge(
 for _action in ACTION_NAMES:
     PREDICTIONS.labels(action=_action).inc(0)
 
+# A zero sample so the first /predict in each status class is visible to rate().
+for _status_class in ("2xx", "4xx", "5xx"):
+    HTTP_REQUESTS.labels(
+        route="/predict", method="POST", status_class=_status_class
+    )
+
 
 def observe_request(
     *,

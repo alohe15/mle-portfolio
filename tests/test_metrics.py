@@ -184,3 +184,18 @@ def test_prediction_action_labels_stay_finite():
             observed.add(sample.labels["action"])
     assert observed <= (set(ACTION_NAMES) | {"other"})
     assert set(ACTION_NAMES) <= observed
+
+
+def test_predict_status_series_exist_before_traffic():
+    for status_class in ("2xx", "4xx", "5xx"):
+        assert (
+            REGISTRY.get_sample_value(
+                "fraud_api_http_requests_total",
+                {
+                    "route": "/predict",
+                    "method": "POST",
+                    "status_class": status_class,
+                },
+            )
+            is not None
+        )

@@ -12,4 +12,6 @@
 
 Health probes (`/health`, `/livez`, `/readyz`) and `/metrics` scrapes are counted under their own route labels. Prediction panels must filter `route="/predict"`. Latency panels should filter `status_class="2xx"` so fast 4xx rejections do not pull the percentiles down.
 
+`POST /predict` is created at import for `2xx`, `4xx`, and `5xx`, each at 0. `rate()` and `increase()` need a prior sample, so the first event on a new series is invisible without that 0 sample.
+
 The container runs a single uvicorn process. The Dockerfile `CMD` has no `--workers`. The ConfigMap `UVICORN_WORKERS` value is not read by the `CMD`. Multiple workers would split counters per process and need Prometheus multiprocess mode.
