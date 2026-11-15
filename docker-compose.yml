@@ -34,4 +34,5 @@ services:
       - tests/test_api_endpoint.py
       - tests/test_observability.py
       - tests/test_metrics.py
+      - tests/test_fault_double.py
       - -v
