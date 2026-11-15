@@ -1,0 +1,5 @@
+# Namespace for the in-cluster Prometheus collector.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
