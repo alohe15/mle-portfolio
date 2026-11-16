@@ -7,12 +7,21 @@ import math
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from prediction_batch_report import record_from_response, summarize  # noqa: E402
+from prediction_batch_report import (  # noqa: E402
+    contract_from_openapi,
+    http_error_summary,
+    record_from_response,
+    run,
+    summarize,
+    validate_batch,
+)
 
 FIXTURE = Path(__file__).parent / "fixtures" / "simulated_labels.json"
 PAYLOADS = ROOT / "tests" / "load" / "payloads.json"
@@ -111,3 +120,105 @@ def test_invalid_score_is_counted_and_excluded_from_quantiles():
     assert report["action_counts"]["decline"] == 1
     assert report["action_counts"]["review"] == 1
     assert report["action_counts"]["step_up"] == 1
+
+
+def _payload_rows() -> list[dict]:
+    return json.loads(PAYLOADS.read_text())
+
+
+def _api_contract() -> dict:
+    from services.api.app import app
+
+    return contract_from_openapi(app.openapi())
+
+
+def _drop_amount(example_ids: set[str]) -> list[dict]:
+    rows = []
+    for item in _payload_rows():
+        request = dict(item["request"])
+        if item["example_id"] in example_ids:
+            del request["TransactionAmt"]
+        rows.append({"example_id": item["example_id"], "request": request})
+    return rows
+
+
+def test_validate_batch_reports_every_missing_amount():
+    dropped = {"syn-003", "syn-011", "syn-019"}
+    errors = validate_batch(_drop_amount(dropped), _api_contract())
+    assert [(error["example_id"], error["field"]) for error in errors] == [
+        ("syn-003", "TransactionAmt"),
+        ("syn-011", "TransactionAmt"),
+        ("syn-019", "TransactionAmt"),
+    ]
+    assert {error["problem"] for error in errors} == {"missing_required"}
+
+
+def test_valid_batch_passes_validation():
+    assert validate_batch(_payload_rows(), _api_contract()) == []
+
+
+def test_contract_requires_transaction_amount():
+    assert "TransactionAmt" in _api_contract()["required"]
+
+
+def test_run_rejects_invalid_batch_with_no_posts(monkeypatch, tmp_path, capsys):
+    from services.api.app import app
+
+    spec = app.openapi()
+    posts = {"count": 0}
+    invalid = tmp_path / "invalid.json"
+    invalid.write_text(json.dumps(_drop_amount({"syn-003", "syn-011", "syn-019"})))
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+
+    class _Response:
+        def __init__(self, payload: bytes) -> None:
+            self._payload = payload
+
+        def read(self) -> bytes:
+            return self._payload
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args: object) -> bool:
+            return False
+
+    def urlopen(request, timeout=30):
+        if request.get_method() == "POST":
+            posts["count"] += 1
+            raise AssertionError("POST /predict must not be called")
+        assert request.full_url.endswith("/openapi.json")
+        return _Response(json.dumps(spec).encode("utf-8"))
+
+    monkeypatch.setattr("prediction_batch_report.urllib.request.urlopen", urlopen)
+    with pytest.raises(SystemExit) as caught:
+        run("http://fraud-api:8000", invalid, None, out_dir)
+    assert caught.value.code == 2
+    assert posts["count"] == 0
+    assert list(out_dir.iterdir()) == []
+    error_text = capsys.readouterr().err
+    assert "batch rejected: 3 of 24 rows invalid" in error_text
+    assert "TransactionAmt missing in syn-003, syn-011, syn-019" in error_text
+
+
+def test_http_422_message_keeps_type_and_loc_only():
+    message = http_error_summary(
+        "syn-003",
+        422,
+        {
+            "detail": [
+                {
+                    "type": "missing",
+                    "loc": ["body", "TransactionAmt"],
+                    "msg": "Field required",
+                    "input": {"card4": "do-not-print"},
+                }
+            ]
+        },
+    )
+    assert message == (
+        "POST /predict failed for syn-003: HTTP 422; "
+        "type=missing loc=body.TransactionAmt"
+    )
+    assert "do-not-print" not in message

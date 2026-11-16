@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -126,6 +127,204 @@ def summarize(rows: list[dict], labels: dict | None = None) -> dict:
     return report
 
 
+def _deref(schema: dict, schemas: dict, depth: int = 0) -> dict:
+    """Follow $ref. Sibling keys on the reference win over the target."""
+    if depth > 12 or not isinstance(schema, dict):
+        return schema
+    if "$ref" not in schema:
+        return schema
+    name = str(schema["$ref"]).rsplit("/", 1)[-1]
+    resolved = _deref(schemas[name], schemas, depth + 1)
+    extra = {key: value for key, value in schema.items() if key != "$ref"}
+    if extra and isinstance(resolved, dict):
+        merged = dict(resolved)
+        merged.update(extra)
+        return merged
+    return resolved
+
+
+def _type_info(schema: dict, schemas: dict) -> tuple[list[str], bool]:
+    """Concrete JSON types for a property, and whether null is allowed."""
+    schema = _deref(schema, schemas)
+    options = schema.get("anyOf") or schema.get("oneOf")
+    if isinstance(options, list):
+        types: list[str] = []
+        nullable = False
+        for option in options:
+            option_types, option_null = _type_info(option, schemas)
+            nullable = nullable or option_null
+            for name in option_types:
+                if name not in types:
+                    types.append(name)
+        return types, nullable
+    declared = schema.get("type")
+    if isinstance(declared, list):
+        nullable = "null" in declared
+        return [name for name in declared if name != "null"], nullable
+    if declared == "null":
+        return [], True
+    if isinstance(declared, str):
+        return [declared], False
+    if "properties" in schema:
+        return ["object"], False
+    return [], False
+
+
+def contract_from_openapi(spec: dict) -> dict:
+    """TransactionRequest as required names plus resolved property types.
+
+    The schema is the POST /predict JSON body. Field names come from that
+    schema, not from a list in this file.
+    """
+    schemas = spec.get("components", {}).get("schemas", {})
+    body = spec["paths"]["/predict"]["post"]["requestBody"]["content"]["application/json"]["schema"]
+    schema = _deref(body, schemas)
+    properties = {}
+    for name, prop in schema.get("properties", {}).items():
+        types, nullable = _type_info(prop, schemas)
+        properties[name] = {"types": types, "nullable": nullable}
+    return {
+        "required": list(schema.get("required") or []),
+        "properties": properties,
+    }
+
+
+def fetch_contract(base_url: str) -> dict:
+    """GET /openapi.json and return the TransactionRequest contract."""
+    url = base_url.rstrip("/") + "/openapi.json"
+    request = urllib.request.Request(url, method="GET")
+    with urllib.request.urlopen(request, timeout=30) as response:
+        spec = json.loads(response.read().decode("utf-8"))
+    return contract_from_openapi(spec)
+
+
+def _value_matches(value: object, types: list[str]) -> bool:
+    for name in types:
+        if name == "string" and isinstance(value, str):
+            return True
+        if name == "number" and isinstance(value, (int, float)) and not isinstance(value, bool):
+            return True
+        if name == "integer" and isinstance(value, int) and not isinstance(value, bool):
+            return True
+        if name == "boolean" and isinstance(value, bool):
+            return True
+        if name == "object" and isinstance(value, dict):
+            return True
+        if name == "array" and isinstance(value, list):
+            return True
+        if name == "null" and value is None:
+            return True
+    return False
+
+
+def validate_batch(rows: list[dict], contract: dict) -> list[dict]:
+    """Check every row. Return all errors; do not stop at the first."""
+    required = set(contract.get("required") or [])
+    properties = contract.get("properties") or {}
+    errors: list[dict] = []
+    for row in rows:
+        example_id = row.get("example_id")
+        request = row.get("request")
+        if not isinstance(request, dict):
+            errors.append(
+                {"example_id": example_id, "field": "request", "problem": "wrong_type"}
+            )
+            continue
+        for field, spec in properties.items():
+            types = list(spec.get("types") or [])
+            nullable = bool(spec.get("nullable"))
+            if field not in request:
+                if field in required:
+                    errors.append(
+                        {
+                            "example_id": example_id,
+                            "field": field,
+                            "problem": "missing_required",
+                        }
+                    )
+                continue
+            value = request[field]
+            if value is None:
+                if field in required and not nullable:
+                    errors.append(
+                        {
+                            "example_id": example_id,
+                            "field": field,
+                            "problem": "null_required",
+                        }
+                    )
+                elif not nullable and "null" not in types:
+                    errors.append(
+                        {
+                            "example_id": example_id,
+                            "field": field,
+                            "problem": "wrong_type",
+                        }
+                    )
+                continue
+            if types and not _value_matches(value, types):
+                errors.append(
+                    {"example_id": example_id, "field": field, "problem": "wrong_type"}
+                )
+    return errors
+
+
+def format_rejection(rows: list[dict], errors: list[dict]) -> str:
+    """One stderr line. Names every bad row, not only the first."""
+    invalid = []
+    seen = set()
+    for error in errors:
+        example_id = error["example_id"]
+        if example_id not in seen:
+            seen.add(example_id)
+            invalid.append(example_id)
+    grouped: dict[tuple[str, str], list] = {}
+    order: list[tuple[str, str]] = []
+    words = {
+        "missing_required": "missing",
+        "null_required": "null",
+        "wrong_type": "wrong type",
+    }
+    for error in errors:
+        key = (str(error["field"]), words.get(error["problem"], error["problem"]))
+        if key not in grouped:
+            grouped[key] = []
+            order.append(key)
+        if error["example_id"] not in grouped[key]:
+            grouped[key].append(error["example_id"])
+    details = [
+        f"{field} {word} in {', '.join(str(example_id) for example_id in ids)}"
+        for (field, word), ids in ((key, grouped[key]) for key in order)
+    ]
+    return (
+        f"batch rejected: {len(invalid)} of {len(rows)} rows invalid; "
+        + "; ".join(details)
+    )
+
+
+def http_error_summary(example_id: str, status: int, body: object) -> str:
+    """example_id plus 422 type and loc. Never the submitted values."""
+    message = f"POST /predict failed for {example_id}: HTTP {status}"
+    if status != 422 or not isinstance(body, dict):
+        return message
+    detail = body.get("detail")
+    if not isinstance(detail, list):
+        return message
+    parts = []
+    for item in detail:
+        if not isinstance(item, dict):
+            continue
+        loc = item.get("loc")
+        if isinstance(loc, list):
+            loc_text = ".".join(str(piece) for piece in loc)
+        else:
+            loc_text = "" if loc is None else str(loc)
+        parts.append(f"type={item.get('type')} loc={loc_text}")
+    if not parts:
+        return message
+    return message + "; " + "; ".join(parts)
+
+
 def _post_predict(base_url: str, request_body: dict) -> dict:
     url = base_url.rstrip("/") + "/predict"
     payload = json.dumps(request_body).encode("utf-8")
@@ -145,9 +344,24 @@ def _load_labels(path: str | None) -> dict | None:
     return json.loads(Path(path).read_text())
 
 
+def _read_http_error(exc: urllib.error.HTTPError) -> object:
+    try:
+        raw = exc.read()
+    except Exception:
+        return None
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+
 def run(base_url: str, payloads_path: Path, labels_path: str | None, out_dir: Path) -> dict:
     payloads = json.loads(payloads_path.read_text())
     labels = _load_labels(labels_path)
+    errors = validate_batch(payloads, fetch_contract(base_url))
+    if errors:
+        print(format_rejection(payloads, errors), file=sys.stderr)
+        raise SystemExit(2)
     records = []
     for item in payloads:
         example_id = item["example_id"]
@@ -155,7 +369,7 @@ def run(base_url: str, payloads_path: Path, labels_path: str | None, out_dir: Pa
             body = _post_predict(base_url, item["request"])
         except urllib.error.HTTPError as exc:
             raise SystemExit(
-                f"POST /predict failed for {example_id}: HTTP {exc.code}"
+                http_error_summary(example_id, exc.code, _read_http_error(exc))
             ) from None
         records.append(record_from_response(example_id, body))
 

@@ -1,0 +1,36 @@
+Loading comparison sample from /evidence/invalid_batch.csv ...
+Comparison rows: 24
+Loading serving artifacts from models/registry.json ...
+Validating schema, missingness, and categoricals on the raw comparison file (before NaN-fill, coercion, or column drops) ...
+Applying frozen fitted transforms ...
+Scoring 24 comparison rows ...
+
+=== Drift report ===
+Overall status: CRITICAL
+Comparison n=24  labels=no  model=9  dataset=v5  reference_split=train
+
+TIER 1 (immediate)
+  [CRITICAL ] schema_missing_columns           observed=438  reference=0  threshold=0
+  [WARNING  ] schema_extra_columns             observed=2  reference=0  threshold=0
+  [PASS     ] schema_dtype_mismatch            observed=0  reference=0  threshold=0
+  [WARNING  ] missingness_rate_change          observed=1.0  reference=0.0  threshold=0.05
+  [WARNING  ] categorical_new_levels           observed=32  reference=0  threshold=0
+  [WARNING  ] feature_distribution_psi         observed=8.318494055777359  reference=0.0  threshold=0.2
+  [WARNING  ] score_distribution_psi           observed=5.109127354840574  reference=0.0  threshold=0.1
+  [WARNING  ] amount_distribution_psi          observed=4.563567432222054  reference=0.0  threshold=0.2
+  [WARNING  ] action_band_volume_change        observed=41.205546026300745  reference=0.0  threshold=0.3
+
+TIER 2 (delayed / labels)
+  (skipped — no labels)
+
+Fired signals:
+  - schema_missing_columns: critical (observed=438, reference=0, threshold=0)
+  - schema_extra_columns: warning (observed=2, reference=0, threshold=0)
+  - missingness_rate_change: warning (observed=1.0, reference=0.0, threshold=0.05)
+  - categorical_new_levels: warning (observed=32, reference=0, threshold=0)
+  - feature_distribution_psi: warning (observed=8.318494055777359, reference=0.0, threshold=0.2)
+  - score_distribution_psi: warning (observed=5.109127354840574, reference=0.0, threshold=0.1)
+  - amount_distribution_psi: warning (observed=4.563567432222054, reference=0.0, threshold=0.2)
+  - action_band_volume_change: warning (observed=41.205546026300745, reference=0.0, threshold=0.3)
+
+Wrote /out/drift_report.json
