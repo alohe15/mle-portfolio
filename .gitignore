@@ -231,6 +231,7 @@ data/processed/**/*.parquet
 # Test fixtures generated at runtime. The golden request is a checked-in baseline.
 tests/fixtures/*
 !tests/fixtures/golden_request.json
+!tests/fixtures/simulated_labels.json
 
 # Trained model binaries (metrics, manifests, and registry tracked)
 models/**/*.txt
