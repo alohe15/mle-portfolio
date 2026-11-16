@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: fraud-api
-          image: fraud-api:latest
+          image: fraud-api:a7555b2
           imagePullPolicy: Never
           ports:
             - containerPort: 8000

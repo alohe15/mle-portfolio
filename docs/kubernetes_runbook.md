@@ -23,10 +23,11 @@ Expected: one node, `fraud-local-control-plane`, in the Ready state.
 
 ```bash
 docker compose build fraud-api
-kind load docker-image fraud-api:latest --name fraud-local
+docker tag fraud-api:latest fraud-api:a7555b2
+kind load docker-image fraud-api:a7555b2 --name fraud-local
 ```
 
-`kind load` is required because Kind runs its own containerd and cannot see images in Docker Desktop's local store. The image is about 426 MB.
+`kind load` is required because Kind runs its own containerd and cannot see images in Docker Desktop's local store. The tag matches the image in `deploy/k8s/local/deployment.yaml`. The image is about 426 MB.
 
 ## 3. Deploy to the cluster
 

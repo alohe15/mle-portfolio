@@ -31,3 +31,31 @@ Golden `action_costs`:
 Score tolerance: absolute difference <= 1e-6. Status: proposed, pending mentor approval.
 
 The Docker image ID changes on identical rebuilds, so the config digest is the identity.
+
+## Phase 11 recovery baseline
+
+Recorded after the image was pinned and rolled out, and before any release fault.
+
+| Item | Value |
+|---|---|
+| Code commit | `a7555b2` |
+| Image tag | `fraud-api:a7555b2` |
+| Image ID (`docker image inspect --format '{{.Id}}'`) | `sha256:4317228a5def4615ed4dbc642f8dc8e39722a5ff1453ad4200cf6a51f2e623cd` |
+| Image config digest | `sha256:16ab9529bcfe8afa8027aff31ed1fd999c315b6267bb09e64870ca458bc9bf89` |
+| Pod imageID | `docker.io/library/import-2026-11-16@sha256:d8de616b56cf92ef76ec0a5f08e4ef1ce84989bd864bbeb3c563f77d79aae66a` |
+| Deployment revision | `6` |
+| ConfigMap `LOG_LEVEL` | `INFO` |
+| ConfigMap `UVICORN_WORKERS` | `1` |
+| Resources | requests `250m` / `768Mi`, limits `500m` / `1Gi` |
+| Golden `fraud_probability` | `0.005580357142857143` |
+| Golden action | `approve` |
+
+The image ID above is the OCI index digest. The config digest is the image config blob, and that is the identity that stays put across a retag. The pod imageID is the digest Kind stored when the image was imported.
+
+Score tolerance: absolute difference <= 1e-6 on `fraud_probability`, and the action must match exactly. Status: proposed, pending mentor approval.
+
+Restoration command, written before any fault:
+
+```bash
+kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+```
