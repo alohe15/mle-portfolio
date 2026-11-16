@@ -1,0 +1,4 @@
+check	expected	actual status	request_id	error_category	metric deltas	result
+normal	200 none 2xx+1 approve+1	200	efee5592-bdc4-4ee5-ae5c-731004c65ec7	none	2xx+1 approve+1 prometheus_after=15.0/15.0	PASS
+malformed	422 validation_error 4xx+1 predictions+0	422	1d728182-bb3b-4ed5-844c-ae36c642a86d	validation_error	4xx+1 predictions+0 prometheus_after=5.0/15.0	PASS
+service error	500 prediction_error 5xx+1 predictions+0	500	6165e24a-f804-46df-aefc-3aa9caace7b2	prediction_error	5xx+1 predictions+0 marker_absent prometheus_after=5.0/0.0	PASS
