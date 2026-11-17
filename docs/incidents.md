@@ -4,6 +4,20 @@ Values below are taken from `docs/evidence/phase11/`. The release section uses `
 
 ## Release incident
 
+### How to start
+
+From the repo root, after the API rollout. The script writes `~/fraud-evidence/phase11/release_incident.log`.
+
+```bash
+bash scripts/drills/release_incident.sh
+```
+
+Optional dashboard snapshots need Prometheus on `localhost:9090`. In a second terminal tab, port-forward it as in [docs/operations.md](operations.md). In the first tab:
+
+```bash
+DASHBOARD_SNAPSHOT=1 bash scripts/drills/release_incident.sh
+```
+
 ### Injected fault
 
 The live Deployment's readiness probe `httpGet` path was patched to `/readyz-does-not-exist`. The committed manifest was not edited. `kubectl rollout status` was bounded at 90s.
@@ -11,6 +25,8 @@ The live Deployment's readiness probe `httpGet` path was patched to `/readyz-doe
 ### First signal
 
 `rollout status` printed `error: timed out waiting for the condition` and exited 1. The new pod then showed `Readiness probe failed: HTTP probe failed with statuscode: 404`.
+
+The dashboard over the fault window (18:55:25-18:56:58 local) showed no change in error ratios or model panels; see [release_incident_dashboard_window.png](evidence/phase11/release_incident_dashboard_window.png).
 
 ### Timeline (UTC, from the logs)
 
@@ -110,6 +126,37 @@ Hypotheses:
 - 94s or 99s measures recovery. Both totals are the 90s wait plus the checks around it.
 
 ## Data incident
+
+### How to start
+
+Port-forward the Service first, in a second terminal tab, as in [docs/model_monitoring.md](model_monitoring.md). In the first tab, build an invalid copy outside Git by dropping `TransactionAmt` from `syn-003`, `syn-011`, and `syn-019`, then run it. That run is expected to exit 2 and leave the out-dir empty. Then run the valid batch.
+
+```bash
+mkdir -p "$HOME/fraud-evidence/phase11/invalid_run2"
+python3 - << 'PY'
+import json
+from pathlib import Path
+rows = json.loads(Path("tests/load/payloads.json").read_text())
+drop = {"syn-003", "syn-011", "syn-019"}
+for row in rows:
+    if row["example_id"] in drop:
+        row["request"].pop("TransactionAmt", None)
+out = Path.home() / "fraud-evidence/phase11/invalid_batch.json"
+out.write_text(json.dumps(rows))
+print(out)
+PY
+python3 scripts/prediction_batch_report.py \
+  --payloads "$HOME/fraud-evidence/phase11/invalid_batch.json" \
+  --out-dir "$HOME/fraud-evidence/phase11/invalid_run2"
+```
+
+Expected exit code: 2.
+
+```bash
+python3 scripts/prediction_batch_report.py --out-dir "$HOME/fraud-evidence/phase11/valid_run"
+```
+
+Expected exit code: 0.
 
 ### Injected fault
 

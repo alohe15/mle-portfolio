@@ -38,8 +38,9 @@ Approximate sizes: model `.txt` ~238 MB; fitted transforms `.pkl` ~1.2 MB; calib
 
 ## Build
 
+From the repo root:
+
 ```bash
-cd /path/to/mle-portfolio
 docker build -t fraud-api .
 ```
 
@@ -57,8 +58,10 @@ docker images fraud-api
 Option A — Compose:
 
 ```bash
-docker compose up --build -d
+docker compose up -d --wait fraud-api
 ```
+
+`--wait` starts only `fraud-api` and blocks until its healthcheck passes. The model takes several seconds to load, so a curl issued the moment the container is created can still get connection refused.
 
 Option B — raw Docker:
 
@@ -131,24 +134,15 @@ PR / this runbook. Asserts in-process P99 < 100 ms.
 
 ## Running tests inside the container
 
-Endpoint tests (mount tests; image excludes `tests/`):
+The serving image does not install pytest. From the repo root, the test image does:
 
 ```bash
-docker run --rm \
-  -v "$(pwd)/tests:/app/tests:ro" \
-  fraud-api \
-  python -m pytest tests/test_api_endpoint.py -v
+docker compose run --rm test
 ```
 
-Parity test needs data mounted:
+The test list is the `command` on the `test` service in `docker-compose.yml`.
 
-```bash
-docker run --rm \
-  -v "$(pwd)/data:/app/data:ro" \
-  -v "$(pwd)/tests:/app/tests:ro" \
-  fraud-api \
-  python -m pytest tests/test_training_serving_parity.py -v
-```
+`docker compose down` before the Kubernetes stage (frees host port 8000).
 
 ## Shutdown
 

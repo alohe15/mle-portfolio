@@ -20,12 +20,14 @@ The `openssl` command creates the Grafana admin password in the cluster Secret `
 
 ## 3. Access
 
-Run each port-forward in the foreground in its own terminal tab:
+In a second terminal tab, run each port-forward in the foreground. Leave that tab running:
 
 ```bash
 kubectl -n monitoring port-forward svc/prometheus 9090:9090
 kubectl -n monitoring port-forward svc/grafana 3000:3000
 ```
+
+In the first tab, with Prometheus forwarded, run `python3 scripts/check_dashboard_queries.py` (section 7).
 
 Open http://localhost:3000/d/fraud-api. Anonymous access is a Viewer (`GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer`). A port-forward attaches to one Pod and dies when that Pod is replaced. Rerun it after any rollout.
 
@@ -95,7 +97,7 @@ The saved dashboard is `deploy/monitoring/grafana/dashboards/fraud-api.json`. Qu
 
 `/livez`, `/readyz`, and `/metrics` are excluded from these panels. "No traffic" means no `/predict` requests in the window, not that the API is healthy. Error ratios count a missing error series as 0 when traffic exists (`or vector(0)`). Panels aggregate every scraped API Pod, including the drill Pod while it runs. `increase()` is extrapolated, so use logs for exact counts. With few requests, p95 is effectively the slowest request. `scrape_up=1` only proves `/metrics` answered, not that `/predict` works.
 
-Check every query without a browser, with Prometheus forwarded to port 9090:
+Check every query without a browser. Run this in the first tab. The Prometheus port-forward stays in the second tab:
 
 ```bash
 python3 scripts/check_dashboard_queries.py
@@ -149,10 +151,17 @@ A readiness failure is a different experiment, since traffic stops before predic
 ## 11. Cleanup
 
 ```bash
-kubectl delete -f deploy/drills/fault-instance.yaml
+kubectl delete -f deploy/drills/fault-instance.yaml --ignore-not-found
 kubectl delete -k deploy/monitoring/grafana
 kubectl -n monitoring delete secret grafana-admin
 kubectl delete -f deploy/monitoring/
+```
+
+k6 Jobs delete themselves 600 seconds after they finish (`ttlSecondsAfterFinished` on the Job). To remove one now, list them and delete by name:
+
+```bash
+kubectl -n fraud-local get jobs
+kubectl -n fraud-local delete job <name>
 ```
 
 Stop the port-forwards in their terminal tabs. To remove the cluster as well:

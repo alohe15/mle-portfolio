@@ -52,6 +52,8 @@ Recorded after the image was pinned and rolled out, and before any release fault
 
 The image ID above is the OCI index digest. The config digest is the image config blob, and that is the identity that stays put across a retag. The pod imageID is the digest Kind stored when the image was imported.
 
+The recorded image ID and pod imageID come from the original build on the author's machine and will differ on any rebuild. Identity for another checkout is the checks in [docs/kubernetes_runbook.md](kubernetes_runbook.md): image inputs match `a7555b2`, artifact checksums verified at startup, `kubectl diff` clean, and the golden request within tolerance.
+
 Score tolerance: absolute difference <= 1e-6 on `fraud_probability`, and the action must match exactly. Status: proposed, pending mentor approval.
 
 Restoration command, written before any fault:
@@ -59,3 +61,11 @@ Restoration command, written before any fault:
 ```bash
 kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
 ```
+
+## Re-pin after Phase 11
+
+The current manifest tag is `fraud-api:9789b59`. Phase 11 changed `scripts/drills/release_incident.sh` and `scripts/prediction_batch_report.py`. Both are copied into the image because the Dockerfile copies `scripts/` whole, so the pin moved from `fraud-api:a7555b2` to the last commit that changed an image input.
+
+Rolled out on 2026-11-17. Pod `fraud-api-69f7598b8d-2jkkn` imageID `docker.io/library/import-2026-11-17@sha256:48b49a41aac71113d64846ef616aede8f1a2592efaa808c190b9984a0d4193d3`. Golden through the Service was unchanged: `fraud_probability` `0.005580357142857143`, action `approve`.
+
+The incident drills ran against `fraud-api:a7555b2`. The restoration command is unchanged.

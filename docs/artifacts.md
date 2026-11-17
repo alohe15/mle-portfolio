@@ -92,24 +92,39 @@ are not registry artifact paths and are not copied by `Dockerfile`).
 ## Fresh clone
 
 1. Clone the repo. You get configs, the manifest, metrics, `models/registry.json`, `artifacts.sha256`, and `artifacts.serving.sha256`. You do not get the three gitignored binaries or the parquets.
-2. Either run the scripts below, or copy the three binaries from the model owner. Place them at the paths in the table. Do not rename them.
+2. Serving binaries, required to build the image. Either train them, or copy them from a source tree. `SRC` is that tree (for example a teammate's working copy). Do not rename the files.
    ```bash
    python scripts/build_dataset.py --config configs/dataset_v5.json
    python scripts/train.py --config configs/lgbm_v9.json
    python evals/calibrate.py
    ```
    Training rewrites the booster, the fitted-transforms pickle, the manifest, and the metrics. After a retrain the digests change; update `artifacts.sha256`, `artifacts.serving.sha256`, and this document from the new files. Do not reuse a version number.
-3. Confirm every digest before building:
+
+   Or copy the three binaries only:
+   ```bash
+   SRC=/path/to/artifact/source
+   cp "$SRC/models/lgbm_v9_optuna_tuning.txt" models/lgbm_v9_optuna_tuning.txt
+   cp "$SRC/models/lgbm_v9_optuna_tuning_fitted_transforms.pkl" models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+   cp "$SRC/models/lgbm_v9_calibrator.pkl" models/lgbm_v9_calibrator.pkl
+   ```
+3. Parquets, needed only for the in-container parity test. They are not baked into the image.
+   ```bash
+   SRC=/path/to/artifact/source
+   mkdir -p data/processed data/raw
+   cp "$SRC/data/processed/dataset_v5_dn_only.parquet" data/processed/dataset_v5_dn_only.parquet
+   cp "$SRC/data/raw/train_merged.parquet" data/raw/train_merged.parquet
+   ```
+4. Confirm every digest before building:
    ```bash
    shasum -a 256 -c artifacts.sha256
    shasum -a 256 -c artifacts.serving.sha256
    ```
-4. Build the serving image (lean: no pytest, no `tests/`, no `data/`):
+5. Build the serving image (lean: no pytest, no `tests/`, no `data/`):
    ```bash
    docker compose build fraud-api
    ```
-5. Run training-vs-serving parity and the endpoint tests inside the test image:
+6. Run the in-container tests:
    ```bash
    docker compose run --rm test
    ```
-   That service builds `Dockerfile.test`, which extends the serving image, installs `requirements-test.txt` (`pytest`, `httpx`), copies `tests/`, and mounts `data/` read-only. It also copies `configs/lgbm_v9.json`, which the parity test needs to rebuild the temporal split and which the serving image does not carry. The command is `python -m pytest tests/test_training_serving_parity.py tests/test_api_endpoint.py -v`.
+   That service builds `Dockerfile.test`, which extends the serving image, installs `requirements-test.txt` (`pytest`, `httpx`), copies `tests/`, and mounts `data/` read-only. It also copies `configs/lgbm_v9.json`, which the parity test needs to rebuild the temporal split and which the serving image does not carry. The test list is the `command` on the `test` service in `docker-compose.yml`.

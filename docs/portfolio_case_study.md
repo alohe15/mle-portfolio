@@ -17,14 +17,14 @@ flowchart LR
   pod --> logs[structured logs]
   prom[Prometheus Pod discovery] --> pod
   prom --> grafana[Grafana dashboard]
-  artifacts[models configs artifacts.serving.sha256 image fraud-api a7555b2] --> pod
+  artifacts[models configs artifacts.serving.sha256 image fraud-api 9789b59] --> pod
 ```
 
-The image in the diagram is `fraud-api:a7555b2` [deploy/k8s/local/deployment.yaml], and the model is v9 [docs/release_baseline.md]. The API pod loads `models/`, `configs/`, and `artifacts.serving.sha256` at startup and checks those checksums before it serves [docs/artifacts.md]. Prometheus discovers the pod and Grafana reads Prometheus. k6 sends synthetic posts to the Service.
+The image in the diagram is `fraud-api:9789b59` [deploy/k8s/local/deployment.yaml], and the model is v9 [docs/release_baseline.md]. The API pod loads `models/`, `configs/`, and `artifacts.serving.sha256` at startup and checks those checksums before it serves [docs/artifacts.md]. Prometheus discovers the pod and Grafana reads Prometheus. k6 sends synthetic posts to the Service.
 
 ## Frozen release
 
-The cluster manifest pins image `fraud-api:a7555b2` [deploy/k8s/local/deployment.yaml], one replica [deploy/k8s/local/deployment.yaml], requests 250m CPU and 768Mi memory, limits 500m CPU and 1Gi memory [deploy/k8s/local/deployment.yaml]. The recovery baseline records that tag, code commit `a7555b2`, and golden `fraud_probability` 0.005580357142857143 with action `approve` [docs/release_baseline.md]. The allowed score difference is an absolute 1e-6, and that tolerance is still proposed, pending mentor approval [docs/release_baseline.md]. Deployment revision before any fault was 6 [docs/release_baseline.md]. `UVICORN_WORKERS` is 1 [deploy/k8s/local/configmap.yaml]. The container command does not read that value, so the pod is one process [docs/metrics.md].
+The cluster manifest pins image `fraud-api:9789b59` [deploy/k8s/local/deployment.yaml], one replica [deploy/k8s/local/deployment.yaml], requests 250m CPU and 768Mi memory, limits 500m CPU and 1Gi memory [deploy/k8s/local/deployment.yaml]. The Phase 11 recovery baseline recorded image `fraud-api:a7555b2` and code commit `a7555b2`, and golden `fraud_probability` 0.005580357142857143 with action `approve` [docs/release_baseline.md]. The allowed score difference is an absolute 1e-6, and that tolerance is still proposed, pending mentor approval [docs/release_baseline.md]. Deployment revision before any fault was 6 [docs/release_baseline.md]. `UVICORN_WORKERS` is 1 [deploy/k8s/local/configmap.yaml]. The container command does not read that value, so the pod is one process [docs/metrics.md].
 
 ## Monitoring
 
@@ -40,7 +40,7 @@ The 24 synthetic payloads are mostly `review`: approve 3, step_up 0, review 21, 
 
 ### Release
 
-The drill patched only the live readiness path. `kubectl rollout status` was bounded at 90s [scripts/drills/release_incident.sh] and exited 1 [docs/evidence/phase11/release_incident.log]. The new pod was not ready. Its readiness probe returned HTTP 404 on an unmatched route [docs/evidence/phase11/release_incident.log]. Endpoints stayed on the old pod, and the golden request id was in that pod's logs and absent from the new pod [docs/evidence/phase11/release_incident.log]. The Service golden score during the fault was still 0.005580357142857143 [docs/evidence/phase11/release_incident.log].
+The drill patched only the live readiness path. `kubectl rollout status` was bounded at 90s [scripts/drills/release_incident.sh] and exited 1 [docs/evidence/phase11/release_incident.log]. The new pod was not ready. Its readiness probe returned HTTP 404 on an unmatched route [docs/evidence/phase11/release_incident.log]. Endpoints stayed on the old pod, and the golden request id was in that pod's logs and absent from the new pod [docs/evidence/phase11/release_incident.log]. The Service golden score during the fault was still 0.005580357142857143 [docs/evidence/phase11/release_incident.log]. Background k6 traffic (1 VU, 300s) recorded 0 HTTP failures and 0 semantic failures across 1780 requests through the fault and the restore [docs/evidence/phase11/drill-traffic.summary.json].
 
 Restore was `kubectl apply` of the committed manifest, then a rollout status wait [docs/release_baseline.md]. After that, the image was `fraud-api:a7555b2`, `kubectl diff` exited 0, the golden score matched 0.005580357142857143, and the log says `RECOVERY VERIFIED` [docs/evidence/phase11/release_incident.log]. The revision in that log moved from 8 to 10 [docs/evidence/phase11/release_incident.log]. The recorded total from fault injection to that check was 94 seconds [docs/evidence/phase11/release_incident.log]. That total is the 90s wait [scripts/drills/release_incident.sh] plus the checks, not a measured repair time.
 
@@ -60,7 +60,7 @@ The main tradeoff is one uvicorn process at a 500m CPU limit [deploy/k8s/local/d
 
 (a) One process at 500m keeps the Prometheus metrics inside that process and holds the baseline RSS to 320.1 MiB [docs/load_test.md]. The same runs show the process is CPU-bound: peak CPU was 0.501 cores against the 500m limit [docs/load_test.md]. Five users at that limit produced 4.533 req/s, which the findings state as 4.5 req/s, and the 1000m run produced 9.983 req/s, which the findings state as 10.0 req/s [docs/load_test.md]. Adding workers would split those counters per process and would need Prometheus multiprocess mode [docs/metrics.md].
 
-(b) Model artifacts are copied into the image and checked against `artifacts.serving.sha256` before the model loads [docs/artifacts.md]. That makes a running pod match the checksummed files. The image is about 426 MB [docs/kubernetes_runbook.md], and any artifact change means a new image.
+(b) Model artifacts are copied into the image and checked against `artifacts.serving.sha256` before the model loads [docs/artifacts.md]. That makes a running pod match the checksummed files. The image is about 426 MB [docs/kubernetes_runbook.md], and any artifact change means a new image. Because the whole `scripts/` directory is copied into the image, a change to a non-serving script forces a re-pin; copying only the files the API imports would avoid that.
 
 (c) The kind cluster is one node, `fraud-local-control-plane`, and that node runs k6, the API, Prometheus, and Grafana [docs/load_test.md]. The setup is cheap to recreate from the runbooks. The rates above are laptop measurements, and they do not transfer to a production cluster.
 
@@ -70,8 +70,8 @@ The main tradeoff is one uvicorn process at a 500m CPU limit [deploy/k8s/local/d
 
 Alert on rollout health, including a Deployment that is stuck or not progressing. The release drill left the old pod serving, the prediction error ratios did not move, and the dashboard looked normal while the rollout had already failed its bounded wait.
 
-Build the image in CI, push it to a registry, and deploy by digest. The local cluster is loaded with `kind load` and pinned by the tag `fraud-api:a7555b2` [docs/kubernetes_runbook.md]. A digest in the manifest would be the identity a registry deploy can check.
+Build the image in CI, push it to a registry, and deploy by digest. The local cluster is loaded with `kind load` and pinned by the tag `fraud-api:9789b59` [deploy/k8s/local/deployment.yaml]. A digest in the manifest would be the identity a registry deploy can check.
 
 ## Limitations
 
-Traffic is synthetic [docs/load_test.md]. The Deployment is a single replica [deploy/k8s/local/deployment.yaml]. Alerting is not set up [docs/operations.md]. There are no real labels. The batch demo uses simulated labels for 10 of 24 rows [docs/model_monitoring.md]. Local Compose builds still use the tag `fraud-api:latest` [docker-compose.yml], while the cluster manifest pins `fraud-api:a7555b2` [deploy/k8s/local/deployment.yaml]. The score tolerance of 1e-6 is proposed and pending mentor approval [docs/release_baseline.md]. The artifact handoff is written in [docs/artifacts.md](artifacts.md) and has not had an independent check.
+Traffic is synthetic [docs/load_test.md]. The Deployment is a single replica [deploy/k8s/local/deployment.yaml]. Alerting is not set up [docs/operations.md]. There are no real labels. The batch demo uses simulated labels for 10 of 24 rows [docs/model_monitoring.md]. Local Compose builds still use the tag `fraud-api:latest` [docker-compose.yml], while the cluster manifest pins `fraud-api:9789b59` [deploy/k8s/local/deployment.yaml]. The score tolerance of 1e-6 is proposed and pending mentor approval [docs/release_baseline.md]. The artifact handoff is written in [docs/artifacts.md](artifacts.md) and has not had an independent check.
