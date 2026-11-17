@@ -3,6 +3,8 @@
 LightGBM binary classifier predicting e-commerce transaction fraud probability.
 Config-driven training, versioned datasets, temporal splits, FastAPI serving.
 
+Portfolio write-up: [docs/portfolio_case_study.md](docs/portfolio_case_study.md).
+
 ## Current serving model
 
 lgbm_v9 on dataset_v5 (Dn-only, 464 features) — test AUC-PR 0.5952
@@ -78,35 +80,17 @@ uvicorn services.api.app:app --host 0.0.0.0 --port 8000
 
 Returns `{"fraud_probability": float, "model_version": 9, "dataset_version": 5}`.
 
-## Docker
+## Running the service end to end
 
-```bash
-# Build the API image
-docker compose build fraud-api
+Model binaries and data are never committed; see [docs/artifacts.md](docs/artifacts.md).
 
-# Run the API
-docker compose up fraud-api
-
-# In another terminal — check endpoints
-curl http://localhost:8000/livez
-curl http://localhost:8000/readyz
-curl http://localhost:8000/health
-
-# Run tests inside Docker
-docker compose build test
-docker compose run --rm test
-
-# Focused release tests only
-docker compose run --rm test python -m pytest \
-  tests/test_monitoring_schema.py \
-  tests/test_fixture_models.py \
-  tests/test_serving_checksum_manifest.py \
-  tests/test_training_serving_parity.py \
-  -q
-
-# Cleanup
-docker compose down
-```
+1. Artifact setup. [docs/artifacts.md](docs/artifacts.md) says how to get the gitignored binaries and how to verify checksums (`artifacts.sha256` and `artifacts.serving.sha256`).
+2. Release checks. [docs/container_runbook.md](docs/container_runbook.md) and [docs/release_evidence.md](docs/release_evidence.md): build the image, run the in-container tests, and run the smoke test.
+3. Local Kubernetes. [docs/kubernetes_runbook.md](docs/kubernetes_runbook.md). The cluster image tag is pinned to `fraud-api:a7555b2`.
+4. Monitoring. [docs/operations.md](docs/operations.md).
+5. Load tests. [docs/load_test.md](docs/load_test.md).
+6. Recovery drills. [docs/incidents.md](docs/incidents.md) and [scripts/drills/](scripts/drills/).
+7. Cleanup. [Container shutdown](docs/container_runbook.md#shutdown), [monitoring cleanup](docs/operations.md#11-cleanup), and [cluster teardown](docs/kubernetes_runbook.md#8-teardown).
 
 ## Further documentation
 
