@@ -20,6 +20,14 @@ section() {
   echo "=== $(date -u +%Y-%m-%dT%H:%M:%SZ) $1 ==="
 }
 
+dashboard_snapshot() {
+  if [[ "${DASHBOARD_SNAPSHOT:-}" != "1" ]]; then
+    return 0
+  fi
+  section "DASHBOARD $1"
+  python3 scripts/check_dashboard_queries.py
+}
+
 running_pod() {
   kubectl -n "$NS" get pods -l app=fraud-api --field-selector=status.phase=Running \
     -o jsonpath='{.items[0].metadata.name}'
@@ -79,6 +87,7 @@ echo "fraud_probability: ${BASE_SCORE}"
 echo "recommended_action: ${BASE_ACTION}"
 echo "X-Request-ID: ${BASE_REQUEST_ID}"
 echo "restoration command: ${RESTORE_CMD}"
+dashboard_snapshot "BASELINE"
 
 section "INJECT"
 T0="$(date -u +%s)"
@@ -89,6 +98,7 @@ kubectl -n "$NS" patch deployment fraud-api --type=json \
 section "OBSERVE"
 kubectl -n "$NS" rollout status deployment/fraud-api --timeout=90s
 echo "rollout status exit code: $?"
+dashboard_snapshot "DURING"
 echo "pods:"
 kubectl -n "$NS" get pods -l app=fraud-api -o wide
 echo "replica sets:"
@@ -229,6 +239,7 @@ if abs(now - base) <= 1e-6 and now_action == base_action:
 else:
     print("RECOVERY FAILED")
 PY
+dashboard_snapshot "AFTER"
 NOW_REVISION="$(kubectl -n "$NS" get deploy fraud-api -o jsonpath='{.metadata.annotations.deployment\.kubernetes\.io/revision}')"
 echo "deployment revision: ${NOW_REVISION}"
 kubectl -n "$NS" rollout history deployment/fraud-api

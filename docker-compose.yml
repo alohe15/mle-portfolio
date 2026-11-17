@@ -25,6 +25,7 @@ services:
     image: fraud-api:test
     volumes:
       - ./data:/app/data:ro
+      - ./deploy/k8s/local/deployment.yaml:/app/deploy/k8s/local/deployment.yaml:ro
     working_dir: /app
     command:
       - python
@@ -35,5 +36,6 @@ services:
       - tests/test_observability.py
       - tests/test_metrics.py
       - tests/test_batch_report.py
+      - tests/test_k8s_probe_paths.py
       - tests/test_fault_double.py
       - -v

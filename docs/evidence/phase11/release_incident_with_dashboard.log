@@ -1,0 +1,151 @@
+
+=== 2026-11-16T23:55:22Z BASELINE ===
+pod: fraud-api-89f7dff65-s55dn
+pod IP: 10.244.0.23
+ready: true
+image: fraud-api:a7555b2
+imageID: docker.io/library/import-2026-11-16@sha256:d8de616b56cf92ef76ec0a5f08e4ef1ce84989bd864bbeb3c563f77d79aae66a
+deployment revision: 10
+replica set: fraud-api-89f7dff65
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.23:8000   7d2h
+golden via the Service:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: 3a726666-9570-486c-89cd-84ce93b69b94
+restoration command: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+
+=== 2026-11-16T23:55:25Z DASHBOARD BASELINE ===
+Prediction volume	POST /predict	2.7553718640979494
+Client error ratio (4xx)	4xx	0
+Server error ratio (5xx)	5xx	0
+Latency, successful predictions	p50	0.193
+Latency, successful predictions	p95	0.6799999999999989
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 16.842164358471436; {action="step_up"} 0; {action="review"} 113.68460941968219; {action="decline"} 0
+
+=== 2026-11-16T23:55:25Z INJECT ===
+T0: 2026-11-16T23:55:25Z
+deployment.apps/fraud-api patched
+
+=== 2026-11-16T23:55:25Z OBSERVE ===
+Waiting for deployment "fraud-api" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "fraud-api" rollout to finish: 1 old replicas are pending termination...
+error: timed out waiting for the condition
+rollout status exit code: 1
+
+=== 2026-11-16T23:56:56Z DASHBOARD DURING ===
+Prediction volume	POST /predict	6.044578768417076
+Client error ratio (4xx)	4xx	0
+Server error ratio (5xx)	5xx	0
+Latency, successful predictions	p50	0.18242981640851852
+Latency, successful predictions	p95	0.41470664461004136
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 81.05348477352393; {action="step_up"} 0; {action="review"} 567.3743934146675; {action="decline"} 0
+pods:
+NAME                         READY   STATUS    RESTARTS   AGE   IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-75c44c8f45-csfvg   0/1     Running   0          91s   10.244.0.27   fraud-local-control-plane   <none>           <none>
+fraud-api-89f7dff65-s55dn    1/1     Running   0          99m   10.244.0.23   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-754c9d9c84   0         0         <none>
+fraud-api-75c44c8f45   1         1         <none>
+fraud-api-75d945d867   0         0         <none>
+fraud-api-79574cd964   0         0         <none>
+fraud-api-89f7dff65    1         1         1
+fraud-api-c65dfc4f5    0         0         <none>
+old replica set: fraud-api-89f7dff65
+new pod: fraud-api-75c44c8f45-csfvg
+new replica set: fraud-api-75c44c8f45
+events for fraud-api-75c44c8f45-csfvg, sorted by creation time, Readiness or Unhealthy:
+3s          Warning   Unhealthy           pod/fraud-api-75c44c8f45-csfvg    Readiness probe failed: HTTP probe failed with statuscode: 404
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.23:8000   7d2h
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.23
+endpoints contain only the old pod IP
+golden via the Service, exec from fraud-api-75c44c8f45-csfvg:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: ff606fed-4800-4980-83fe-9d23dac69b57
+request_id ff606fed-4800-4980-83fe-9d23dac69b57 is in fraud-api-89f7dff65-s55dn logs; this pod served it
+request_id ff606fed-4800-4980-83fe-9d23dac69b57 is not in fraud-api-75c44c8f45-csfvg logs
+The probe now hits an unmatched route, so the new pod's logs show route "unmatched" 404s.
+{"event": "request_completed", "timestamp": "2026-11-16T23:55:42.585695+00:00", "request_id": "b54da588-0a77-4850-aeac-e4938b5f92a9", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 0.823, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+{"event": "request_completed", "timestamp": "2026-11-16T23:55:47.585386+00:00", "request_id": "d3ae760a-93c7-40b2-a70a-7cc1fcc08319", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 0.825, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+
+=== 2026-11-16T23:56:58Z RESTORE ===
+T1: 2026-11-16T23:56:58Z
+running: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+deployment.apps/fraud-api configured
+Waiting for deployment "fraud-api" rollout to finish: 1 old replicas are pending termination...
+deployment "fraud-api" successfully rolled out
+
+=== 2026-11-16T23:56:58Z VERIFY ===
+waiting until the broken pod is gone
+pods:
+NAME                        READY   STATUS    RESTARTS   AGE   IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-89f7dff65-s55dn   1/1     Running   0          99m   10.244.0.23   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-754c9d9c84   0         0         <none>
+fraud-api-75c44c8f45   0         0         <none>
+fraud-api-75d945d867   0         0         <none>
+fraud-api-79574cd964   0         0         <none>
+fraud-api-89f7dff65    1         1         1
+fraud-api-c65dfc4f5    0         0         <none>
+running ready pods: 1
+broken replica set fraud-api-75c44c8f45 desired replicas: 0
+pod: fraud-api-89f7dff65-s55dn
+pod IP: 10.244.0.23
+image: fraud-api:a7555b2
+imageID: docker.io/library/import-2026-11-16@sha256:d8de616b56cf92ef76ec0a5f08e4ef1ce84989bd864bbeb3c563f77d79aae66a
+baseline imageID: docker.io/library/import-2026-11-16@sha256:d8de616b56cf92ef76ec0a5f08e4ef1ce84989bd864bbeb3c563f77d79aae66a
+readinessProbe path: /readyz
+image matches fraud-api:a7555b2
+imageID matches the baseline imageID
+readinessProbe path is /readyz
+kubectl diff exit code: 0
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.23:8000   7d2h
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.23
+endpoints list the ready pod IP
+fraud_probability: 0.005580357142857143
+baseline fraud_probability: 0.005580357142857143
+recommended_action: approve
+baseline recommended_action: approve
+X-Request-ID: 9f66efc9-85da-4f6c-a6cc-94203731c15e
+RECOVERY VERIFIED
+
+=== 2026-11-16T23:57:03Z DASHBOARD AFTER ===
+Prediction volume	POST /predict	6.044578768417076
+Client error ratio (4xx)	4xx	0
+Server error ratio (5xx)	5xx	0
+Latency, successful predictions	p50	0.1822064056939502
+Latency, successful predictions	p95	0.41111111111111076
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 81.05348477352393; {action="step_up"} 0; {action="review"} 567.3743934146675; {action="decline"} 0
+deployment revision: 12
+deployment.apps/fraud-api 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+4         <none>
+5         <none>
+11        <none>
+12        <none>
+
+verified at: 2026-11-16T23:57:04Z
+total seconds from T0 to verified recovery: 99
