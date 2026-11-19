@@ -1,0 +1,982 @@
+=== 2026-11-19T16:51:06Z STEP 0 audit ~/mle-portfolio ===
+pwd=/Users/arnavlohe/mle-portfolio
+--- git status --short ---
+--- git log --oneline -1 ---
+0edf624 Phase 11: self-check runbook fixes; tag derived from image inputs with a manifest guard; re-pin after Phase 11 script changes
+--- docker ---
+docker-ok
+--- kind clusters ---
+fraud-local
+--- fraud-local pods ---
+NAME                         READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-69f7598b8d-2jkkn   1/1     Running   0          2d15h   10.244.0.12   fraud-local-control-plane   <none>           <none>
+--- monitoring pods ---
+NAME                          READY   STATUS    RESTARTS   AGE     IP           NODE                        NOMINATED NODE   READINESS GATES
+grafana-784c94d9cd-6czs5      1/1     Running   0          2d16h   10.244.0.9   fraud-local-control-plane   <none>           <none>
+prometheus-7b598c448d-kl2tp   1/1     Running   0          2d16h   10.244.0.8   fraud-local-control-plane   <none>           <none>
+--- listeners 8000/9090/3000 ---
+COMMAND     PID      USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+com.docke 34158 arnavlohe  157u  IPv6 0xef73737358e28ea4      0t0  TCP *:8000 (LISTEN)
+kubectl   85868 arnavlohe   10u  IPv4 0x258367a9c1adf706      0t0  TCP 127.0.0.1:8000 (LISTEN)
+kubectl   85868 arnavlohe   11u  IPv6 0xb2e9f08fc422f252      0t0  TCP [::1]:8000 (LISTEN)
+COMMAND   PID      USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+kubectl 85570 arnavlohe   10u  IPv4 0x28f39e3d15c636ff      0t0  TCP 127.0.0.1:9090 (LISTEN)
+kubectl 85570 arnavlohe   11u  IPv6 0x4e5b130480cad122      0t0  TCP [::1]:9090 (LISTEN)
+=== 2026-11-19T16:51:08Z STEP 0 done ===
+=== 2026-11-19T16:51:43Z PART A checkout ===
+--- docker ps port 8000 holder ---
+CONTAINER ID   IMAGE                  NAMES                           PORTS                                         STATUS
+22348ba010e1   kindest/node:v1.37.0   fraud-local-control-plane       127.0.0.1:58312->6443/tcp                     Up 2 days
+a123e336eebc   98151f08e4aa           mle-handoff-check-fraud-api-1   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp   Up 2 days (healthy)
+pwd=/Users/arnavlohe/mle-handoff-check
+From https://github.com/alohe15/mle-portfolio
+   0a0ab35..0edf624  pr/phase11-recovery -> origin/pr/phase11-recovery
+Already on 'pr/phase11-recovery'
+Your branch is behind 'origin/pr/phase11-recovery' by 1 commit, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+Updating 0a0ab35..0edf624
+Fast-forward
+ README.md                        |  8 +++----
+ deploy/k8s/local/deployment.yaml |  2 +-
+ docs/artifacts.md                | 25 ++++++++++++++++-----
+ docs/container_runbook.md        | 24 ++++++++------------
+ docs/incidents.md                | 47 ++++++++++++++++++++++++++++++++++++++++
+ docs/kubernetes_runbook.md       | 18 ++++++++++-----
+ docs/operations.md               | 15 ++++++++++---
+ docs/portfolio_case_study.md     | 14 ++++++------
+ docs/release_baseline.md         | 10 +++++++++
+ docs/release_evidence.md         |  2 ++
+ 10 files changed, 125 insertions(+), 40 deletions(-)
+--- handoff HEAD ---
+0edf624 Phase 11: self-check runbook fixes; tag derived from image inputs with a manifest guard; re-pin after Phase 11 script changes
+=== 2026-11-19T16:52:26Z 1 artifacts copy and checksums ===
+SRC=/Users/arnavlohe/mle-portfolio
+--- shasum artifacts.sha256 ---
+models/lgbm_v9_optuna_tuning.txt: OK
+models/lgbm_v9_optuna_tuning_fitted_transforms.pkl: OK
+models/lgbm_v9_calibrator.pkl: OK
+models/lgbm_v9_optuna_tuning_manifest.json: OK
+models/lgbm_v9_optuna_tuning_metrics.json: OK
+configs/lgbm_v9.json: OK
+configs/dataset_v5.json: OK
+configs/decision_policy_v1.json: OK
+data/processed/dataset_v5_dn_only_manifest.json: OK
+sha256 exit:0
+--- shasum artifacts.serving.sha256 ---
+models/registry.json: OK
+models/lgbm_v9_optuna_tuning_manifest.json: OK
+models/lgbm_v9_optuna_tuning.txt: OK
+models/lgbm_v9_optuna_tuning_fitted_transforms.pkl: OK
+models/lgbm_v9_calibrator.pkl: OK
+configs/lgbm_v9.json: OK
+configs/dataset_v1.json: OK
+configs/dataset_v2.json: OK
+configs/dataset_v3.json: OK
+configs/dataset_v5.json: OK
+configs/decision_policy_v1.json: OK
+serving sha256 exit:0
+=== 2026-11-19T16:52:28Z 1 done ===
+=== 2026-11-19T16:52:28Z 2 container_runbook Build ===
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.10kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim
+#2 DONE 0.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 618B done
+#3 DONE 0.0s
+
+#4 [ 1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#4 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 251.41MB 3.3s done
+#5 DONE 3.3s
+
+#6 [ 3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [ 2/20] WORKDIR /app
+#7 CACHED
+
+#8 [13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#8 CACHED
+
+#9 [10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#9 CACHED
+
+#10 [15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#10 CACHED
+
+#11 [ 8/20] COPY services/ services/
+#11 CACHED
+
+#12 [ 9/20] COPY evals/ evals/
+#12 CACHED
+
+#13 [ 7/20] COPY scripts/ scripts/
+#13 CACHED
+
+#14 [11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#14 CACHED
+
+#15 [18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#15 CACHED
+
+#16 [ 4/20] COPY requirements.txt .
+#16 CACHED
+
+#17 [12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#17 CACHED
+
+#18 [14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#18 CACHED
+
+#19 [16/20] COPY models/registry.json models/registry.json
+#19 CACHED
+
+#20 [17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#20 CACHED
+
+#21 [19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#21 CACHED
+
+#22 [ 5/20] RUN pip install --no-cache-dir -r requirements.txt
+#22 CACHED
+
+#23 [ 6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#23 CACHED
+
+#24 [20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#24 CACHED
+
+#25 exporting to image
+#25 exporting layers done
+#25 exporting manifest sha256:3d1140ae11f20e14887dce88b5275c99bdae65a6085ee8adb75dd58285c87abf done
+#25 exporting config sha256:fc91cde58bdf6f0c8c4d3971506f67786af0cceb9178fb3f2aac0d0f254513e4 done
+#25 exporting attestation manifest sha256:ef906851ab76537052b27f8393e362f41676306e36c6973e1b71322336365233 done
+#25 exporting manifest list sha256:6265d814cbe673c539bce21131f1a032d1f748b760842e8bc814af5f5d43a87e done
+#25 naming to docker.io/library/fraud-api:latest done
+#25 unpacking to docker.io/library/fraud-api:latest 0.0s done
+#25 DONE 0.1s
+docker build exit:0
+IMAGE               ID             DISK USAGE   CONTENT SIZE   EXTRA
+fraud-api:9789b59   72285184e20e       1.79GB          428MB        
+fraud-api:9b53475   e731d03cde8a       1.79GB          426MB        
+fraud-api:a7555b2   12907e952230       1.79GB          428MB   U    
+fraud-api:latest    6265d814cbe6       1.79GB          428MB        
+fraud-api:test      d57d2a4662ee       1.81GB          432MB   U    
+=== 2026-11-19T16:52:33Z 2 done ===
+=== 2026-11-19T16:52:46Z clear leftover port 8000 holders from 2026-11-17 ===
+These are not documented commands. They remove the compose container and kubectl port-forward left running after the first self-check so localhost:8000 is free for the runbook.
+ Container mle-handoff-check-fraud-api-1 Stopping 
+ Container mle-handoff-check-test-1 Stopping 
+ Container mle-handoff-check-test-1 Stopped 
+ Container mle-handoff-check-test-1 Removing 
+ Container mle-handoff-check-test-1 Removed 
+ Container mle-handoff-check-fraud-api-1 Stopped 
+ Container mle-handoff-check-fraud-api-1 Removing 
+ Container mle-handoff-check-fraud-api-1 Removed 
+ Network mle-handoff-check_default Removing 
+ Network mle-handoff-check_default Removed 
+compose down exit:0
+stopped leftover kubectl pid 85868
+port 8000 free
+=== 2026-11-19T16:52:51Z 3 compose up --wait and smoke ===
+ Network mle-handoff-check_default Creating 
+ Network mle-handoff-check_default Creating 
+ Network mle-handoff-check_default Created 
+ Network mle-handoff-check_default Created 
+ Container mle-handoff-check-fraud-api-1 Creating 
+ Container mle-handoff-check-fraud-api-1 Created 
+ Container mle-handoff-check-fraud-api-1 Starting 
+ Container mle-handoff-check-fraud-api-1 Started 
+ Container mle-handoff-check-fraud-api-1 Waiting 
+ Container mle-handoff-check-fraud-api-1 Healthy 
+compose up exit:0
+NAME                            IMAGE              COMMAND                  SERVICE     CREATED         STATUS                   PORTS
+mle-handoff-check-fraud-api-1   fraud-api:latest   "uvicorn services.ap…"   fraud-api   6 seconds ago   Up 5 seconds (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+=== Smoke Test: Health (http://localhost:8000/health) ===
+  HTTP 200
+  body: {"status":"healthy","model_version":"v9","dataset_version":5,"model_loaded":true}
+  PASS: health HTTP 200
+  PASS: health has model_version
+  PASS: health has dataset_version
+
+=== Smoke Test: Liveness (http://localhost:8000/livez) ===
+  HTTP 200
+  body: {"status":"alive"}
+  PASS: livez HTTP 200
+  PASS: livez body contains alive
+
+=== Smoke Test: Readiness (http://localhost:8000/readyz) ===
+  HTTP 200
+  body: {"status":"ready","model_version":"v9","dataset_version":5,"model_loaded":true}
+  PASS: readyz HTTP 200
+  PASS: readyz body contains ready
+  PASS: readyz has model_version
+
+=== Smoke Test: Predict (http://localhost:8000/predict) ===
+  HTTP 200
+  body: {"fraud_probability":0.005580357142857143,"recommended_action":"approve","action_costs":{"approve":1.4006696428571428,"step_up":6.660184151785715,"review":10.070033482142858,"decline":124.79966517857143},"model_version":"v9","dataset_version":5,"request_id":"3492b7f1-b4ff-4ad7-9024-c3e7bfff0c4a"}
+  PASS: predict HTTP 200
+  PASS: predict has fraud_probability
+  PASS: predict has recommended_action
+  PASS: predict has action_costs
+  PASS: predict has model_version
+  PASS: predict has dataset_version
+  PASS: predict has request_id
+
+=== Smoke Test: Validation Error (missing TransactionAmt) ===
+  HTTP 422
+  body: {"detail":[{"type":"missing","loc":["body","TransactionAmt"],"msg":"Field required"}],"request_id":"82178fd8-a354-44ce-825d-d5b3afe758ae"}
+  PASS: validation HTTP 422
+
+=== Summary: 16 passed, 0 failed ===
+=== All smoke tests passed ===
+smoke exit:0
+=== 2026-11-19T16:52:58Z 3 done ===
+=== 2026-11-19T16:53:11Z 4 docker compose run --rm test ===
+ Image fraud-api:latest Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.03kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.10kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 618B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 4.13kB done
+#5 DONE 0.0s
+
+#6 [ 1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#6 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 done
+#6 DONE 0.0s
+
+#7 [14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#7 CACHED
+
+#8 [ 5/20] RUN pip install --no-cache-dir -r requirements.txt
+#8 CACHED
+
+#9 [11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#9 CACHED
+
+#10 [19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#10 CACHED
+
+#11 [16/20] COPY models/registry.json models/registry.json
+#11 CACHED
+
+#12 [13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#12 CACHED
+
+#13 [17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#13 CACHED
+
+#14 [18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#14 CACHED
+
+#15 [ 2/20] WORKDIR /app
+#15 CACHED
+
+#16 [ 3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#16 CACHED
+
+#17 [12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#17 CACHED
+
+#18 [ 6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#18 CACHED
+
+#19 [ 8/20] COPY services/ services/
+#19 CACHED
+
+#20 [ 4/20] COPY requirements.txt .
+#20 CACHED
+
+#21 [10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#21 CACHED
+
+#22 [15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#22 CACHED
+
+#23 [ 7/20] COPY scripts/ scripts/
+#23 CACHED
+
+#24 [ 9/20] COPY evals/ evals/
+#24 CACHED
+
+#25 [20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#25 CACHED
+
+#26 exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:c8622e528d3c71bb47ec74608b09c1cf06b66d8ca4195b7d2a7a4f6a57f3bb19 done
+#26 exporting config sha256:c50310703804f091b34ac457bbdb6cdbc220356e4008400136154946e7d49073 done
+#26 exporting attestation manifest sha256:c286284df0d6433a88e92e9f01b8768a5f551b902585c236112be7c392a67dc7 done
+#26 exporting manifest list sha256:9a66a4fa24061cc7d39def44fe89f28eb84c49b183af09d39a779ec0c077e85c
+#26 exporting manifest list sha256:9a66a4fa24061cc7d39def44fe89f28eb84c49b183af09d39a779ec0c077e85c done
+#26 naming to docker.io/library/fraud-api:latest done
+#26 unpacking to docker.io/library/fraud-api:latest done
+#26 DONE 0.1s
+
+#27 resolving provenance for metadata file
+#27 DONE 0.0s
+ Image fraud-api:latest Built 
+ Container mle-handoff-check-test-run-fc09186b04fc Creating 
+ Container mle-handoff-check-test-run-fc09186b04fc Created 
+============================= test session starts ==============================
+platform linux -- Python 3.11.16, pytest-9.0.3, pluggy-1.7.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+plugins: anyio-4.16.0
+collecting ... collected 41 items
+
+tests/test_training_serving_parity.py::test_training_serving_parity PASSED [  2%]
+tests/test_api_endpoint.py::test_successful_prediction PASSED            [  4%]
+tests/test_api_endpoint.py::test_missing_transaction_amt_returns_422 PASSED [  7%]
+tests/test_api_endpoint.py::test_wrong_type_transaction_amt_returns_422 PASSED [  9%]
+tests/test_api_endpoint.py::test_extreme_near_zero_amount PASSED         [ 12%]
+tests/test_api_endpoint.py::test_extreme_large_amount PASSED             [ 14%]
+tests/test_api_endpoint.py::test_all_null_historical_features PASSED     [ 17%]
+tests/test_api_endpoint.py::test_unseen_categorical_productcd PASSED     [ 19%]
+tests/test_api_endpoint.py::test_health_endpoint PASSED                  [ 21%]
+tests/test_api_endpoint.py::test_livez_returns_200 PASSED                [ 24%]
+tests/test_api_endpoint.py::test_readyz_returns_200_when_loaded PASSED   [ 26%]
+tests/test_api_endpoint.py::test_negative_amount_returns_422 PASSED      [ 29%]
+tests/test_api_endpoint.py::test_response_has_no_raw_input_fields PASSED [ 31%]
+tests/test_api_endpoint.py::test_request_id_unique PASSED                [ 34%]
+tests/test_api_endpoint.py::test_action_costs_four_keys PASSED           [ 36%]
+tests/test_api_endpoint.py::test_dataset_version_present PASSED          [ 39%]
+tests/test_observability.py::test_valid_predict_logs_one_line_and_matching_request_id PASSED [ 41%]
+tests/test_observability.py::test_missing_transaction_amt_hides_input PASSED [ 43%]
+tests/test_observability.py::test_prediction_failure_hides_exception_message PASSED [ 46%]
+tests/test_observability.py::test_unknown_path_is_unmatched_and_omits_raw_path PASSED [ 48%]
+tests/test_observability.py::test_client_request_id_is_ignored PASSED    [ 51%]
+tests/test_metrics.py::test_metrics_endpoint_lists_families PASSED       [ 53%]
+tests/test_metrics.py::test_golden_predict_increments_request_and_action PASSED [ 56%]
+tests/test_metrics.py::test_validation_error_does_not_count_a_prediction PASSED [ 58%]
+tests/test_metrics.py::test_prediction_error_does_not_count_a_prediction PASSED [ 60%]
+tests/test_metrics.py::test_model_gauges_after_load PASSED               [ 63%]
+tests/test_metrics.py::test_metrics_text_omits_request_identifiers PASSED [ 65%]
+tests/test_metrics.py::test_prediction_action_labels_stay_finite PASSED  [ 68%]
+tests/test_metrics.py::test_predict_status_series_exist_before_traffic PASSED [ 70%]
+tests/test_batch_report.py::test_missing_labels_are_unavailable PASSED   [ 73%]
+tests/test_batch_report.py::test_partial_simulated_labels_do_not_fill_zero PASSED [ 75%]
+tests/test_batch_report.py::test_original_score_is_not_replaced_by_action PASSED [ 78%]
+tests/test_batch_report.py::test_invalid_score_is_counted_and_excluded_from_quantiles PASSED [ 80%]
+tests/test_batch_report.py::test_validate_batch_reports_every_missing_amount PASSED [ 82%]
+tests/test_batch_report.py::test_valid_batch_passes_validation PASSED    [ 85%]
+tests/test_batch_report.py::test_contract_requires_transaction_amount PASSED [ 87%]
+tests/test_batch_report.py::test_run_rejects_invalid_batch_with_no_posts PASSED [ 90%]
+tests/test_batch_report.py::test_http_422_message_keeps_type_and_loc_only PASSED [ 92%]
+tests/test_k8s_probe_paths.py::test_probe_paths_are_real_get_routes PASSED [ 95%]
+tests/test_fault_double.py::test_golden_request_hides_the_injected_failure PASSED [ 97%]
+tests/test_fault_double.py::test_readyz_stays_ready PASSED               [100%]
+
+=============================== warnings summary ===============================
+../usr/local/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /usr/local/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+../usr/local/lib/python3.11/site-packages/starlette/testclient.py:53
+  /usr/local/lib/python3.11/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 41 passed, 2 warnings in 54.28s ========================
+compose test exit:0
+=== 2026-11-19T16:54:12Z 4 done ===
+=== 2026-11-19T16:54:12Z 10 docker compose down before Kubernetes ===
+ Container mle-handoff-check-fraud-api-1 Stopping 
+ Container mle-handoff-check-fraud-api-1 Stopped 
+ Container mle-handoff-check-fraud-api-1 Removing 
+ Container mle-handoff-check-fraud-api-1 Removed 
+ Network mle-handoff-check_default Removing 
+ Network mle-handoff-check_default Removed 
+compose down exit:0
+port 8000 free
+=== 2026-11-19T16:54:16Z 10 done ===
+=== 2026-11-19T16:54:33Z 5 kubectl wait on existing cluster ===
+Cluster fraud-local already exists, so kind create was not run.
+2026-11-19T16:54:33Z
+NAME                        STATUS   ROLES           AGE     VERSION
+fraud-local-control-plane   Ready    control-plane   2d16h   v1.37.0
+2026-11-19T16:54:34Z
+node/fraud-local-control-plane condition met
+wait exit:0
+2026-11-19T16:54:34Z
+=== 2026-11-19T16:54:34Z 5 done ===
+=== 2026-11-19T16:54:34Z 6 tag guard, load, apply, rollout ===
+ Image fraud-api:latest Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 541B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.10kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 618B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 4.13kB 0.0s done
+#5 DONE 0.0s
+
+#6 [ 1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#6 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 0.0s done
+#6 DONE 0.0s
+
+#7 [14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#7 CACHED
+
+#8 [ 9/20] COPY evals/ evals/
+#8 CACHED
+
+#9 [ 3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#9 CACHED
+
+#10 [19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#10 CACHED
+
+#11 [ 5/20] RUN pip install --no-cache-dir -r requirements.txt
+#11 CACHED
+
+#12 [17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#12 CACHED
+
+#13 [13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#13 CACHED
+
+#14 [ 8/20] COPY services/ services/
+#14 CACHED
+
+#15 [12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#15 CACHED
+
+#16 [ 6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#16 CACHED
+
+#17 [15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#17 CACHED
+
+#18 [ 7/20] COPY scripts/ scripts/
+#18 CACHED
+
+#19 [10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#19 CACHED
+
+#20 [ 2/20] WORKDIR /app
+#20 CACHED
+
+#21 [11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#21 CACHED
+
+#22 [16/20] COPY models/registry.json models/registry.json
+#22 CACHED
+
+#23 [ 4/20] COPY requirements.txt .
+#23 CACHED
+
+#24 [18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#24 CACHED
+
+#25 [20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#25 CACHED
+
+#26 exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:c8622e528d3c71bb47ec74608b09c1cf06b66d8ca4195b7d2a7a4f6a57f3bb19 done
+#26 exporting config sha256:c50310703804f091b34ac457bbdb6cdbc220356e4008400136154946e7d49073 done
+#26 exporting attestation manifest sha256:0bdc56945e88521ea3c80eaec0e740bac49eb7a701313e33d9cb6703c3817389
+#26 exporting attestation manifest sha256:0bdc56945e88521ea3c80eaec0e740bac49eb7a701313e33d9cb6703c3817389 done
+#26 exporting manifest list sha256:0177c0e6cf7851d0beb0a6cf44e5d0e012dcdb321ec632cc7419b84d4cac5bc2 done
+#26 naming to docker.io/library/fraud-api:latest done
+#26 unpacking to docker.io/library/fraud-api:latest 0.0s done
+#26 DONE 0.1s
+
+#27 resolving provenance for metadata file
+#27 DONE 0.0s
+ Image fraud-api:latest Built 
+compose build exit:0
+TAG=9789b59
+guard passed for fraud-api:9789b59
+docker tag exit:0
+sha256:0177c0e6cf7851d0beb0a6cf44e5d0e012dcdb321ec632cc7419b84d4cac5bc2
+Image: "fraud-api:9789b59" with ID "sha256:0177c0e6cf7851d0beb0a6cf44e5d0e012dcdb321ec632cc7419b84d4cac5bc2" not yet present on node "fraud-local-control-plane", loading...
+kind load exit:0
+namespace/fraud-local unchanged
+configmap/fraud-api-config unchanged
+deployment.apps/fraud-api unchanged
+service/fraud-api unchanged
+deployment "fraud-api" successfully rolled out
+rollout exit:0
+NAME                         READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-69f7598b8d-2jkkn   1/1     Running   0          2d15h   10.244.0.12   fraud-local-control-plane   <none>           <none>
+=== 2026-11-19T16:54:46Z 6 done ===
+=== 2026-11-19T16:55:03Z 7 in-cluster curl -i ===
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+pod "curl-client" deleted from fraud-local namespace
+readyz curl exit:0
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+pod "curl-client" deleted from fraud-local namespace
+livez curl exit:0
+=== 2026-11-19T16:55:09Z 7 done ===
+=== 2026-11-19T16:55:41Z 7 retry curls outside a pipe ===
+=== 2026-11-19T16:55:55Z 7 readyz exact ===
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100     79 100     79   0      0  19329      0                              0100     79 100     79   0      0  19249      0                              0100     79 100     79   0      0  19221      0                              0
+{"status":"ready","model_version":"v9","dataset_version":5,"model_loaded":true}All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/curl-client, falling back to streaming logs: Internal error occurred: Internal error occurred: error attaching to container: container is in CONTAINER_EXITED state
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100     79 100     79   0      0  19329      0                              0100     79 100     79   0      0  19249      0                              0100     79 100     79   0      0  19221      0                              0
+{"status":"ready","model_version":"v9","dataset_version":5,"model_loaded":true}pod "curl-client" deleted from fraud-local namespace
+readyz exit:0
+=== 2026-11-19T16:56:06Z 7 livez exact ===
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100     18 100     18   0      0   1522      0                              0100     18 100     18   0      0   1520      0                              0100     18 100     18   0      0   1519      0                              0
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+pod "curl-client" deleted from fraud-local namespace
+livez exit:0
+=== 2026-11-19T16:56:08Z 7 done exact ===
+=== 2026-11-19T16:56:24Z 7 livez exact repeat ===
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100     18 100     18   0      0   4160      0                              0100     18 100     18   0      0   4144      0                              0100     18 100     18   0      0   4136      0                              0
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/curl-client, falling back to streaming logs: Internal error occurred: Internal error occurred: error attaching to container: container is in CONTAINER_EXITED state
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0100     18 100     18   0      0   4160      0                              0100     18 100     18   0      0   4144      0                              0100     18 100     18   0      0   4136      0                              0
+{"status":"alive"}pod "curl-client" deleted from fraud-local namespace
+livez repeat exit:0
+=== 2026-11-19T16:56:55Z 8 operations access listeners ===
+COMMAND   PID      USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+kubectl 85570 arnavlohe   10u  IPv4 0x28f39e3d15c636ff      0t0  TCP 127.0.0.1:9090 (LISTEN)
+kubectl 85570 arnavlohe   11u  IPv6 0x4e5b130480cad122      0t0  TCP [::1]:9090 (LISTEN)
+3000 free
+  PID     ELAPSED COMMAND
+85570 02-16:05:41 kubectl -n monitoring port-forward svc/prometheus 9090:9090
+=== 2026-11-19T16:56:59Z grafana port-forward start ===
+=== 2026-11-19T16:57:07Z 8 check_dashboard_queries ===
+Prometheus port-forward already running in its own process: pid 85570, command matches the runbook (kubectl -n monitoring port-forward svc/prometheus 9090:9090). Left it running.
+Grafana port-forward started as its own process because one foreground tab cannot run both port-forwards.
+Prediction volume	POST /predict	0
+Client error ratio (4xx)	4xx	EMPTY
+Server error ratio (5xx)	5xx	EMPTY
+Latency, successful predictions	p50	EMPTY
+Latency, successful predictions	p95	EMPTY
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 0; {action="step_up"} 0; {action="review"} 0; {action="decline"} 0
+dashboard script exit:0
+=== 2026-11-19T16:57:07Z 8 done ===
+=== 2026-11-19T16:57:17Z 9 release drill ===
+
+=== 2026-11-19T16:57:17Z BASELINE ===
+pod: fraud-api-69f7598b8d-2jkkn
+pod IP: 10.244.0.12
+ready: true
+image: fraud-api:9789b59
+imageID: docker.io/library/import-2026-11-17@sha256:48b49a41aac71113d64846ef616aede8f1a2592efaa808c190b9984a0d4193d3
+deployment revision: 4
+replica set: fraud-api-69f7598b8d
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.12:8000   2d16h
+golden via the Service:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: fb2e8abe-ccf1-45e5-bc1a-3cdded2f40bd
+restoration command: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+
+=== 2026-11-19T16:57:21Z INJECT ===
+T0: 2026-11-19T16:57:21Z
+deployment.apps/fraud-api patched
+
+=== 2026-11-19T16:57:21Z OBSERVE ===
+Waiting for deployment "fraud-api" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "fraud-api" rollout to finish: 1 old replicas are pending termination...
+error: timed out waiting for the condition
+rollout status exit code: 1
+pods:
+NAME                         READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-57fb4cb766-hd826   0/1     Running   0          90s     10.244.0.20   fraud-local-control-plane   <none>           <none>
+fraud-api-69f7598b8d-2jkkn   1/1     Running   0          2d15h   10.244.0.12   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-576fb8459b   0         0         <none>
+fraud-api-57fb4cb766   1         1         <none>
+fraud-api-5c6c787f54   0         0         <none>
+fraud-api-69f7598b8d   1         1         1
+old replica set: fraud-api-69f7598b8d
+new pod: fraud-api-57fb4cb766-hd826
+new replica set: fraud-api-57fb4cb766
+events for fraud-api-57fb4cb766-hd826, sorted by creation time, Readiness or Unhealthy:
+80s         Warning   Unhealthy           pod/fraud-api-57fb4cb766-hd826    Liveness probe failed: Get "http://10.244.0.20:8000/livez": dial tcp 10.244.0.20:8000: connect: connection refused
+1s          Warning   Unhealthy           pod/fraud-api-57fb4cb766-hd826    Readiness probe failed: HTTP probe failed with statuscode: 404
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.12:8000   2d16h
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.12
+endpoints contain only the old pod IP
+golden via the Service, exec from fraud-api-57fb4cb766-hd826:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: f6ad2775-cb2b-4774-96f2-878c3c68daf2
+request_id f6ad2775-cb2b-4774-96f2-878c3c68daf2 is in fraud-api-69f7598b8d-2jkkn logs; this pod served it
+request_id f6ad2775-cb2b-4774-96f2-878c3c68daf2 is not in fraud-api-57fb4cb766-hd826 logs
+The probe now hits an unmatched route, so the new pod's logs show route "unmatched" 404s.
+{"event": "request_completed", "timestamp": "2026-11-19T16:57:37.277878+00:00", "request_id": "ca760fd4-20ee-42b7-8a92-a0958d20b30e", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 36.927, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+{"event": "request_completed", "timestamp": "2026-11-19T16:57:42.198462+00:00", "request_id": "7adf6ad4-7e43-4dfa-bbf9-d6823ecae772", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 0.967, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+
+=== 2026-11-19T16:58:52Z RESTORE ===
+T1: 2026-11-19T16:58:52Z
+running: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+deployment.apps/fraud-api configured
+deployment "fraud-api" successfully rolled out
+
+=== 2026-11-19T16:58:52Z VERIFY ===
+waiting until the broken pod is gone
+pods:
+NAME                         READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-69f7598b8d-2jkkn   1/1     Running   0          2d15h   10.244.0.12   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-576fb8459b   0         0         <none>
+fraud-api-57fb4cb766   0         0         <none>
+fraud-api-5c6c787f54   0         0         <none>
+fraud-api-69f7598b8d   1         1         1
+running ready pods: 1
+broken replica set fraud-api-57fb4cb766 desired replicas: 0
+pod: fraud-api-69f7598b8d-2jkkn
+pod IP: 10.244.0.12
+image: fraud-api:9789b59
+imageID: docker.io/library/import-2026-11-17@sha256:48b49a41aac71113d64846ef616aede8f1a2592efaa808c190b9984a0d4193d3
+baseline imageID: docker.io/library/import-2026-11-17@sha256:48b49a41aac71113d64846ef616aede8f1a2592efaa808c190b9984a0d4193d3
+readinessProbe path: /readyz
+image does not match fraud-api:a7555b2
+imageID matches the baseline imageID
+readinessProbe path is /readyz
+kubectl diff exit code: 0
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.12:8000   2d16h
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.12
+endpoints list the ready pod IP
+fraud_probability: 0.005580357142857143
+baseline fraud_probability: 0.005580357142857143
+recommended_action: approve
+baseline recommended_action: approve
+X-Request-ID: 94ba692c-ff3a-4b75-93cc-c6797504a095
+RECOVERY VERIFIED
+deployment revision: 6
+deployment.apps/fraud-api 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+5         <none>
+6         <none>
+
+verified at: 2026-11-19T16:58:55Z
+total seconds from T0 to verified recovery: 94
+release drill exit:0
+=== 2026-11-19T16:58:55Z 9 release drill done ===
+=== 2026-11-19T16:59:07Z fraud-api port-forward start ===
+=== 2026-11-19T16:59:23Z 9 data drill ===
+/Users/arnavlohe/fraud-evidence/phase11/invalid_batch.json
+invalid builder exit:0
+batch rejected: 3 of 24 rows invalid; TransactionAmt missing in syn-003, syn-011, syn-019
+invalid batch exit:2
+invalid_run2 listing:
+       0
+{
+  "row_count": 24,
+  "invalid_score_count": 0,
+  "score_quantiles": {
+    "min": 0.00989621047550085,
+    "p10": 0.019065868398502685,
+    "p25": 0.09875141884222474,
+    "p50": 0.23414634146341465,
+    "p75": 0.35185185185185186,
+    "p90": 0.43967532467532466,
+    "max": 0.5167785234899327
+  },
+  "action_counts": {
+    "approve": 3,
+    "step_up": 0,
+    "review": 21,
+    "decline": 0,
+    "other": 0
+  },
+  "scores": [
+    0.23414634146341465,
+    0.4155844155844156,
+    0.017982456140350878,
+    0.4155844155844156,
+    0.5167785234899327,
+    0.2608695652173913,
+    0.2,
+    0.24050632911392406,
+    0.24050632911392406,
+    0.09875141884222474,
+    0.35185185185185186,
+    0.5107913669064749,
+    0.45,
+    0.19576719576719573,
+    0.23414634146341465,
+    0.09875141884222474,
+    0.017982456140350878,
+    0.12373737373737376,
+    0.00989621047550085,
+    0.05858170606372044,
+    0.23414634146341465,
+    0.35185185185185186,
+    0.021593830334190232,
+    0.09875141884222474
+  ],
+  "label_status": "unavailable",
+  "matched_label_count": null,
+  "label_coverage": null,
+  "joined_labels": null,
+  "performance": null
+}
+valid batch exit:0
+row_count 24
+invalid_score_count 0
+=== 2026-11-19T16:59:29Z 9 data drill done ===
+=== 2026-11-19T17:00:53Z 11 cleanup k6 jobs and drill pod ===
+fault-instance delete exit:0
+--- jobs ---
+No resources found in fraud-local namespace.
+jobs get exit:0
+No job name to delete. Did not delete monitoring or the cluster.
+=== 2026-11-19T17:00:53Z 11 done ===
+=== 2026-11-19T17:01:07Z PART C cluster checks ===
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES              SELECTOR
+deployment.apps/fraud-api   1/1     1            1           2d16h   fraud-api    fraud-api:9789b59   app=fraud-api
+
+NAME                             READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+pod/fraud-api-69f7598b8d-2jkkn   1/1     Running   0          2d15h   10.244.0.12   fraud-local-control-plane   <none>           <none>
+--- live container ---
+image=fraud-api:9789b59
+cpu=500m
+readiness=/readyz
+
+fraud-api-69f7598b8d-2jkkn image=fraud-api:9789b59 ready=true
+--- kubectl diff ---
+diff_exit:0
+--- golden ---
+pod=fraud-api-69f7598b8d-2jkkn
+fraud_probability 0.005580357142857143
+recommended_action approve
+KNOWN-GOOD CONFIRMED
+--- monitoring pods ---
+NAME                          READY   STATUS    RESTARTS   AGE
+grafana-784c94d9cd-6czs5      1/1     Running   0          2d16h
+prometheus-7b598c448d-kl2tp   1/1     Running   0          2d16h
+--- dashboard queries ---
+Prediction volume	POST /predict	0
+Client error ratio (4xx)	4xx	EMPTY
+Server error ratio (5xx)	5xx	EMPTY
+Latency, successful predictions	p50	0.19023560181427776
+Latency, successful predictions	p95	0.9125000000000001
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 6.315722992389555; {action="step_up"} 0; {action="review"} 21.569646635298575; {action="decline"} 0
+dashboard_exit:0
+=== 2026-11-19T17:01:09Z PART C cluster checks done ===
+=== 2026-11-19T17:01:36Z PART C docker compose run --rm test ===
+ Image fraud-api:latest Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.01kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.10kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 0.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 618B done
+#4 DONE 0.0s
+
+#5 [ 1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#5 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 253.13MB 2.8s done
+#6 DONE 2.8s
+
+#7 [ 4/20] COPY requirements.txt .
+#7 CACHED
+
+#8 [16/20] COPY models/registry.json models/registry.json
+#8 CACHED
+
+#9 [15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#9 CACHED
+
+#10 [17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#10 CACHED
+
+#11 [10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#11 CACHED
+
+#12 [ 7/20] COPY scripts/ scripts/
+#12 CACHED
+
+#13 [ 2/20] WORKDIR /app
+#13 CACHED
+
+#14 [18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#14 CACHED
+
+#15 [11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#15 CACHED
+
+#16 [ 6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#16 CACHED
+
+#17 [13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#17 CACHED
+
+#18 [ 8/20] COPY services/ services/
+#18 CACHED
+
+#19 [ 9/20] COPY evals/ evals/
+#19 CACHED
+
+#20 [14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#20 CACHED
+
+#21 [ 5/20] RUN pip install --no-cache-dir -r requirements.txt
+#21 CACHED
+
+#22 [12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#22 CACHED
+
+#23 [19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#23 CACHED
+
+#24 [ 3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#24 CACHED
+
+#25 [20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#25 CACHED
+
+#26 exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:dfb6792189fa53343a415f15590efb13190079eea2e3cf642a4e06f5f53b3f2f done
+#26 exporting config sha256:d39ade59c43e3fb3cef211de6854deb88ac0944ac0d53597255ec13d33a8e372 done
+#26 exporting attestation manifest sha256:ae18acc208c9cf8c47ed0d607e88d7a72d570ad353908aac00af70734a5afda9 done
+#26 exporting manifest list sha256:57ef81455af0b1ec2a8b4a460948aef2829f49636ebc37a35bcc8db816fa8dc6 0.0s done
+#26 naming to docker.io/library/fraud-api:latest done
+#26 unpacking to docker.io/library/fraud-api:latest 0.0s done
+#26 DONE 0.1s
+
+#27 resolving provenance for metadata file
+#27 DONE 0.0s
+ Image fraud-api:latest Built 
+ Container mle-portfolio-test-run-0272b42a5fcf Creating 
+ Container mle-portfolio-test-run-0272b42a5fcf Created 
+============================= test session starts ==============================
+platform linux -- Python 3.11.16, pytest-9.0.3, pluggy-1.7.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+plugins: anyio-4.16.0
+collecting ... collected 41 items
+
+tests/test_training_serving_parity.py::test_training_serving_parity PASSED [  2%]
+tests/test_api_endpoint.py::test_successful_prediction PASSED            [  4%]
+tests/test_api_endpoint.py::test_missing_transaction_amt_returns_422 PASSED [  7%]
+tests/test_api_endpoint.py::test_wrong_type_transaction_amt_returns_422 PASSED [  9%]
+tests/test_api_endpoint.py::test_extreme_near_zero_amount PASSED         [ 12%]
+tests/test_api_endpoint.py::test_extreme_large_amount PASSED             [ 14%]
+tests/test_api_endpoint.py::test_all_null_historical_features PASSED     [ 17%]
+tests/test_api_endpoint.py::test_unseen_categorical_productcd PASSED     [ 19%]
+tests/test_api_endpoint.py::test_health_endpoint PASSED                  [ 21%]
+tests/test_api_endpoint.py::test_livez_returns_200 PASSED                [ 24%]
+tests/test_api_endpoint.py::test_readyz_returns_200_when_loaded PASSED   [ 26%]
+tests/test_api_endpoint.py::test_negative_amount_returns_422 PASSED      [ 29%]
+tests/test_api_endpoint.py::test_response_has_no_raw_input_fields PASSED [ 31%]
+tests/test_api_endpoint.py::test_request_id_unique PASSED                [ 34%]
+tests/test_api_endpoint.py::test_action_costs_four_keys PASSED           [ 36%]
+tests/test_api_endpoint.py::test_dataset_version_present PASSED          [ 39%]
+tests/test_observability.py::test_valid_predict_logs_one_line_and_matching_request_id PASSED [ 41%]
+tests/test_observability.py::test_missing_transaction_amt_hides_input PASSED [ 43%]
+tests/test_observability.py::test_prediction_failure_hides_exception_message PASSED [ 46%]
+tests/test_observability.py::test_unknown_path_is_unmatched_and_omits_raw_path PASSED [ 48%]
+tests/test_observability.py::test_client_request_id_is_ignored PASSED    [ 51%]
+tests/test_metrics.py::test_metrics_endpoint_lists_families PASSED       [ 53%]
+tests/test_metrics.py::test_golden_predict_increments_request_and_action PASSED [ 56%]
+tests/test_metrics.py::test_validation_error_does_not_count_a_prediction PASSED [ 58%]
+tests/test_metrics.py::test_prediction_error_does_not_count_a_prediction PASSED [ 60%]
+tests/test_metrics.py::test_model_gauges_after_load PASSED               [ 63%]
+tests/test_metrics.py::test_metrics_text_omits_request_identifiers PASSED [ 65%]
+tests/test_metrics.py::test_prediction_action_labels_stay_finite PASSED  [ 68%]
+tests/test_metrics.py::test_predict_status_series_exist_before_traffic PASSED [ 70%]
+tests/test_batch_report.py::test_missing_labels_are_unavailable PASSED   [ 73%]
+tests/test_batch_report.py::test_partial_simulated_labels_do_not_fill_zero PASSED [ 75%]
+tests/test_batch_report.py::test_original_score_is_not_replaced_by_action PASSED [ 78%]
+tests/test_batch_report.py::test_invalid_score_is_counted_and_excluded_from_quantiles PASSED [ 80%]
+tests/test_batch_report.py::test_validate_batch_reports_every_missing_amount PASSED [ 82%]
+tests/test_batch_report.py::test_valid_batch_passes_validation PASSED    [ 85%]
+tests/test_batch_report.py::test_contract_requires_transaction_amount PASSED [ 87%]
+tests/test_batch_report.py::test_run_rejects_invalid_batch_with_no_posts PASSED [ 90%]
+tests/test_batch_report.py::test_http_422_message_keeps_type_and_loc_only PASSED [ 92%]
+tests/test_k8s_probe_paths.py::test_probe_paths_are_real_get_routes PASSED [ 95%]
+tests/test_fault_double.py::test_golden_request_hides_the_injected_failure PASSED [ 97%]
+tests/test_fault_double.py::test_readyz_stays_ready PASSED               [100%]
+
+=============================== warnings summary ===============================
+../usr/local/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /usr/local/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+../usr/local/lib/python3.11/site-packages/starlette/testclient.py:53
+  /usr/local/lib/python3.11/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 41 passed, 2 warnings in 42.89s ========================
+compose test exit:0
+=== 2026-11-19T17:02:26Z PART C compose test done ===

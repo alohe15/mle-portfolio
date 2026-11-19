@@ -1,0 +1,1345 @@
+
+=== 2026-11-17T00:45:23Z STAGE 0 clean environment ===
+teardown command from docs/kubernetes_runbook.md section 8:
+kind delete cluster --name fraud-local
+Deleting cluster "fraud-local" ...
+Deleted nodes: ["fraud-local-control-plane"]
+kind delete exit: 0
+port-forwards before:
+none
+port-forwards after:
+none
+removing ~/mle-handoff-check
+ls: /Users/arnavlohe/mle-handoff-check: No such file or directory
+handoff dir absent
+
+=== 2026-11-17T00:45:26Z STAGE 0 done ===
+
+=== 2026-11-17T00:45:36Z STAGE 1 clone ===
+Cloning into '/Users/arnavlohe/mle-handoff-check'...
+clone exit: 0
+Switched to a new branch 'pr/phase11-recovery'
+branch 'pr/phase11-recovery' set up to track 'origin/pr/phase11-recovery'.
+checkout exit: 0
+pr/phase11-recovery
+0a0ab35 Phase 11: README end-to-end order linking runbooks; portfolio case study with sourced numbers and architecture diagram
+
+=== 2026-11-17T00:45:37Z STAGE 1 done ===
+
+=== 2026-11-17T00:47:07Z STAGE artifacts ===
+FINDING: docs/artifacts.md Fresh clone step 2 says copy the three binaries from the model owner, and the outside-git table also lists two parquets, but it gives no cp command and no source path.
+WORKAROUND: copy only the paths in the 'Files required outside git' table from ~/mle-portfolio
+copy exit: 0
+--- shasum artifacts.sha256 (docs/artifacts.md) ---
+models/lgbm_v9_optuna_tuning.txt: OK
+models/lgbm_v9_optuna_tuning_fitted_transforms.pkl: OK
+models/lgbm_v9_calibrator.pkl: OK
+models/lgbm_v9_optuna_tuning_manifest.json: OK
+models/lgbm_v9_optuna_tuning_metrics.json: OK
+configs/lgbm_v9.json: OK
+configs/dataset_v5.json: OK
+configs/decision_policy_v1.json: OK
+data/processed/dataset_v5_dn_only_manifest.json: OK
+artifacts.sha256 exit: 0
+--- shasum artifacts.serving.sha256 (docs/artifacts.md) ---
+models/registry.json: OK
+models/lgbm_v9_optuna_tuning_manifest.json: OK
+models/lgbm_v9_optuna_tuning.txt: OK
+models/lgbm_v9_optuna_tuning_fitted_transforms.pkl: OK
+models/lgbm_v9_calibrator.pkl: OK
+configs/lgbm_v9.json: OK
+configs/dataset_v1.json: OK
+configs/dataset_v2.json: OK
+configs/dataset_v3.json: OK
+configs/dataset_v5.json: OK
+configs/decision_policy_v1.json: OK
+artifacts.serving.sha256 exit: 0
+--- container runbook prerequisites ---
+docker info exit: 0
+Client:
+ Version:    29.7.2
+ Context:    desktop-linux
+ Debug Mode: false
+ Plugins:
+-rw-r--r--@ 1 arnavlohe  staff   429B Nov 16 19:45 configs/dataset_v1.json
+-rw-r--r--@ 1 arnavlohe  staff   3.0K Nov 16 19:45 configs/dataset_v2.json
+-rw-r--r--@ 1 arnavlohe  staff   987B Nov 16 19:45 configs/dataset_v3.json
+-rw-r--r--@ 1 arnavlohe  staff   3.0K Nov 16 19:45 configs/dataset_v5.json
+-rw-r--r--@ 1 arnavlohe  staff   424B Nov 16 19:45 configs/decision_policy_v1.json
+-rw-r--r--@ 1 arnavlohe  staff   4.3K Nov 16 19:45 evals/cost_model.py
+-rw-r--r--@ 1 arnavlohe  staff   2.4K Nov 16 19:47 models/lgbm_v9_calibrator.pkl
+-rw-r--r--@ 1 arnavlohe  staff   238M Nov 16 19:47 models/lgbm_v9_optuna_tuning.txt
+-rw-r--r--@ 1 arnavlohe  staff   1.2M Nov 16 19:47 models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+-rw-r--r--@ 1 arnavlohe  staff    17K Nov 16 19:45 models/lgbm_v9_optuna_tuning_manifest.json
+-rw-r--r--@ 1 arnavlohe  staff   6.1K Nov 16 19:45 models/registry.json
+-rw-r--r--@ 1 arnavlohe  staff    19K Nov 16 19:45 scripts/feature_engineering.py
+-rw-r--r--@ 1 arnavlohe  staff    35K Nov 16 19:45 scripts/train.py
+ls exit: 0
+
+=== 2026-11-17T00:47:10Z STAGE artifacts checksums done ===
+
+=== 2026-11-17T00:47:18Z STAGE release checks build ===
+FINDING: docs/container_runbook.md Build says 'cd /path/to/mle-portfolio', which is not a real path.
+WORKAROUND: cd ~/mle-handoff-check (the fresh checkout) and run the documented docker build.
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.10kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim
+#2 DONE 0.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 618B done
+#3 DONE 0.0s
+
+#4 [ 1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#4 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 253.06MB 2.2s done
+#5 DONE 2.2s
+
+#6 [ 3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [ 2/20] WORKDIR /app
+#7 CACHED
+
+#8 [ 4/20] COPY requirements.txt .
+#8 CACHED
+
+#9 [ 5/20] RUN pip install --no-cache-dir -r requirements.txt
+#9 CACHED
+
+#10 [ 6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#10 CACHED
+
+#11 [ 7/20] COPY scripts/ scripts/
+#11 CACHED
+
+#12 [ 8/20] COPY services/ services/
+#12 CACHED
+
+#13 [ 9/20] COPY evals/ evals/
+#13 DONE 0.2s
+
+#14 [10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#14 DONE 0.0s
+
+#15 [11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#15 DONE 0.0s
+
+#16 [12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#16 DONE 0.0s
+
+#17 [13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#17 DONE 0.0s
+
+#18 [14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#18 DONE 0.0s
+
+#19 [15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#19 DONE 0.0s
+
+#20 [16/20] COPY models/registry.json models/registry.json
+#20 DONE 0.0s
+
+#21 [17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#21 DONE 1.0s
+
+#22 [18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#22 DONE 0.0s
+
+#23 [19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#23 DONE 0.0s
+
+#24 [20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#24 DONE 0.0s
+
+#25 exporting to image
+#25 exporting layers
+#25 exporting layers 9.2s done
+#25 exporting manifest sha256:3d1140ae11f20e14887dce88b5275c99bdae65a6085ee8adb75dd58285c87abf done
+#25 exporting config sha256:fc91cde58bdf6f0c8c4d3971506f67786af0cceb9178fb3f2aac0d0f254513e4 done
+#25 exporting attestation manifest sha256:876996e24528391600a933b255bf0506480919d63699f32554d16b0ade23aecd done
+#25 exporting manifest list sha256:3ff1507b0abfa365fb649b5b2f291fbb916d2602357869275de275bd6765d13d done
+#25 naming to docker.io/library/fraud-api:latest done
+#25 unpacking to docker.io/library/fraud-api:latest
+#25 unpacking to docker.io/library/fraud-api:latest 1.1s done
+#25 DONE 10.4s
+docker build exit: 0
+IMAGE               ID             DISK USAGE   CONTENT SIZE   EXTRA
+fraud-api:9b53475   e731d03cde8a       1.79GB          426MB        
+fraud-api:a7555b2   4317228a5def       1.79GB          428MB        
+fraud-api:latest    3ff1507b0abf       1.79GB          428MB        
+fraud-api:test      ed6befd88584       1.81GB          432MB        
+
+=== 2026-11-17T00:47:33Z STAGE release checks build done ===
+
+=== 2026-11-17T00:47:48Z STAGE release checks run and smoke ===
+ Image fraud-api:latest Building 
+ Image fraud-api:test Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.05kB done
+#1 DONE 0.0s
+
+#2 [test internal] load build definition from Dockerfile.test
+#2 transferring dockerfile: 849B done
+#2 DONE 0.0s
+
+#3 [fraud-api internal] load build definition from Dockerfile
+#3 transferring dockerfile: 2.10kB done
+#3 DONE 0.0s
+
+#4 [fraud-api internal] load metadata for docker.io/library/python:3.11-slim
+#4 DONE 0.0s
+
+#5 [test internal] load .dockerignore
+#5 transferring context: 618B done
+#5 DONE 0.0s
+
+#6 [test internal] load build context
+#6 transferring context: 121.36kB done
+#6 DONE 0.0s
+
+#7 [fraud-api internal] load build context
+#7 transferring context: 4.13kB done
+#7 DONE 0.0s
+
+#8 [fraud-api  1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#8 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 0.0s done
+#8 DONE 0.0s
+
+#9 [fraud-api 12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#9 CACHED
+
+#10 [fraud-api  4/20] COPY requirements.txt .
+#10 CACHED
+
+#11 [fraud-api  3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#12 [fraud-api  2/20] WORKDIR /app
+#12 CACHED
+
+#13 [fraud-api  6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#13 CACHED
+
+#14 [fraud-api 19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#14 CACHED
+
+#15 [fraud-api 14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#15 CACHED
+
+#16 [fraud-api 13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#16 CACHED
+
+#17 [fraud-api 10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#17 CACHED
+
+#18 [fraud-api 17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#18 CACHED
+
+#19 [fraud-api 11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#19 CACHED
+
+#20 [fraud-api 18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#20 CACHED
+
+#21 [fraud-api  7/20] COPY scripts/ scripts/
+#21 CACHED
+
+#22 [fraud-api 15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#22 CACHED
+
+#23 [fraud-api 16/20] COPY models/registry.json models/registry.json
+#23 CACHED
+
+#24 [fraud-api  9/20] COPY evals/ evals/
+#24 CACHED
+
+#25 [fraud-api  5/20] RUN pip install --no-cache-dir -r requirements.txt
+#25 CACHED
+
+#26 [fraud-api  8/20] COPY services/ services/
+#26 CACHED
+
+#27 [fraud-api 20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#27 CACHED
+
+#14 [test 19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#14 CACHED
+
+#15 [test 14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#15 CACHED
+
+#12 [test  2/20] WORKDIR /app
+#12 CACHED
+
+#22 [test 15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#22 CACHED
+
+#16 [test 13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#16 CACHED
+
+#20 [test 18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#20 CACHED
+
+#11 [test  3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#24 [test  9/20] COPY evals/ evals/
+#24 CACHED
+
+#19 [test 11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#19 CACHED
+
+#10 [test  4/20] COPY requirements.txt .
+#10 CACHED
+
+#17 [test 10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#17 CACHED
+
+#23 [test 16/20] COPY models/registry.json models/registry.json
+#23 CACHED
+
+#21 [test  7/20] COPY scripts/ scripts/
+#21 CACHED
+
+#25 [test  5/20] RUN pip install --no-cache-dir -r requirements.txt
+#25 CACHED
+
+#13 [test  6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#13 CACHED
+
+#26 [test  8/20] COPY services/ services/
+#26 CACHED
+
+#18 [test 17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#18 CACHED
+
+#9 [test 12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#9 CACHED
+
+#28 [fraud-api] exporting to image
+#28 exporting layers done
+#28 exporting manifest sha256:c8622e528d3c71bb47ec74608b09c1cf06b66d8ca4195b7d2a7a4f6a57f3bb19
+#28 exporting manifest sha256:c8622e528d3c71bb47ec74608b09c1cf06b66d8ca4195b7d2a7a4f6a57f3bb19 0.2s done
+#28 exporting config sha256:c50310703804f091b34ac457bbdb6cdbc220356e4008400136154946e7d49073
+#28 exporting config sha256:c50310703804f091b34ac457bbdb6cdbc220356e4008400136154946e7d49073 done
+#28 exporting attestation manifest sha256:95a56fe12e57fcf9d42a15536bff74ed8d562bdd1bb60f36080e32133ebf8659 0.0s done
+#28 exporting manifest list sha256:98151f08e4aa7b765128eb1f042da37b78653d74a686e3c59e3ac8c1fb70cc8c done
+#28 naming to docker.io/library/fraud-api:latest done
+#28 unpacking to docker.io/library/fraud-api:latest done
+#28 DONE 0.3s
+
+#29 [test 1/6] COPY requirements-test.txt /tmp/requirements-test.txt
+#29 DONE 0.2s
+
+#30 [fraud-api] resolving provenance for metadata file
+#30 DONE 0.0s
+
+#31 [test 2/6] RUN pip install --no-cache-dir -r /tmp/requirements-test.txt     && rm /tmp/requirements-test.txt
+#31 1.053 Collecting pytest==9.0.3 (from -r /tmp/requirements-test.txt (line 3))
+#31 1.153   Downloading pytest-9.0.3-py3-none-any.whl.metadata (7.6 kB)
+#31 1.193 Collecting httpx==0.28.1 (from -r /tmp/requirements-test.txt (line 4))
+#31 1.206   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+#31 1.234 Collecting iniconfig>=1.0.1 (from pytest==9.0.3->-r /tmp/requirements-test.txt (line 3))
+#31 1.256   Downloading iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+#31 1.258 Requirement already satisfied: packaging>=22 in /usr/local/lib/python3.11/site-packages (from pytest==9.0.3->-r /tmp/requirements-test.txt (line 3)) (26.3)
+#31 1.282 Collecting pluggy<2,>=1.5 (from pytest==9.0.3->-r /tmp/requirements-test.txt (line 3))
+#31 1.298   Downloading pluggy-1.7.0-py3-none-any.whl.metadata (5.0 kB)
+#31 1.336 Collecting pygments>=2.7.2 (from pytest==9.0.3->-r /tmp/requirements-test.txt (line 3))
+#31 1.351   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+#31 1.357 Requirement already satisfied: anyio in /usr/local/lib/python3.11/site-packages (from httpx==0.28.1->-r /tmp/requirements-test.txt (line 4)) (4.16.0)
+#31 1.386 Collecting certifi (from httpx==0.28.1->-r /tmp/requirements-test.txt (line 4))
+#31 1.401   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+#31 1.429 Collecting httpcore==1.* (from httpx==0.28.1->-r /tmp/requirements-test.txt (line 4))
+#31 1.445   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+#31 1.450 Requirement already satisfied: idna in /usr/local/lib/python3.11/site-packages (from httpx==0.28.1->-r /tmp/requirements-test.txt (line 4)) (3.20)
+#31 1.453 Requirement already satisfied: h11>=0.16 in /usr/local/lib/python3.11/site-packages (from httpcore==1.*->httpx==0.28.1->-r /tmp/requirements-test.txt (line 4)) (0.16.0)
+#31 1.459 Requirement already satisfied: typing_extensions>=4.16.0 in /usr/local/lib/python3.11/site-packages (from anyio->httpx==0.28.1->-r /tmp/requirements-test.txt (line 4)) (4.16.0)
+#31 1.475 Downloading pytest-9.0.3-py3-none-any.whl (375 kB)
+#31 1.526    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 375.2/375.2 kB 8.9 MB/s eta 0:00:00
+#31 1.541 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+#31 1.543    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.5/73.5 kB 251.0 MB/s eta 0:00:00
+#31 1.557 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+#31 1.560    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 90.5 MB/s eta 0:00:00
+#31 1.573 Downloading iniconfig-2.3.1-py3-none-any.whl (7.6 kB)
+#31 1.589 Downloading pluggy-1.7.0-py3-none-any.whl (27 kB)
+#31 1.602 Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+#31 1.640    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 33.9 MB/s eta 0:00:00
+#31 1.663 Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+#31 1.666    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 135.1/135.1 kB 87.2 MB/s eta 0:00:00
+#31 1.901 Installing collected packages: pygments, pluggy, iniconfig, certifi, pytest, httpcore, httpx
+#31 2.567 Successfully installed certifi-2026.10.23 httpcore-1.0.9 httpx-0.28.1 iniconfig-2.3.1 pluggy-1.7.0 pygments-2.21.0 pytest-9.0.3
+#31 2.567 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+#31 2.860 
+#31 2.860 [notice] A new release of pip is available: 24.0 -> 26.3
+#31 2.860 [notice] To update, run: pip install --upgrade pip
+#31 DONE 3.0s
+
+#32 [test 3/6] COPY configs/lgbm_v9.json /app/configs/lgbm_v9.json
+#32 DONE 0.0s
+
+#33 [test 4/6] COPY artifacts.sha256 /app/artifacts.sha256
+#33 DONE 0.0s
+
+#34 [test 5/6] COPY tests/ /app/tests/
+#34 DONE 0.0s
+
+#35 [test] exporting to image
+#35 exporting layers 0.6s done
+#35 exporting manifest sha256:4168e4ad9d68d3b8ef29cdb24e5db06a5580b60d1fc43d25071ae4c698dbfed4 done
+#35 exporting config sha256:90c71e3ab93ac762f075d0aabc6f98ac0f0bd0b7dc17d037a2054b6714563b69 done
+#35 exporting attestation manifest sha256:c957f314a1da23e4d77a1056adbe41a6180d81a9e05afbd6dc723b8882f7d5b2 done
+#35 exporting manifest list sha256:d57d2a4662eee4d2953ebd503e7ff4d218717269a651accbf7548ae88a156b35 done
+#35 naming to docker.io/library/fraud-api:test done
+#35 unpacking to docker.io/library/fraud-api:test
+#35 unpacking to docker.io/library/fraud-api:test 0.2s done
+#35 DONE 0.8s
+
+#36 [test] resolving provenance for metadata file
+#36 DONE 0.0s
+ Image fraud-api:latest Built 
+ Image fraud-api:test Built 
+ Network mle-handoff-check_default Creating 
+ Network mle-handoff-check_default Creating 
+ Network mle-handoff-check_default Created 
+ Network mle-handoff-check_default Created 
+ Container mle-handoff-check-test-1 Creating 
+ Container mle-handoff-check-fraud-api-1 Creating 
+ Container mle-handoff-check-fraud-api-1 Created 
+ Container mle-handoff-check-test-1 Created 
+ Container mle-handoff-check-test-1 Starting 
+ Container mle-handoff-check-fraud-api-1 Starting 
+ Container mle-handoff-check-test-1 Started 
+ Container mle-handoff-check-fraud-api-1 Started 
+compose up exit: 0
+--- health (immediate, as written) ---
+
+curl health exit: 0
+
+=== 2026-11-17T00:47:54Z STAGE release checks smoke script ===
+=== Smoke Test: Health (http://localhost:8000/health) ===
+  HTTP 000
+  body: 
+  FAIL: health expected 200 got 000
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: health missing model_version
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: health missing dataset_version
+
+=== Smoke Test: Liveness (http://localhost:8000/livez) ===
+  HTTP 000
+  body: 
+  FAIL: livez expected 200 got 000
+  FAIL: livez body missing alive
+
+=== Smoke Test: Readiness (http://localhost:8000/readyz) ===
+  HTTP 000
+  body: 
+  FAIL: readyz expected 200 got 000
+  FAIL: readyz body missing ready
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: readyz missing model_version
+
+=== Smoke Test: Predict (http://localhost:8000/predict) ===
+  HTTP 000
+  body: 
+  FAIL: predict expected 200 got 000
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: predict missing fraud_probability
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: predict missing recommended_action
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: predict missing action_costs
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: predict missing model_version
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: predict missing dataset_version
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  FAIL: predict missing request_id
+
+=== Smoke Test: Validation Error (missing TransactionAmt) ===
+  HTTP 000
+  body: 
+  FAIL: validation expected 422 got 000
+
+=== Summary: 0 passed, 16 failed ===
+=== Smoke tests FAILED ===
+smoke exit: 1
+
+=== 2026-11-17T00:47:55Z STAGE release checks smoke done ===
+
+=== 2026-11-17T00:48:19Z STAGE release checks smoke retry ===
+FINDING: curl right after 'docker compose up --build -d' returned HTTP 000. The runbook does not say to wait for the model to load. 'docker compose up' also started the test service, not only fraud-api.
+--- docker ps (runbook shutdown section uses this) ---
+CONTAINER ID   IMAGE              COMMAND                  CREATED          STATUS                    PORTS                                         NAMES
+0bc5fabbfe4d   fraud-api:test     "python -m pytest te…"   26 seconds ago   Up 25 seconds             8000/tcp                                      mle-handoff-check-test-1
+a123e336eebc   fraud-api:latest   "uvicorn services.ap…"   26 seconds ago   Up 25 seconds (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp   mle-handoff-check-fraud-api-1
+WORKAROUND: wait until /health returns JSON, then rerun the documented smoke command.
+try 1 health: {"status":"healthy","model_version":"v9","dataset_version":5,"model_loaded":true}
+=== Smoke Test: Health (http://localhost:8000/health) ===
+  HTTP 200
+  body: {"status":"healthy","model_version":"v9","dataset_version":5,"model_loaded":true}
+  PASS: health HTTP 200
+  PASS: health has model_version
+  PASS: health has dataset_version
+
+=== Smoke Test: Liveness (http://localhost:8000/livez) ===
+  HTTP 200
+  body: {"status":"alive"}
+  PASS: livez HTTP 200
+  PASS: livez body contains alive
+
+=== Smoke Test: Readiness (http://localhost:8000/readyz) ===
+  HTTP 200
+  body: {"status":"ready","model_version":"v9","dataset_version":5,"model_loaded":true}
+  PASS: readyz HTTP 200
+  PASS: readyz body contains ready
+  PASS: readyz has model_version
+
+=== Smoke Test: Predict (http://localhost:8000/predict) ===
+  HTTP 200
+  body: {"fraud_probability":0.005580357142857143,"recommended_action":"approve","action_costs":{"approve":1.4006696428571428,"step_up":6.660184151785715,"review":10.070033482142858,"decline":124.79966517857143},"model_version":"v9","dataset_version":5,"request_id":"5dc82805-c0d9-4798-bda2-e549285f67ee"}
+  PASS: predict HTTP 200
+  PASS: predict has fraud_probability
+  PASS: predict has recommended_action
+  PASS: predict has action_costs
+  PASS: predict has model_version
+  PASS: predict has dataset_version
+  PASS: predict has request_id
+
+=== Smoke Test: Validation Error (missing TransactionAmt) ===
+  HTTP 422
+  body: {"detail":[{"type":"missing","loc":["body","TransactionAmt"],"msg":"Field required"}],"request_id":"f4193a4d-61d5-4886-9986-0e6012b77d71"}
+  PASS: validation HTTP 422
+
+=== Summary: 16 passed, 0 failed ===
+=== All smoke tests passed ===
+smoke retry exit: 0
+
+=== 2026-11-17T00:48:20Z STAGE release checks smoke retry done ===
+
+=== 2026-11-17T00:48:31Z STAGE release checks container_runbook pytest ===
+--- docker run endpoint tests (container runbook) ---
+/usr/local/bin/python: No module named pytest
+endpoint docker run exit: 1
+--- docker run parity (container runbook) ---
+/usr/local/bin/python: No module named pytest
+parity docker run exit: 1
+
+=== 2026-11-17T00:48:31Z STAGE release checks container_runbook pytest done ===
+
+=== 2026-11-17T00:48:39Z STAGE release checks docker compose run test ===
+FINDING: container runbook 'docker run ... python -m pytest' exits 1: No module named pytest. The serving image does not install pytest.
+WORKAROUND: run the in-container test command from docs/release_evidence.md: docker compose run --rm test
+ Image fraud-api:latest Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.03kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.10kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 618B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 4.13kB done
+#5 DONE 0.0s
+
+#6 [ 1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#6 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 0.0s done
+#6 DONE 0.0s
+
+#7 [13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#7 CACHED
+
+#8 [ 6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#8 CACHED
+
+#9 [16/20] COPY models/registry.json models/registry.json
+#9 CACHED
+
+#10 [ 7/20] COPY scripts/ scripts/
+#10 CACHED
+
+#11 [ 2/20] WORKDIR /app
+#11 CACHED
+
+#12 [12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#12 CACHED
+
+#13 [11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#13 CACHED
+
+#14 [ 3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#14 CACHED
+
+#15 [14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#15 CACHED
+
+#16 [15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#16 CACHED
+
+#17 [ 5/20] RUN pip install --no-cache-dir -r requirements.txt
+#17 CACHED
+
+#18 [18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#18 CACHED
+
+#19 [ 4/20] COPY requirements.txt .
+#19 CACHED
+
+#20 [17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#20 CACHED
+
+#21 [19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#21 CACHED
+
+#22 [ 8/20] COPY services/ services/
+#22 CACHED
+
+#23 [ 9/20] COPY evals/ evals/
+#23 CACHED
+
+#24 [10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#24 CACHED
+
+#25 [20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#25 CACHED
+
+#26 exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:c8622e528d3c71bb47ec74608b09c1cf06b66d8ca4195b7d2a7a4f6a57f3bb19 done
+#26 exporting config sha256:c50310703804f091b34ac457bbdb6cdbc220356e4008400136154946e7d49073 done
+#26 exporting attestation manifest sha256:1337ea1e86b404cc14ff2bcb2aa9ff269097d0e37889047ee347cd53791f1297 done
+#26 exporting manifest list sha256:da8bcad17222e1fb62ee887556cd85d6a4a341f46819962294e060840fad7652 done
+#26 naming to docker.io/library/fraud-api:latest done
+#26 unpacking to docker.io/library/fraud-api:latest done
+#26 DONE 0.1s
+
+#27 resolving provenance for metadata file
+#27 DONE 0.0s
+ Image fraud-api:latest Built 
+ Container mle-handoff-check-test-run-8482312d5e6c Creating 
+ Container mle-handoff-check-test-run-8482312d5e6c Created 
+============================= test session starts ==============================
+platform linux -- Python 3.11.16, pytest-9.0.3, pluggy-1.7.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /app
+plugins: anyio-4.16.0
+collecting ... collected 41 items
+
+tests/test_training_serving_parity.py::test_training_serving_parity PASSED [  2%]
+tests/test_api_endpoint.py::test_successful_prediction PASSED            [  4%]
+tests/test_api_endpoint.py::test_missing_transaction_amt_returns_422 PASSED [  7%]
+tests/test_api_endpoint.py::test_wrong_type_transaction_amt_returns_422 PASSED [  9%]
+tests/test_api_endpoint.py::test_extreme_near_zero_amount PASSED         [ 12%]
+tests/test_api_endpoint.py::test_extreme_large_amount PASSED             [ 14%]
+tests/test_api_endpoint.py::test_all_null_historical_features PASSED     [ 17%]
+tests/test_api_endpoint.py::test_unseen_categorical_productcd PASSED     [ 19%]
+tests/test_api_endpoint.py::test_health_endpoint PASSED                  [ 21%]
+tests/test_api_endpoint.py::test_livez_returns_200 PASSED                [ 24%]
+tests/test_api_endpoint.py::test_readyz_returns_200_when_loaded PASSED   [ 26%]
+tests/test_api_endpoint.py::test_negative_amount_returns_422 PASSED      [ 29%]
+tests/test_api_endpoint.py::test_response_has_no_raw_input_fields PASSED [ 31%]
+tests/test_api_endpoint.py::test_request_id_unique PASSED                [ 34%]
+tests/test_api_endpoint.py::test_action_costs_four_keys PASSED           [ 36%]
+tests/test_api_endpoint.py::test_dataset_version_present PASSED          [ 39%]
+tests/test_observability.py::test_valid_predict_logs_one_line_and_matching_request_id PASSED [ 41%]
+tests/test_observability.py::test_missing_transaction_amt_hides_input PASSED [ 43%]
+tests/test_observability.py::test_prediction_failure_hides_exception_message PASSED [ 46%]
+tests/test_observability.py::test_unknown_path_is_unmatched_and_omits_raw_path PASSED [ 48%]
+tests/test_observability.py::test_client_request_id_is_ignored PASSED    [ 51%]
+tests/test_metrics.py::test_metrics_endpoint_lists_families PASSED       [ 53%]
+tests/test_metrics.py::test_golden_predict_increments_request_and_action PASSED [ 56%]
+tests/test_metrics.py::test_validation_error_does_not_count_a_prediction PASSED [ 58%]
+tests/test_metrics.py::test_prediction_error_does_not_count_a_prediction PASSED [ 60%]
+tests/test_metrics.py::test_model_gauges_after_load PASSED               [ 63%]
+tests/test_metrics.py::test_metrics_text_omits_request_identifiers PASSED [ 65%]
+tests/test_metrics.py::test_prediction_action_labels_stay_finite PASSED  [ 68%]
+tests/test_metrics.py::test_predict_status_series_exist_before_traffic PASSED [ 70%]
+tests/test_batch_report.py::test_missing_labels_are_unavailable PASSED   [ 73%]
+tests/test_batch_report.py::test_partial_simulated_labels_do_not_fill_zero PASSED [ 75%]
+tests/test_batch_report.py::test_original_score_is_not_replaced_by_action PASSED [ 78%]
+tests/test_batch_report.py::test_invalid_score_is_counted_and_excluded_from_quantiles PASSED [ 80%]
+tests/test_batch_report.py::test_validate_batch_reports_every_missing_amount PASSED [ 82%]
+tests/test_batch_report.py::test_valid_batch_passes_validation PASSED    [ 85%]
+tests/test_batch_report.py::test_contract_requires_transaction_amount PASSED [ 87%]
+tests/test_batch_report.py::test_run_rejects_invalid_batch_with_no_posts PASSED [ 90%]
+tests/test_batch_report.py::test_http_422_message_keeps_type_and_loc_only PASSED [ 92%]
+tests/test_k8s_probe_paths.py::test_probe_paths_are_real_get_routes PASSED [ 95%]
+tests/test_fault_double.py::test_golden_request_hides_the_injected_failure PASSED [ 97%]
+tests/test_fault_double.py::test_readyz_stays_ready PASSED               [100%]
+
+=============================== warnings summary ===============================
+../usr/local/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /usr/local/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+../usr/local/lib/python3.11/site-packages/starlette/testclient.py:53
+  /usr/local/lib/python3.11/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 41 passed, 2 warnings in 17.38s ========================
+compose test exit: 0
+
+=== 2026-11-17T00:48:59Z STAGE release checks done ===
+
+=== 2026-11-17T00:49:07Z STAGE kubernetes create ===
+Creating cluster "fraud-local" ...
+ • Ensuring node image (kindest/node:v1.37.0) 🖼️  ...
+ ✓ Ensuring node image (kindest/node:v1.37.0) 🖼️
+ • Preparing nodes 📦   ...
+ ✓ Preparing nodes 📦 
+ • Writing configuration 📜  ...
+ ✓ Writing configuration 📜
+ • Starting control-plane 🕹️  ...
+ ✓ Starting control-plane 🕹️
+ • Installing CNI 🔌  ...
+ ✓ Installing CNI 🔌
+ • Installing StorageClass 💾  ...
+ ✓ Installing StorageClass 💾
+Set kubectl context to "kind-fraud-local"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-fraud-local
+
+Not sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/quick-start/
+kind create exit: 0
+Kubernetes control plane is running at https://127.0.0.1:58312
+CoreDNS is running at https://127.0.0.1:58312/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+cluster-info exit: 0
+NAME                        STATUS     ROLES           AGE   VERSION
+fraud-local-control-plane   NotReady   control-plane   4s    v1.37.0
+get nodes exit: 0
+
+=== 2026-11-17T00:49:18Z STAGE kubernetes create done ===
+
+=== 2026-11-17T00:49:26Z STAGE kubernetes load and apply ===
+FINDING: kubectl get nodes immediately after create printed STATUS NotReady. The runbook expects Ready and does not say to wait.
+WORKAROUND: poll kubectl get nodes until Ready, then continue with the documented tag and load.
+NAME                        STATUS     ROLES           AGE   VERSION
+fraud-local-control-plane   NotReady   control-plane   12s   v1.37.0
+NAME                        STATUS     ROLES           AGE   VERSION
+fraud-local-control-plane   NotReady   control-plane   15s   v1.37.0
+NAME                        STATUS     ROLES           AGE   VERSION
+fraud-local-control-plane   NotReady   control-plane   18s   v1.37.0
+NAME                        STATUS   ROLES           AGE   VERSION
+fraud-local-control-plane   Ready    control-plane   21s   v1.37.0
+node Ready on try 4
+NOTE: docker tag fraud-api:latest fraud-api:a7555b2 retags the fresh build onto the pinned name.
+sha256:da8bcad17222e1fb62ee887556cd85d6a4a341f46819962294e060840fad7652
+ Image fraud-api:latest Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 541B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.10kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 618B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 4.13kB done
+#5 DONE 0.0s
+
+#6 [ 1/20] FROM docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
+#6 resolve docker.io/library/python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534 0.0s done
+#6 DONE 0.0s
+
+#7 [10/20] COPY configs/lgbm_v9.json configs/lgbm_v9.json
+#7 CACHED
+
+#8 [ 3/20] RUN apt-get update     && apt-get install -y --no-install-recommends libgomp1 curl     && rm -rf /var/lib/apt/lists/*
+#8 CACHED
+
+#9 [ 4/20] COPY requirements.txt .
+#9 CACHED
+
+#10 [11/20] COPY configs/dataset_v1.json configs/dataset_v1.json
+#10 CACHED
+
+#11 [16/20] COPY models/registry.json models/registry.json
+#11 CACHED
+
+#12 [ 6/20] COPY artifacts.serving.sha256 artifacts.serving.sha256
+#12 CACHED
+
+#13 [12/20] COPY configs/dataset_v2.json configs/dataset_v2.json
+#13 CACHED
+
+#14 [17/20] COPY models/lgbm_v9_optuna_tuning.txt models/lgbm_v9_optuna_tuning.txt
+#14 CACHED
+
+#15 [14/20] COPY configs/dataset_v5.json configs/dataset_v5.json
+#15 CACHED
+
+#16 [13/20] COPY configs/dataset_v3.json configs/dataset_v3.json
+#16 CACHED
+
+#17 [ 7/20] COPY scripts/ scripts/
+#17 CACHED
+
+#18 [15/20] COPY configs/decision_policy_v1.json configs/decision_policy_v1.json
+#18 CACHED
+
+#19 [ 2/20] WORKDIR /app
+#19 CACHED
+
+#20 [ 8/20] COPY services/ services/
+#20 CACHED
+
+#21 [18/20] COPY models/lgbm_v9_optuna_tuning_manifest.json models/lgbm_v9_optuna_tuning_manifest.json
+#21 CACHED
+
+#22 [19/20] COPY models/lgbm_v9_optuna_tuning_fitted_transforms.pkl models/lgbm_v9_optuna_tuning_fitted_transforms.pkl
+#22 CACHED
+
+#23 [ 5/20] RUN pip install --no-cache-dir -r requirements.txt
+#23 CACHED
+
+#24 [ 9/20] COPY evals/ evals/
+#24 CACHED
+
+#25 [20/20] COPY models/lgbm_v9_calibrator.pkl models/lgbm_v9_calibrator.pkl
+#25 CACHED
+
+#26 exporting to image
+#26 exporting layers done
+#26 exporting manifest sha256:c8622e528d3c71bb47ec74608b09c1cf06b66d8ca4195b7d2a7a4f6a57f3bb19 done
+#26 exporting config sha256:c50310703804f091b34ac457bbdb6cdbc220356e4008400136154946e7d49073 done
+#26 exporting attestation manifest sha256:3791025658c597e386276676ded8ecadee02e14d9720805239746d1dfed1bbc4 done
+#26 exporting manifest list sha256:12907e9522304774d2cb92a221c9a2d47ac33df2512ad07f5b21401e0ce465be done
+#26 naming to docker.io/library/fraud-api:latest done
+#26 unpacking to docker.io/library/fraud-api:latest done
+#26 DONE 0.0s
+
+#27 resolving provenance for metadata file
+#27 DONE 0.0s
+ Image fraud-api:latest Built 
+compose build fraud-api exit: 0
+docker tag exit: 0
+sha256:12907e9522304774d2cb92a221c9a2d47ac33df2512ad07f5b21401e0ce465be
+Image: "fraud-api:a7555b2" with ID "sha256:12907e9522304774d2cb92a221c9a2d47ac33df2512ad07f5b21401e0ce465be" not yet present on node "fraud-local-control-plane", loading...
+kind load exit: 0
+namespace/fraud-local created
+configmap/fraud-api-config created
+deployment.apps/fraud-api created
+service/fraud-api created
+apply exit: 0
+Waiting for deployment "fraud-api" rollout to finish: 0 of 1 updated replicas are available...
+deployment "fraud-api" successfully rolled out
+rollout status exit: 0
+NAME                         READY   STATUS    RESTARTS   AGE
+fraud-api-576fb8459b-xccsb   1/1     Running   0          16s
+
+=== 2026-11-17T00:50:06Z STAGE kubernetes apply done ===
+
+=== 2026-11-17T00:50:15Z STAGE kubernetes verify curl ===
+{"status":"ready","model_version":"v9","dataset_version":5,"model_loaded":true}Unable to use a TTY - input is not a terminal or the right kind of file
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/curl-client, falling back to streaming logs: unable to upgrade connection: rpc error: code = InvalidArgument desc = tty and stderr cannot both be true
+{"status":"ready","model_version":"v9","dataset_version":5,"model_loaded":true}pod "curl-client" deleted from fraud-local namespace
+readyz curl exit: 0
+{"status":"alive"}Unable to use a TTY - input is not a terminal or the right kind of file
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+warning: couldn't attach to pod/curl-client, falling back to streaming logs: unable to upgrade connection: container curl-client not found in pod curl-client_fraud-local
+{"status":"alive"}pod "curl-client" deleted from fraud-local namespace
+livez curl exit: 0
+
+=== 2026-11-17T00:50:23Z STAGE kubernetes verify done ===
+
+=== 2026-11-17T00:50:30Z STAGE monitoring install ===
+namespace/monitoring created
+namespace/monitoring unchanged
+configmap/prometheus-config created
+deployment.apps/prometheus created
+serviceaccount/prometheus created
+role.rbac.authorization.k8s.io/prometheus-pod-reader created
+rolebinding.rbac.authorization.k8s.io/prometheus-pod-reader created
+service/prometheus created
+monitoring apply exit: 0
+secret/grafana-admin created
+grafana secret exit: 0
+configmap/grafana-dashboard-provider created
+configmap/grafana-dashboards created
+configmap/grafana-datasources created
+service/grafana created
+deployment.apps/grafana created
+grafana apply exit: 0
+Waiting for deployment "prometheus" rollout to finish: 0 of 1 updated replicas are available...
+deployment "prometheus" successfully rolled out
+prometheus rollout exit: 0
+Waiting for deployment "grafana" rollout to finish: 0 of 1 updated replicas are available...
+deployment "grafana" successfully rolled out
+grafana rollout exit: 0
+
+=== 2026-11-17T00:51:01Z STAGE monitoring install done ===
+
+=== 2026-11-17T00:51:14Z STAGE monitoring dashboard queries ===
+FINDING: docs/operations.md section 3 says to run each port-forward in the foreground in its own terminal tab. This check has one shell, and the query script needs Prometheus on localhost:9090.
+WORKAROUND: start the documented Prometheus port-forward in the background, then run python3 scripts/check_dashboard_queries.py
+prom pf pid 85570
+Prediction volume	POST /predict	0
+Client error ratio (4xx)	4xx	EMPTY
+Server error ratio (5xx)	5xx	EMPTY
+Latency, successful predictions	p50	EMPTY
+Latency, successful predictions	p95	EMPTY
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 0; {action="step_up"} 0; {action="review"} 0; {action="decline"} 0
+dashboard queries exit: 0
+
+=== 2026-11-17T00:51:17Z STAGE monitoring done ===
+
+=== 2026-11-17T00:51:31Z STAGE load smoke ===
+SCOPE: docs/load_test.md lists five runs. This check runs only the smoke line, as assigned.
+docker.io/grafana/k6:2.4.0              	saved	
+application/vnd.oci.image.index.v1+json sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276
+Importing	elapsed: 0.8 s	total:   0.0 B	(0.0 B/s)	
+configmap/k6-scripts created
+job.batch/smoke created
+job.batch/smoke condition met
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /scripts/predict.js
+        output: -
+
+     scenarios: (100.00%) 2 scenarios, 2 max VUs, 50s max duration (incl. graceful stop):
+              * warmup: 1 looping VUs for 5s (gracefulStop: 30s)
+              * measured: 1 looping VUs for 10s (startTime: 10s, gracefulStop: 30s)
+
+
+running (01.0s), 1/2 VUs, 5 complete and 0 interrupted iterations
+warmup     [  20% ] 1 VUs    1.0s/5s
+measured • [   0% ] waiting  09.0s
+
+running (02.0s), 1/2 VUs, 10 complete and 0 interrupted iterations
+warmup     [  40% ] 1 VUs    2.0s/5s
+measured • [   0% ] waiting  08.0s
+
+running (03.0s), 1/2 VUs, 18 complete and 0 interrupted iterations
+warmup     [  60% ] 1 VUs    3.0s/5s
+measured • [   0% ] waiting  07.0s
+
+running (04.0s), 1/2 VUs, 25 complete and 0 interrupted iterations
+warmup     [  80% ] 1 VUs    4.0s/5s
+measured • [   0% ] waiting  06.0s
+
+running (05.0s), 1/2 VUs, 32 complete and 0 interrupted iterations
+warmup     [ 100% ] 1 VUs    5.0s/5s
+measured • [   0% ] waiting  05.0s
+
+running (06.0s), 0/2 VUs, 33 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs    5s
+measured • [   0% ] waiting  04.0s
+
+running (07.0s), 0/2 VUs, 33 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs    5s
+measured • [   0% ] waiting  03.0s
+
+running (08.0s), 0/2 VUs, 33 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs    5s
+measured • [   0% ] waiting  02.0s
+
+running (09.0s), 0/2 VUs, 33 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs    5s
+measured • [   0% ] waiting  01.0s
+
+running (10.0s), 0/2 VUs, 33 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [   0% ] 1 VUs  00.0s/10s
+
+running (11.0s), 1/2 VUs, 39 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  10% ] 1 VUs  01.0s/10s
+
+running (12.0s), 1/2 VUs, 46 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  20% ] 1 VUs  02.0s/10s
+
+running (13.0s), 1/2 VUs, 54 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  30% ] 1 VUs  03.0s/10s
+
+running (14.0s), 1/2 VUs, 61 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  40% ] 1 VUs  04.0s/10s
+
+running (15.0s), 1/2 VUs, 68 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  50% ] 1 VUs  05.0s/10s
+
+running (16.0s), 1/2 VUs, 74 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  60% ] 1 VUs  06.0s/10s
+
+running (17.0s), 1/2 VUs, 82 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  70% ] 1 VUs  07.0s/10s
+
+running (18.0s), 1/2 VUs, 88 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  80% ] 1 VUs  08.0s/10s
+
+running (19.0s), 1/2 VUs, 95 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [  90% ] 1 VUs  09.0s/10s
+
+running (20.0s), 1/2 VUs, 102 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured   [ 100% ] 1 VUs  10.0s/10s
+time="2026-11-17T00:51:53Z" level=info msg="K6_SUMMARY {\"vus\":1,\"duration_s\":10,\"requests\":70,\"achieved_rps\":7,\"http_failures\":0,\"semantic_failures\":0,\"p50_ms\":145.01822950000002,\"p95_ms\":177.65804389999988,\"p99_ms\":218.39911473,\"max_ms\":227.557542,\"actions\":{\"approve\":9,\"step_up\":0,\"review\":61,\"decline\":0}}" source=console
+
+running (20.1s), 0/2 VUs, 103 complete and 0 interrupted iterations
+warmup   ✓ [ 100% ] 1 VUs  5s
+measured ✓ [ 100% ] 1 VUs  10s
+{"vus": 1, "duration_s": 10, "requests": 70, "achieved_rps": 7, "http_failures": 0, "semantic_failures": 0, "p50_ms": 145.01822950000002, "p95_ms": 177.65804389999988, "p99_ms": 218.39911473, "max_ms": 227.557542, "actions": {"approve": 9, "step_up": 0, "review": 61, "decline": 0}}
+API pod: fraud-api-576fb8459b-xccsb
+API resources: {"limits":{"cpu":"500m","memory":"1Gi"},"requests":{"cpu":"250m","memory":"768Mi"}}
+k6 image: grafana/k6:2.4.0
+API node: fraud-local-control-plane
+k6 pod: smoke-jsvsf
+k6 node: fraud-local-control-plane
+k6 shares the same kind node (same machine) as the API
+smoke load exit: 0
+
+=== 2026-11-17T00:51:56Z STAGE load smoke done ===
+
+=== 2026-11-17T00:52:03Z STAGE recovery release drill ===
+FINDING: README links scripts/drills/ and docs/incidents.md records the restore command, but neither file contains the command to start the drill.
+WORKAROUND: bash scripts/drills/release_incident.sh once, from the checkout root.
+
+=== 2026-11-17T00:52:03Z BASELINE ===
+pod: fraud-api-576fb8459b-xccsb
+pod IP: 10.244.0.5
+ready: true
+image: fraud-api:a7555b2
+imageID: docker.io/library/import-2026-11-17@sha256:bd3b0a4478978ca387e5a51e2541d77faa56d64bb1177dd10b8b52fb00d5c46d
+deployment revision: 1
+replica set: fraud-api-576fb8459b
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS         AGE
+fraud-api   10.244.0.5:8000   2m13s
+golden via the Service:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: a02c77ae-c4c1-460a-9c4d-8d38c21347a2
+restoration command: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+
+=== 2026-11-17T00:52:03Z INJECT ===
+T0: 2026-11-17T00:52:03Z
+deployment.apps/fraud-api patched
+
+=== 2026-11-17T00:52:03Z OBSERVE ===
+Waiting for deployment "fraud-api" rollout to finish: 1 old replicas are pending termination...
+error: timed out waiting for the condition
+rollout status exit code: 1
+pods:
+NAME                         READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-576fb8459b-xccsb   1/1     Running   0          3m44s   10.244.0.5    fraud-local-control-plane   <none>           <none>
+fraud-api-5c6c787f54-4kfmd   0/1     Running   0          91s     10.244.0.11   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-576fb8459b   1         1         1
+fraud-api-5c6c787f54   1         1         <none>
+old replica set: fraud-api-576fb8459b
+new pod: fraud-api-5c6c787f54-4kfmd
+new replica set: fraud-api-5c6c787f54
+events for fraud-api-5c6c787f54-4kfmd, sorted by creation time, Readiness or Unhealthy:
+80s         Warning   Unhealthy           pod/fraud-api-5c6c787f54-4kfmd    Liveness probe failed: Get "http://10.244.0.11:8000/livez": dial tcp 10.244.0.11:8000: connect: connection refused
+1s          Warning   Unhealthy           pod/fraud-api-5c6c787f54-4kfmd    Readiness probe failed: HTTP probe failed with statuscode: 404
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS         AGE
+fraud-api   10.244.0.5:8000   3m44s
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.5
+endpoints contain only the old pod IP
+golden via the Service, exec from fraud-api-576fb8459b-xccsb:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: a201a765-5e77-4470-9406-3102c9107729
+request_id a201a765-5e77-4470-9406-3102c9107729 is in fraud-api-576fb8459b-xccsb logs; this pod served it
+request_id a201a765-5e77-4470-9406-3102c9107729 is not in fraud-api-5c6c787f54-4kfmd logs
+The probe now hits an unmatched route, so the new pod's logs show route "unmatched" 404s.
+{"event": "request_completed", "timestamp": "2026-11-17T00:52:19.908900+00:00", "request_id": "61df8f3d-ff64-4301-82fc-e2abc43d206a", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 3.002, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+{"event": "request_completed", "timestamp": "2026-11-17T00:52:24.904893+00:00", "request_id": "59393127-ff92-460c-b702-5ff466438150", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 0.959, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+
+=== 2026-11-17T00:53:35Z RESTORE ===
+T1: 2026-11-17T00:53:35Z
+running: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+deployment.apps/fraud-api configured
+deployment "fraud-api" successfully rolled out
+
+=== 2026-11-17T00:53:35Z VERIFY ===
+waiting until the broken pod is gone
+pods:
+NAME                         READY   STATUS    RESTARTS   AGE     IP           NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-576fb8459b-xccsb   1/1     Running   0          3m47s   10.244.0.5   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-576fb8459b   1         1         1
+fraud-api-5c6c787f54   0         0         <none>
+running ready pods: 1
+broken replica set fraud-api-5c6c787f54 desired replicas: 0
+pod: fraud-api-576fb8459b-xccsb
+pod IP: 10.244.0.5
+image: fraud-api:a7555b2
+imageID: docker.io/library/import-2026-11-17@sha256:bd3b0a4478978ca387e5a51e2541d77faa56d64bb1177dd10b8b52fb00d5c46d
+baseline imageID: docker.io/library/import-2026-11-17@sha256:bd3b0a4478978ca387e5a51e2541d77faa56d64bb1177dd10b8b52fb00d5c46d
+readinessProbe path: /readyz
+image matches fraud-api:a7555b2
+imageID matches the baseline imageID
+readinessProbe path is /readyz
+kubectl diff exit code: 0
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS         AGE
+fraud-api   10.244.0.5:8000   3m47s
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.5
+endpoints list the ready pod IP
+fraud_probability: 0.005580357142857143
+baseline fraud_probability: 0.005580357142857143
+recommended_action: approve
+baseline recommended_action: approve
+X-Request-ID: 9aa60500-48d0-4854-b2fc-cafa56198f2e
+RECOVERY VERIFIED
+deployment revision: 3
+deployment.apps/fraud-api 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+
+verified at: 2026-11-17T00:53:38Z
+total seconds from T0 to verified recovery: 95
+drill exit: 0
+
+=== 2026-11-17T00:53:38Z STAGE recovery release drill done ===
+
+=== 2026-11-17T00:53:51Z STAGE recovery valid batch ===
+Attempting documented port-forward while compose may still hold port 8000.
+pf pid 85868
+pf log:
+Forwarding from 127.0.0.1:8000 -> 8000
+Forwarding from [::1]:8000 -> 8000
+{
+  "row_count": 24,
+  "invalid_score_count": 0,
+  "score_quantiles": {
+    "min": 0.00989621047550085,
+    "p10": 0.019065868398502685,
+    "p25": 0.09875141884222474,
+    "p50": 0.23414634146341465,
+    "p75": 0.35185185185185186,
+    "p90": 0.43967532467532466,
+    "max": 0.5167785234899327
+  },
+  "action_counts": {
+    "approve": 3,
+    "step_up": 0,
+    "review": 21,
+    "decline": 0,
+    "other": 0
+  },
+  "scores": [
+    0.23414634146341465,
+    0.4155844155844156,
+    0.017982456140350878,
+    0.4155844155844156,
+    0.5167785234899327,
+    0.2608695652173913,
+    0.2,
+    0.24050632911392406,
+    0.24050632911392406,
+    0.09875141884222474,
+    0.35185185185185186,
+    0.5107913669064749,
+    0.45,
+    0.19576719576719573,
+    0.23414634146341465,
+    0.09875141884222474,
+    0.017982456140350878,
+    0.12373737373737376,
+    0.00989621047550085,
+    0.05858170606372044,
+    0.23414634146341465,
+    0.35185185185185186,
+    0.021593830334190232,
+    0.09875141884222474
+  ],
+  "label_status": "unavailable",
+  "matched_label_count": null,
+  "label_coverage": null,
+  "joined_labels": null,
+  "performance": null
+}
+valid batch exit: 0
+
+=== 2026-11-17T00:53:57Z STAGE recovery valid batch done ===
+
+=== 2026-11-17T00:54:26Z STAGE golden through the Service ===
+--- lsof port 8000 (container runbook common failures) ---
+COMMAND     PID      USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+com.docke 34158 arnavlohe  157u  IPv6 0xef73737358e28ea4      0t0  TCP *:8000 (LISTEN)
+kubectl   85868 arnavlohe   10u  IPv4 0x258367a9c1adf706      0t0  TCP 127.0.0.1:8000 (LISTEN)
+kubectl   85868 arnavlohe   11u  IPv6 0xb2e9f08fc422f252      0t0  TCP [::1]:8000 (LISTEN)
+--- docker ps ---
+fraud-local-control-plane 127.0.0.1:58312->6443/tcp Up 5 minutes
+mle-handoff-check-fraud-api-1 0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp Up 6 minutes (healthy)
+FINDING: no runbook gives a standalone golden POST through the Service. The drill script does that POST to http://fraud-api:8000/predict.
+WORKAROUND: repeat that Service POST from the ready pod, using tests/fixtures/golden_request.json, and compare to docs/release_baseline.md.
+pod fraud-api-576fb8459b-xccsb
+--- headers and body ---
+HTTP/1.1 200 OK
+fraud_probability 0.005580357142857143
+recommended_action approve
+baseline_score 0.005580357142857143
+baseline_action approve
+score_match True
+action_match True
+golden check exit: 0
+
+=== 2026-11-17T00:54:26Z STAGE golden done ===
+
+=== 2026-11-17T00:54:51Z STAGE cleanup load jobs and drill pods ===
+FINDING: docs/operations.md cleanup deletes monitoring and the cluster. docs/kubernetes_runbook.md teardown deletes the cluster. Neither says how to delete a finished k6 Job. This check must not delete the cluster or monitoring.
+WORKAROUND: kubectl -n fraud-local delete job smoke
+NAME    STATUS     COMPLETIONS   DURATION   AGE
+smoke   Complete   1/1           23s        3m19s
+NAME                         READY   STATUS      RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-576fb8459b-xccsb   1/1     Running     0          5m1s    10.244.0.5    fraud-local-control-plane   <none>           <none>
+smoke-jsvsf                  0/1     Completed   0          3m19s   10.244.0.10   fraud-local-control-plane   <none>           <none>
+job.batch "smoke" deleted from fraud-local namespace
+delete job exit: 0
+pods after:
+NAME                         READY   STATUS    RESTARTS   AGE
+fraud-api-576fb8459b-xccsb   1/1     Running   0          5m1s
+jobs after:
+No resources found in fraud-local namespace.
+Left in place: kind cluster fraud-local, monitoring namespace, ~/mle-handoff-check, compose container mle-handoff-check-fraud-api-1.
+
+=== 2026-11-17T00:54:51Z STAGE cleanup done ===
+handoff git status:

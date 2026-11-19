@@ -90,7 +90,7 @@ Model binaries and data are never committed; see [docs/artifacts.md](docs/artifa
 4. Monitoring. [docs/operations.md](docs/operations.md).
 5. Load tests. [docs/load_test.md](docs/load_test.md).
 6. Recovery drills. [docs/incidents.md](docs/incidents.md) and [scripts/drills/](scripts/drills/). Start the release drill with `bash scripts/drills/release_incident.sh` (`DASHBOARD_SNAPSHOT=1` is optional while Prometheus is port-forwarded). Start the data drill with the invalid-batch command, then the valid-batch command, on that page.
-7. Cleanup. [Container shutdown](docs/container_runbook.md#shutdown), [monitoring cleanup](docs/operations.md#11-cleanup) (including k6 Jobs), and [cluster teardown](docs/kubernetes_runbook.md#8-teardown).
+7. Cleanup. [Container shutdown](docs/container_runbook.md#shutdown), [monitoring cleanup](docs/operations.md#11-cleanup) (including k6 Jobs), and [cluster teardown](docs/kubernetes_runbook.md#8-teardown). The author's fresh-checkout self-check is [docs/handoff_selfcheck.md](docs/handoff_selfcheck.md). It is not an independent handoff; that handoff is pending.
 
 ## Further documentation
 

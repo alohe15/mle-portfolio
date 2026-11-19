@@ -74,4 +74,14 @@ Build the image in CI, push it to a registry, and deploy by digest. The local cl
 
 ## Limitations
 
-Traffic is synthetic [docs/load_test.md]. The Deployment is a single replica [deploy/k8s/local/deployment.yaml]. Alerting is not set up [docs/operations.md]. There are no real labels. The batch demo uses simulated labels for 10 of 24 rows [docs/model_monitoring.md]. Local Compose builds still use the tag `fraud-api:latest` [docker-compose.yml], while the cluster manifest pins `fraud-api:9789b59` [deploy/k8s/local/deployment.yaml]. The score tolerance of 1e-6 is proposed and pending mentor approval [docs/release_baseline.md]. The artifact handoff is written in [docs/artifacts.md](artifacts.md) and has not had an independent check.
+Traffic is synthetic [docs/load_test.md]. The Deployment is a single replica [deploy/k8s/local/deployment.yaml]. Alerting is not set up [docs/operations.md]. There are no real labels. The batch demo uses simulated labels for 10 of 24 rows [docs/model_monitoring.md]. Local Compose builds still use the tag `fraud-api:latest` [docker-compose.yml], while the cluster manifest pins `fraud-api:9789b59` [deploy/k8s/local/deployment.yaml]. The score tolerance of 1e-6 is proposed and pending mentor approval [docs/release_baseline.md]. The artifact handoff is written in [docs/artifacts.md](artifacts.md) and has not had an independent check. The author's self-check is [docs/handoff_selfcheck.md](handoff_selfcheck.md). An independent handoff by another person is still pending.
+
+## Final reflection
+
+If readiness, the dashboard, and a successful prediction disagree, none of the three is the verdict by itself.
+
+The Phase 10A service-error drill returned 500 on `/predict`, category `prediction_error`, and the 5xx counter moved, while the pod was still being scraped [docs/evidence/phase10a/step5_checks.txt]. `scrape_up=1` only proves `/metrics` answered, not that `/predict` works [docs/operations.md]. Readiness and `/metrics` do not call the model. Check the request path itself: a golden request, the 5xx counter, and the log line for that request id [docs/operations.md].
+
+During Phase 10A Step 4 every dashboard panel errored while the API was ready and predictions worked. Grafana was `OOMKilled` and the port-forward died [docs/operations.md]. The record is [step4_grafana_unreachable.png](evidence/phase10a/step4_grafana_unreachable.png). Check the monitoring path before concluding the service is broken.
+
+The order is a real request first, then logs by request id, then the monitoring pipeline, then readiness.
