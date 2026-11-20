@@ -1,0 +1,237 @@
+{
+  "uid": "fraud-api",
+  "title": "Fraud API (local)",
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Prediction volume",
+      "description": "POST /predict requests per second, every status class. Rate window 1m. Unit: requests per second. /livez, /readyz, and /metrics are excluded.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(fraud_api_http_requests_total{route=\"/predict\",method=\"POST\"}[1m]))",
+          "legendFormat": "POST /predict"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Client error ratio (4xx)",
+      "description": "Fraction of /predict requests that returned 4xx. Rate window 1m. Unit: fraction of requests, from 0 to 1. /livez, /readyz, and /metrics are excluded.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "noValue": "No traffic"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "(sum(rate(fraud_api_http_requests_total{route=\"/predict\",status_class=\"4xx\"}[1m])) or vector(0)) / (sum(rate(fraud_api_http_requests_total{route=\"/predict\"}[1m])) > 0)",
+          "legendFormat": "4xx"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Server error ratio (5xx)",
+      "description": "Fraction of /predict requests that returned 5xx. Rate window 1m. Unit: fraction of requests, from 0 to 1. /livez, /readyz, and /metrics are excluded.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "noValue": "No traffic"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "(sum(rate(fraud_api_http_requests_total{route=\"/predict\",status_class=\"5xx\"}[1m])) or vector(0)) / (sum(rate(fraud_api_http_requests_total{route=\"/predict\"}[1m])) > 0)",
+          "legendFormat": "5xx"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Latency, successful predictions",
+      "description": "p50 and p95 latency of successful /predict responses (status_class 2xx). Rate window 5m. Unit: seconds. /livez, /readyz, and /metrics are excluded.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "No traffic"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(fraud_api_http_request_duration_seconds_bucket{route=\"/predict\",status_class=\"2xx\"}[5m]))) and on() (sum(rate(fraud_api_http_request_duration_seconds_count{route=\"/predict\",status_class=\"2xx\"}[5m])) > 0)",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fraud_api_http_request_duration_seconds_bucket{route=\"/predict\",status_class=\"2xx\"}[5m]))) and on() (sum(rate(fraud_api_http_request_duration_seconds_count{route=\"/predict\",status_class=\"2xx\"}[5m])) > 0)",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Loaded model",
+      "description": "Loaded model and dataset identity from fraud_api_model_info. Rate window: none (instant gauge). Unit: gauge value 1, shown as the series name. /livez, /readyz, and /metrics are excluded.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (model_version, dataset_version) (fraud_api_model_info)",
+          "legendFormat": "{{model_version}} / dataset {{dataset_version}}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Model loaded / scrape up",
+      "description": "model_loaded is 1 when serving artifacts are loaded, and scrape_up is the Prometheus up series for the fraud-api job. Rate window: none (instant gauges). Unit: 1 or 0. scrape_up=1 only proves /metrics answered, not that /predict works. /livez, /readyz, and /metrics are excluded.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(fraud_api_model_loaded)",
+          "legendFormat": "model_loaded",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(up{job=\"fraud-api\"})",
+          "legendFormat": "scrape_up",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Prediction action mix",
+      "description": "Successful predictions by recommended action. Window 5m, using increase rather than a per-second rate. Unit: predictions (short). /livez, /readyz, and /metrics are excluded.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": { "mode": "normal", "group": "A" },
+            "lineWidth": 1,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (action) (increase(fraud_api_predictions_total[5m]))",
+          "legendFormat": "{{action}}"
+        }
+      ]
+    }
+  ]
+}

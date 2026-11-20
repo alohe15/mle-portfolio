@@ -1,0 +1,9 @@
+Prediction volume	POST /predict	0
+Client error ratio (4xx)	4xx	EMPTY
+Server error ratio (5xx)	5xx	EMPTY
+Latency, successful predictions	p50	0.375
+Latency, successful predictions	p95	0.4875
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 1.0526389658874797; {action="step_up"} 0; {action="review"} 0; {action="decline"} 0

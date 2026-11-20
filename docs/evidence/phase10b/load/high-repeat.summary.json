@@ -1,0 +1,1 @@
+{"vus": 5, "duration_s": 60, "requests": 265, "achieved_rps": 4.416666666666667, "http_failures": 0, "semantic_failures": 0, "p50_ms": 1123.257334, "p95_ms": 1329.429584, "p99_ms": 1625.7536559999996, "max_ms": 1873.343918, "actions": {"approve": 32, "step_up": 0, "review": 233, "decline": 0}}

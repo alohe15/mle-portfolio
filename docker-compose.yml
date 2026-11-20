@@ -32,4 +32,8 @@ services:
       - pytest
       - tests/test_training_serving_parity.py
       - tests/test_api_endpoint.py
+      - tests/test_observability.py
+      - tests/test_metrics.py
+      - tests/test_batch_report.py
+      - tests/test_fault_double.py
       - -v

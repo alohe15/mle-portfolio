@@ -1,0 +1,12 @@
+2026-11-15T21:49:16Z
+NAME                         READY   STATUS    RESTARTS   AGE     IP           NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-75d945d867-6bhzx   1/1     Running   0          7m49s   10.244.0.6   fraud-local-control-plane   <none>           <none>
+prometheus image: prom/prometheus:v3.16.0
+=== BEFORE
+2xx 5
+approve 5
+HTTP 200
+HTTP 200
+=== AFTER (expect +2)
+2xx 7
+approve 7
