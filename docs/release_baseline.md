@@ -40,7 +40,7 @@ Observed. Every cited golden `fraud_probability` is `0.005580357142857143` (abso
 
 Why not exact equality. Float results can change in the last digits across library versions, CPU instruction sets, or thread counts with no change in behaviour. Exact equality would make the check flaky. Float rounding is about 1e-16 relative.
 
-Why not looser. At amount 125.5, the smallest increase in p that changes the action is 0.028902401477832525 (approve to step_up), 28902.401477832525 times `1e-6`. Scanned to -10, no decrease changed the action. A real artifact, model, or transform change is expected to move scores far more than 1e-6.
+Why not looser. At amount 125.5, the smallest increase in p that changes the action is 0.028902401477832525 (approve to step_up), 28902.401477832525 times `1e-6`. No decrease, down to p = 0, changes the action (approve is already the lowest-cost action). A real artifact, model, or transform change is expected to move scores far more than 1e-6.
 
 Limit. `0.005580357142857143` equals 5/896, which suggests it sits on a flat step of the isotonic calibrator. Small raw-score changes may not move it at all, so the golden check is coarse. The parity test (raw scores, same 1e-6) and the startup checksums cover smaller changes.
 
