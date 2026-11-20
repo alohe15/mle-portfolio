@@ -1,0 +1,118 @@
+
+=== 2026-11-16T22:22:16Z BASELINE ===
+pod: fraud-api-89f7dff65-s55dn
+pod IP: 10.244.0.23
+ready: true
+image: fraud-api:a7555b2
+imageID: docker.io/library/import-2026-11-16@sha256:d8de616b56cf92ef76ec0a5f08e4ef1ce84989bd864bbeb3c563f77d79aae66a
+deployment revision: 8
+replica set: fraud-api-89f7dff65
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.23:8000   7d
+golden via the Service:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: 85551090-a595-4160-b2f7-0f8f10606d25
+restoration command: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+
+=== 2026-11-16T22:22:17Z INJECT ===
+T0: 2026-11-16T22:22:17Z
+deployment.apps/fraud-api patched
+
+=== 2026-11-16T22:22:17Z OBSERVE ===
+Waiting for deployment "fraud-api" rollout to finish: 1 old replicas are pending termination...
+error: timed out waiting for the condition
+rollout status exit code: 1
+pods:
+NAME                         READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-75c44c8f45-5g92w   0/1     Running   0          90s     10.244.0.25   fraud-local-control-plane   <none>           <none>
+fraud-api-89f7dff65-s55dn    1/1     Running   0          6m42s   10.244.0.23   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-754c9d9c84   0         0         <none>
+fraud-api-75c44c8f45   1         1         <none>
+fraud-api-75d945d867   0         0         <none>
+fraud-api-79574cd964   0         0         <none>
+fraud-api-89f7dff65    1         1         1
+fraud-api-c65dfc4f5    0         0         <none>
+old replica set: fraud-api-89f7dff65
+new pod: fraud-api-75c44c8f45-5g92w
+new replica set: fraud-api-75c44c8f45
+events for fraud-api-75c44c8f45-5g92w, sorted by creation time, Readiness or Unhealthy:
+0s          Warning   Unhealthy           pod/fraud-api-75c44c8f45-5g92w    Readiness probe failed: HTTP probe failed with statuscode: 404
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.23:8000   7d
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.23
+endpoints contain only the old pod IP
+golden via the Service, exec from fraud-api-75c44c8f45-5g92w:
+fraud_probability: 0.005580357142857143
+recommended_action: approve
+X-Request-ID: 657890db-3473-4c31-b528-5278a2b14644
+request_id 657890db-3473-4c31-b528-5278a2b14644 is in fraud-api-89f7dff65-s55dn logs; this pod served it
+request_id 657890db-3473-4c31-b528-5278a2b14644 is not in fraud-api-75c44c8f45-5g92w logs
+The probe now hits an unmatched route, so the new pod's logs show route "unmatched" 404s.
+{"event": "request_completed", "timestamp": "2026-11-16T22:22:34.051985+00:00", "request_id": "b9b9353d-c42c-4880-83d8-3907c4a1cd84", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 1.736, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+{"event": "request_completed", "timestamp": "2026-11-16T22:22:39.046312+00:00", "request_id": "c611c54e-2ea3-4029-9c4f-99fec6c13726", "route": "unmatched", "method": "GET", "status_class": "4xx", "status_code": 404, "duration_ms": 0.672, "model_version": "v9", "error_category": "not_found", "recommended_action": null}
+
+=== 2026-11-16T22:23:48Z RESTORE ===
+T1: 2026-11-16T22:23:48Z
+running: kubectl apply -f deploy/k8s/local/deployment.yaml && kubectl -n fraud-local rollout status deployment/fraud-api --timeout=180s
+deployment.apps/fraud-api configured
+Waiting for deployment spec update to be observed...
+Waiting for deployment "fraud-api" rollout to finish: 1 old replicas are pending termination...
+deployment "fraud-api" successfully rolled out
+
+=== 2026-11-16T22:23:48Z VERIFY ===
+waiting until the broken pod is gone
+pods:
+NAME                        READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+fraud-api-89f7dff65-s55dn   1/1     Running   0          6m45s   10.244.0.23   fraud-local-control-plane   <none>           <none>
+replica sets:
+NAME                   DESIRED   CURRENT   READY
+fraud-api-754c9d9c84   0         0         <none>
+fraud-api-75c44c8f45   0         0         <none>
+fraud-api-75d945d867   0         0         <none>
+fraud-api-79574cd964   0         0         <none>
+fraud-api-89f7dff65    1         1         1
+fraud-api-c65dfc4f5    0         0         <none>
+running ready pods: 1
+broken replica set fraud-api-75c44c8f45 desired replicas: 0
+pod: fraud-api-89f7dff65-s55dn
+pod IP: 10.244.0.23
+image: fraud-api:a7555b2
+imageID: docker.io/library/import-2026-11-16@sha256:d8de616b56cf92ef76ec0a5f08e4ef1ce84989bd864bbeb3c563f77d79aae66a
+baseline imageID: docker.io/library/import-2026-11-16@sha256:d8de616b56cf92ef76ec0a5f08e4ef1ce84989bd864bbeb3c563f77d79aae66a
+readinessProbe path: /readyz
+image matches fraud-api:a7555b2
+imageID matches the baseline imageID
+readinessProbe path is /readyz
+kubectl diff exit code: 0
+service endpoints:
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS          AGE
+fraud-api   10.244.0.23:8000   7d
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+endpoint IPs: 10.244.0.23
+endpoints list the ready pod IP
+fraud_probability: 0.005580357142857143
+baseline fraud_probability: 0.005580357142857143
+recommended_action: approve
+baseline recommended_action: approve
+X-Request-ID: 2fa98fa6-7cf2-49e0-876b-e3f8bdec70ae
+RECOVERY VERIFIED
+deployment revision: 10
+deployment.apps/fraud-api 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+4         <none>
+5         <none>
+9         <none>
+10        <none>
+
+verified at: 2026-11-16T22:23:51Z
+total seconds from T0 to verified recovery: 94

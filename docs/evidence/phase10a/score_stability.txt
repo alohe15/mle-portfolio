@@ -1,0 +1,92 @@
+# Score stability
+# Recorded 2026-11-20. Request payload values are not recorded.
+# Baseline golden fraud_probability: 0.005580357142857143
+# |difference| below is the absolute difference from that baseline, except the parity row.
+
+## cited golden observations
+
+source	context	value	abs_diff
+docs/release_evidence.md:179	rebuild	0.005580357142857143	0
+docs/release_evidence.md:64	rebuild	absolute difference 0 (training vs serving, raw and calibrated, five rows)	0
+~/fraud-evidence/step0.log:463	fresh clone	0.005580357142857143	0
+~/fraud-evidence/step0.log:518	fresh clone	0.005580357142857143	0
+~/fraud-evidence/golden_response_1.txt:1	fresh clone	0.005580357142857143	0
+~/fraud-evidence/step0.log:520	repeat calls	0.005580357142857143	0
+~/fraud-evidence/golden_response_2.txt:1	repeat calls	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck.log:598	fresh-checkout build	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck.log:1146	repeat calls	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck.log:1181	repeat calls	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck.log:1224	repeat calls	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck.log:1317	repeat calls	0.005580357142857143	0
+~/fraud-evidence/phase11/data_incident_rerun.txt:86	repeat calls	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck_rerun.log:226	re-pin	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck_rerun.log:638	re-pin	0.005580357142857143	0
+~/fraud-evidence/phase11/release_incident.log:14	re-pin	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck_rerun.log:676	re-pin	0.005580357142857143	0
+~/fraud-evidence/phase11/release_incident.log:52	re-pin	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck_rerun.log:721	re-pin	0.005580357142857143	0
+~/fraud-evidence/phase11/release_incident.log:97	re-pin	0.005580357142857143	0
+~/fraud-evidence/phase11/selfcheck_rerun.log:825	re-pin	0.005580357142857143	0
+
+notes:
+- golden_response_1.txt is the response saved from step0.log:518 (request_id 5ba7f9aa-340e-4b95-9d29-c7f8c134031f).
+- golden_response_2.txt is the response saved from step0.log:520 (request_id f4fe7f08-af4b-404e-ae86-b721852784ec).
+- release_incident.log:14, :52, and :97 are the same three Service calls as selfcheck_rerun.log:638, :676, and :721.
+- data_incident_rerun.txt also records abs diff from baseline 0.0 on that call.
+- docs/evidence has no fraud_probability line and no golden line.
+- ~/fraud-evidence/load/drill-traffic.log and ~/fraud-evidence/phase11/drill_traffic.out have no fraud_probability line.
+- CPU limit change: docs/load_test.md, docs/evidence/phase10b/load/high-cpu1000.resources.txt, and ~/fraud-evidence/load/high-cpu1000.summary.json record the 1000m run and do not contain this probability.
+- No final_state.txt under ~/fraud-evidence. The PART C golden on the re-pinned pod is selfcheck_rerun.log:825.
+- Historical max |diff| on the golden probability rows: 0.
+
+## repeat golden requests through the Service
+
+timestamp_start_utc: 2026-11-20T15:50:01Z
+timestamp_end_utc: 2026-11-20T15:50:11Z
+path: kubectl -n fraud-local port-forward svc/fraud-api 8000:8000
+deployment_image: fraud-api:9789b59
+n: 50
+max_abs_diff: 0.0
+distinct_count: 1
+distinct_values: 0.005580357142857143
+action_mismatches: 0
+actions: approve
+
+## batch, two runs against the saved predictions
+
+timestamp_run1_utc: 2026-11-20T15:50:15Z
+timestamp_run2_utc: 2026-11-20T15:50:19Z
+command: python3 scripts/prediction_batch_report.py --base-url http://127.0.0.1:8000 --payloads tests/load/payloads.json
+reference: ~/fraud-evidence/batch/predictions.jsonl
+examples: 24
+run1_vs_run2_max_abs_diff: 0.0
+run1_vs_run2_action_mismatches: 0
+run1_vs_reference_max_abs_diff: 0.0
+run1_vs_reference_action_mismatches: 0
+run2_vs_reference_max_abs_diff: 0.0
+run2_vs_reference_action_mismatches: 0
+
+## decision margin
+
+command: docker compose run --rm --no-deps test python
+image: fraud-api:test
+commit: a7555b2
+amount: 125.5
+p0: 0.005580357142857143
+cost_params: configs/decision_policy_v1.json
+function: optimal_action in evals/cost_model.py
+base_action: approve
+equals_5_over_896: true
+abs_diff_from_5_over_896: 0.0
+scan_step: 1e-5
+refine: binary search
+smallest_increase: 0.028902401477832525
+increase_action: step_up
+increase_same_p: 0.03448275862068966
+increase_changed_p: 0.03448275862068967
+bracket_width: 6.938893903907228e-18
+times_1e-6: 28902.401477832525
+smallest_decrease: none
+decrease_scan: p0 down to -10, step 1e-5, then the endpoint actions were still approve
+action_at_0: approve
+action_at_-10: approve

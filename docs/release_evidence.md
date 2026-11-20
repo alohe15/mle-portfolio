@@ -38,6 +38,8 @@ python -m pytest tests/test_training_serving_parity.py tests/test_api_endpoint.p
 ```
  
 Result: **14 passed**, 2 warnings, 12.32s, inside the container (`platform linux -- Python 3.11.16`).
+
+Note (2026-11-17): As of Phase 11 this command also runs the observability, metrics, fault-double, batch-report and probe-path tests; see the compose test command.
  
 ```
 tests/test_training_serving_parity.py::test_training_serving_parity PASSED

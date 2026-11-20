@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: __RUN_NAME__
+  namespace: fraud-local
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: k6
+          image: grafana/k6:2.4.0
+          args: ["run", "/scripts/predict.js"]
+          workingDir: /scripts
+          env:
+            - name: BASE_URL
+              value: http://fraud-api:8000
+            - name: VUS
+              value: "__VUS__"
+            - name: DURATION
+              value: "__DURATION__"
+            - name: WARMUP_DURATION
+              value: "__WARMUP_DURATION__"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: k6-scripts

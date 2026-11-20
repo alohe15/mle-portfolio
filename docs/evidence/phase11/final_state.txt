@@ -1,0 +1,40 @@
+2026-11-19T17:01:07Z PART C final state. Repo ~/mle-portfolio at the working tree after 0edf624. Cluster kind-fraud-local.
+
+kubectl -n fraud-local get deploy,pods,jobs -o wide
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES              SELECTOR
+deployment.apps/fraud-api   1/1     1            1           2d16h   fraud-api    fraud-api:9789b59   app=fraud-api
+
+NAME                             READY   STATUS    RESTARTS   AGE     IP            NODE                        NOMINATED NODE   READINESS GATES
+pod/fraud-api-69f7598b8d-2jkkn   1/1     Running   0          2d15h   10.244.0.12   fraud-local-control-plane   <none>           <none>
+
+jobs at cleanup 2026-11-19T17:00:53Z and rechecked after the compose test:
+No resources found in fraud-local namespace.
+
+Exactly one fraud-api pod, 1/1. No fraud-api-drill pod. No k6 jobs.
+
+live image=fraud-api:9789b59
+cpu limit=500m
+readinessProbe path=/readyz
+pod fraud-api-69f7598b8d-2jkkn image=fraud-api:9789b59 ready=true
+
+kubectl diff -f deploy/k8s/local/deployment.yaml
+diff_exit:0
+
+golden through the Service
+fraud_probability 0.005580357142857143
+recommended_action approve
+KNOWN-GOOD CONFIRMED
+
+monitoring
+grafana-784c94d9cd-6czs5      1/1     Running
+prometheus-7b598c448d-kl2tp   1/1     Running
+
+python3 scripts/check_dashboard_queries.py
+Loaded model	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+dashboard_exit:0
+
+docker compose run --rm test
+41 passed, 2 warnings in 42.89s
+compose test exit:0

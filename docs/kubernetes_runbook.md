@@ -15,18 +15,25 @@ Step-by-step for running fraud-api in a local Kind cluster. Start from a clean c
 kind create cluster --name fraud-local
 kubectl cluster-info --context kind-fraud-local
 kubectl get nodes
+kubectl wait --for=condition=Ready node --all --timeout=120s
 ```
 
-Expected: one node, `fraud-local-control-plane`, in the Ready state.
+Expected: one node, `fraud-local-control-plane`, in the Ready state. `kubectl get nodes` can print `NotReady` for a few seconds after create. The wait command blocks until the node is Ready.
 
 ## 2. Build and load the Docker image
 
 ```bash
 docker compose build fraud-api
-kind load docker-image fraud-api:latest --name fraud-local
+INPUTS="services/ scripts/ evals/ configs/ models/registry.json Dockerfile requirements.txt artifacts.serving.sha256"
+TAG=$(git log -1 --format=%h -- $INPUTS)
+grep -q "image: fraud-api:$TAG" deploy/k8s/local/deployment.yaml || { echo "manifest is not pinned to fraud-api:$TAG; re-pin first"; exit 1; }
+docker tag fraud-api:latest fraud-api:$TAG
+kind load docker-image fraud-api:$TAG --name fraud-local
 ```
 
-`kind load` is required because Kind runs its own containerd and cannot see images in Docker Desktop's local store. The image is about 426 MB.
+`kind load` is required because Kind runs its own containerd and cannot see images in Docker Desktop's local store. The tag matches the image in `deploy/k8s/local/deployment.yaml`. The image is about 426 MB.
+
+The tag is the last commit that changed anything copied into the image. Changing any of those paths requires a re-pin (update the manifest, rebuild, redeploy, re-record the baseline). Each local build still produces a new image ID. A company setup would build once in CI, push to a registry, and deploy by digest.
 
 ## 3. Deploy to the cluster
 
@@ -60,7 +67,7 @@ Expected: `1/1 Running`. The pod takes about 15–20 seconds to become Ready bec
 Use a temporary curl pod to call the Service by DNS name:
 
 ```bash
-kubectl -n fraud-local run curl-client --rm -it --restart=Never \
+kubectl -n fraud-local run curl-client --rm -i --restart=Never \
   --image=curlimages/curl -- \
   curl http://fraud-api:8000/readyz
 ```
@@ -70,7 +77,7 @@ Expected response: `{"status":"ready","model_version":"v9","dataset_version":5,"
 Also test liveness:
 
 ```bash
-kubectl -n fraud-local run curl-client --rm -it --restart=Never \
+kubectl -n fraud-local run curl-client --rm -i --restart=Never \
   --image=curlimages/curl -- \
   curl http://fraud-api:8000/livez
 ```
@@ -78,6 +85,8 @@ kubectl -n fraud-local run curl-client --rm -it --restart=Never \
 Expected response: `{"status":"alive"}`
 
 ## 6. Self-healing — delete a pod
+
+Note (2026-11-17): the Phase 11 fresh-checkout self-check did not exercise this section or section 7.
 
 ```bash
 kubectl -n fraud-local delete pod -l app=fraud-api
