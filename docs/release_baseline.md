@@ -28,7 +28,7 @@ Golden `action_costs`:
 }
 ```
 
-Score tolerance: absolute difference <= 1e-6. Status: proposed, pending mentor approval.
+Score tolerance: absolute difference <= 1e-6. Status: proposed, rationale in [Score tolerance: rationale](#score-tolerance-rationale), awaiting agreement with Deepa.
 
 The Docker image ID changes on identical rebuilds, so the config digest is the identity.
 
@@ -54,7 +54,7 @@ The image ID above is the OCI index digest. The config digest is the image confi
 
 The recorded image ID and pod imageID come from the original build on the author's machine and will differ on any rebuild. Identity for another checkout is the checks in [docs/kubernetes_runbook.md](kubernetes_runbook.md): image inputs match `a7555b2`, artifact checksums verified at startup, `kubectl diff` clean, and the golden request within tolerance.
 
-Score tolerance: absolute difference <= 1e-6 on `fraud_probability`, and the action must match exactly. Status: proposed, pending mentor approval.
+Score tolerance: absolute difference <= 1e-6 on `fraud_probability`, and the action must match exactly. Status: proposed, rationale in [Score tolerance: rationale](#score-tolerance-rationale), awaiting agreement with Deepa.
 
 Restoration command, written before any fault:
 
@@ -69,3 +69,19 @@ The current manifest tag is `fraud-api:9789b59`. Phase 11 changed `scripts/drill
 Rolled out on 2026-11-17. Pod `fraud-api-69f7598b8d-2jkkn` imageID `docker.io/library/import-2026-11-17@sha256:48b49a41aac71113d64846ef616aede8f1a2592efaa808c190b9984a0d4193d3`. Golden through the Service was unchanged: `fraud_probability` `0.005580357142857143`, action `approve`.
 
 The incident drills ran against `fraud-api:a7555b2`. The restoration command is unchanged.
+
+## Score tolerance: rationale
+
+Origin. `PARITY_ATOL` in `tests/test_training_serving_parity.py` is `1e-6`, for training versus serving on raw scores and calibrated probabilities.
+
+Observed. Every cited golden `fraud_probability` is `0.005580357142857143` (absolute difference 0): fresh clone, rebuild, fresh-checkout build, re-pin, and repeat calls. Same-image training versus serving is absolute difference 0 (`docs/release_evidence.md`). The CPU-limit run (`docs/load_test.md`) does not record this probability. Fifty Service calls: max |diff| 0.0, 0 action mismatches. Two `tests/load/payloads.json` runs: max |diff| 0.0 versus each other and versus `~/fraud-evidence/batch/predictions.jsonl`, 0 action mismatches. Table: `docs/evidence/phase10a/score_stability.txt`.
+
+Why not exact equality. Float results can change in the last digits across library versions, CPU instruction sets, or thread counts with no change in behaviour. Exact equality would make the check flaky. Float rounding is about 1e-16 relative.
+
+Why not looser. At amount 125.5, the smallest increase in p that changes the action is 0.028902401477832525 (approve to step_up), 28902.401477832525 times `1e-6`. No decrease, down to p = 0, changes the action (approve is already the lowest-cost action). A real artifact, model, or transform change is expected to move scores far more than 1e-6.
+
+Limit. `0.005580357142857143` equals 5/896, which suggests it sits on a flat step of the isotonic calibrator. Small raw-score changes may not move it at all, so the golden check is coarse. The parity test (raw scores, same 1e-6) and the startup checksums cover smaller changes.
+
+Rule. Absolute difference <= 1e-6 on `fraud_probability`, and `recommended_action` must match exactly. Scope: a release and recovery check on a fixed request, not a model-quality metric.
+
+Status: proposed, rationale above, awaiting agreement with Deepa.
