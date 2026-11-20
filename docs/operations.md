@@ -63,6 +63,18 @@ The malformed check in [docs/evidence/phase10a/step5_checks.txt](evidence/phase1
 {"event": "request_completed", "timestamp": "2026-11-15T23:10:10.065804+00:00", "request_id": "1d728182-bb3b-4ed5-844c-ae36c642a86d", "route": "/predict", "method": "POST", "status_class": "4xx", "status_code": 422, "duration_ms": 1.132, "model_version": "v9", "error_category": "validation_error", "recommended_action": null}
 ```
 
+## 5a. Worked example: one failed request
+
+Fresh capture: [failed_request_walkthrough.txt](evidence/phase10a/failed_request_walkthrough.txt). The dashboard for this kind of failure is [step5_dashboard_service_error.png](evidence/phase10a/step5_dashboard_service_error.png).
+
+Step 1, response. `POST /predict` on the drill Pod returned status 500. `X-Request-ID` was `4a5bb4a8-902e-481f-9e7d-12755f98d866`. The body was `{"detail":{"message":"Prediction failed","request_id":"4a5bb4a8-902e-481f-9e7d-12755f98d866"}}`. That says the request failed on the server side, and nothing else.
+
+Step 2, log line. Filtering the drill Pod logs by that request id returned one completion line: route `/predict`, status 500, `error_category` `prediction_error`, `duration_ms` 15.29, `model_version` `v9`. That says which request, which category, how long it took, and that no internal detail leaked.
+
+Step 3, metrics. On the Pod, the `/predict` 5xx counter went from 0.0 to 1.0 and the sum of `fraud_api_predictions_total` stayed 0.0. After 35 seconds, Prometheus `increase` of the drill `/predict` 5xx counter over 5m was 1.2954, and the dashboard server error ratio was 1, which is greater than 0. That says whether this is one request or a trend.
+
+Step 4, a healthy scrape is not enough. For the whole failure the same Pod had `up{app="fraud-api-drill"}` = 1 and `/readyz` HTTP 200, before and after. `/metrics` and `/readyz` never call the model. Only a real `/predict` request, the 5xx counter, and the log line showed the failure.
+
 ## 6. Metrics
 
 Details and the single-process note are in [docs/metrics.md](metrics.md).

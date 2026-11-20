@@ -28,6 +28,22 @@ Golden `action_costs`:
 }
 ```
 
-Score tolerance: absolute difference <= 1e-6. Status: proposed, pending mentor approval.
+Score tolerance: absolute difference <= 1e-6. Status: proposed, rationale in [Score tolerance: rationale](#score-tolerance-rationale), awaiting agreement with Deepa.
 
 The Docker image ID changes on identical rebuilds, so the config digest is the identity.
+
+## Score tolerance: rationale
+
+Origin. `PARITY_ATOL` in `tests/test_training_serving_parity.py` is `1e-6`, for training versus serving on raw scores and calibrated probabilities.
+
+Observed. Every cited golden `fraud_probability` is `0.005580357142857143` (absolute difference 0): fresh clone, rebuild, fresh-checkout build, re-pin, and repeat calls. Same-image training versus serving is absolute difference 0 (`docs/release_evidence.md`). The CPU-limit run (`docs/load_test.md`) does not record this probability. Fifty Service calls: max |diff| 0.0, 0 action mismatches. Two `tests/load/payloads.json` runs: max |diff| 0.0 versus each other and versus `~/fraud-evidence/batch/predictions.jsonl`, 0 action mismatches. Table: `docs/evidence/phase10a/score_stability.txt`.
+
+Why not exact equality. Float results can change in the last digits across library versions, CPU instruction sets, or thread counts with no change in behaviour. Exact equality would make the check flaky. Float rounding is about 1e-16 relative.
+
+Why not looser. At amount 125.5, the smallest increase in p that changes the action is 0.028902401477832525 (approve to step_up), 28902.401477832525 times `1e-6`. Scanned to -10, no decrease changed the action. A real artifact, model, or transform change is expected to move scores far more than 1e-6.
+
+Limit. `0.005580357142857143` equals 5/896, which suggests it sits on a flat step of the isotonic calibrator. Small raw-score changes may not move it at all, so the golden check is coarse. The parity test (raw scores, same 1e-6) and the startup checksums cover smaller changes.
+
+Rule. Absolute difference <= 1e-6 on `fraud_probability`, and `recommended_action` must match exactly. Scope: a release and recovery check on a fixed request, not a model-quality metric.
+
+Status: proposed, rationale above, awaiting agreement with Deepa.

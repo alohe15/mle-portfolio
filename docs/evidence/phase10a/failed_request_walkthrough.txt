@@ -1,0 +1,69 @@
+# Failed request walkthrough
+# UTC timestamps. Request payload values are not recorded.
+
+## setup
+timestamp_utc: 2026-11-20T15:45:40Z
+prometheus_port_forward: already listening, kubectl -n monitoring port-forward svc/prometheus 9090:9090
+command: kubectl apply -f deploy/drills/fault-instance.yaml
+deployment.apps/fraud-api-drill created
+command: kubectl -n fraud-local rollout status deployment/fraud-api-drill --timeout=180s
+Waiting for deployment "fraud-api-drill" rollout to finish: 0 of 1 updated replicas are available...
+deployment "fraud-api-drill" successfully rolled out
+drill_pod: fraud-api-drill-dd8896d46-fxnms
+drill_image: fraud-api:test
+fraud-api_deployment_image: fraud-api:9789b59
+
+## before
+timestamp_utc: 2026-11-20T15:45:58Z
+prometheus_up_app_fraud-api-drill: 1
+predict_2xx: 0.0
+predict_4xx: 0.0
+predict_5xx: 0.0
+predictions_total_sum: 0.0
+predictions_total_series: 4
+readyz_http_code: 200
+
+## request
+timestamp_utc: 2026-11-20T15:45:59Z
+command: kubectl -n fraud-local exec curl -si POST localhost:8000/predict
+http_status: 500
+x_request_id: 4a5bb4a8-902e-481f-9e7d-12755f98d866
+response_body: {"detail":{"message":"Prediction failed","request_id":"4a5bb4a8-902e-481f-9e7d-12755f98d866"}}
+
+## log
+timestamp_utc: 2026-11-20T15:45:59Z
+command: kubectl -n fraud-local logs fraud-api-drill-dd8896d46-fxnms | grep request_id
+completion_line_count: 1
+completion_line: {"event": "request_completed", "timestamp": "2026-11-20T15:45:59.138980+00:00", "request_id": "4a5bb4a8-902e-481f-9e7d-12755f98d866", "route": "/predict", "method": "POST", "status_class": "5xx", "status_code": 500, "duration_ms": 15.29, "model_version": "v9", "error_category": "prediction_error", "recommended_action": null}
+
+## after_pod_metrics
+timestamp_utc: 2026-11-20T15:45:59Z
+predict_2xx: 0.0
+predict_4xx: 0.0
+predict_5xx: 1.0
+predictions_total_sum: 0.0
+predictions_total_series: 4
+
+## after_sleep_35
+sleep_seconds: 35
+sleep_started_utc: 2026-11-20T15:45:59Z
+timestamp_utc: 2026-11-20T15:46:34Z
+prometheus_up_app_fraud-api-drill: {app="fraud-api-drill",instance="10.244.0.21:8000",job="fraud-api",namespace="fraud-local",pod="fraud-api-drill-dd8896d46-fxnms"} 1
+prometheus_increase_drill_predict_5xx_5m: {app="fraud-api-drill",instance="10.244.0.21:8000",job="fraud-api",method="POST",namespace="fraud-local",pod="fraud-api-drill-dd8896d46-fxnms",route="/predict",status_class="5xx"} 1.2954
+command: python3 scripts/check_dashboard_queries.py
+Prediction volume	POST /predict	0.02165
+Client error ratio (4xx)	4xx	0
+Server error ratio (5xx)	5xx	1
+Latency, successful predictions	p50	EMPTY
+Latency, successful predictions	p95	EMPTY
+Loaded model	{{model_version}} / dataset {{dataset_version}}	{dataset_version="5",model_version="v9"} 1
+Model loaded / scrape up	model_loaded	1
+Model loaded / scrape up	scrape_up	1
+Prediction action mix	{{action}}	{action="approve"} 0; {action="step_up"} 0; {action="review"} 0; {action="decline"} 0
+readyz_http_code: 200
+
+## cleanup
+timestamp_utc: 2026-11-20T15:46:34Z
+command: kubectl delete -f deploy/drills/fault-instance.yaml
+deployment.apps "fraud-api-drill" deleted from fraud-local namespace
+deleted_utc: 2026-11-20T15:46:34Z
